@@ -709,12 +709,12 @@ input:focus{border-color:var(--green)}
   <div class="hdr" id="noticeHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
     <div><div class="hdr-title" id="noticeCafeName">카페</div><div class="hdr-sub">공지사항 읽어ZUO</div></div>
-    <div style="width:40px"></div>
+    <button id="noticeWriteBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openNoticeWrite()">✏️ 작성</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
-    <div id="noticeAlertBanner"></div>
-    <div id="noticeMasterBtn" style="display:none;margin-bottom:10px">
-      <button class="btn-primary" onclick="openNoticeWrite()">✏️ 공지 작성</button>
+    <div id="noticeMasterArea" style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
+      <button onclick="checkNoticeMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
     </div>
     <div id="noticeList"></div>
   </div>
@@ -784,71 +784,43 @@ input:focus{border-color:var(--green)}
     <button class="btn-outline-s" onclick="changeProfitMonth(1)">▶</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
-    <!-- 수입 -->
+
+    <!-- 매출 -->
     <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
-      <div style="background:var(--green);padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">📥 수입</div></div>
-      <div style="padding:10px 14px">
-        <div class="profit-row" data-key="revenue" data-label="영업이익 (VAT포함)"></div>
+      <div style="background:var(--green);padding:8px 14px"><span style="font-size:13px;font-weight:700;color:#fff">📥 매출</span></div>
+      <div style="padding:8px 14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+          <span style="font-size:13px;color:var(--t1);font-weight:500">매출액</span>
+          <input class="profit-input" type="number" id="pi_revenue" placeholder="0" oninput="calcProfitTotals()">
+        </div>
       </div>
-      <div style="padding:8px 14px;background:var(--gl);display:flex;justify-content:space-between">
-        <span style="font-size:12px;font-weight:600;color:var(--gd)">수입 합계</span>
+      <div style="padding:8px 14px;background:var(--gl);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:600;color:var(--gd)">매출 합계</span>
         <span style="font-size:14px;font-weight:700;color:var(--gd)" id="profitIncomeTotal">₩0</span>
       </div>
     </div>
-    <!-- 일반관리비 -->
+
+    <!-- 지출 -->
     <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
-      <div style="background:#534AB7;padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">📤 일반 관리비</div></div>
-      <div style="padding:10px 14px" id="profitMgmtRows">
-        <div class="profit-row" data-key="rent" data-label="임대료"></div>
-        <div class="profit-row" data-key="royalty" data-label="로열티"></div>
-        <div class="profit-row" data-key="ad" data-label="광고비"></div>
-        <div class="profit-row" data-key="pos" data-label="포스·키오스크"></div>
-        <div class="profit-row" data-key="utility" data-label="전기·수도"></div>
-        <div class="profit-row" data-key="bookkeeping" data-label="기장료"></div>
-        <div class="profit-row" data-key="pest" data-label="방역(해충)"></div>
-        <div class="profit-row" data-key="security" data-label="보안"></div>
-        <div class="profit-row" data-key="music" data-label="음원"></div>
-        <div class="profit-row" data-key="mat" data-label="발판"></div>
-        <div class="profit-row" data-key="insurance" data-label="매장보험(PL)"></div>
-        <div class="profit-row" data-key="mgmtEtc" data-label="기타"></div>
+      <div style="background:#534AB7;padding:8px 14px"><span style="font-size:13px;font-weight:700;color:#fff">📤 지출</span></div>
+      <div style="padding:4px 14px" id="profitExpenseRows">
+        <!-- 동적 렌더링 -->
       </div>
-      <div style="padding:8px 14px;background:#EEEDFE;display:flex;justify-content:space-between">
-        <span style="font-size:12px;font-weight:600;color:#3C3489">소계</span>
-        <span style="font-size:14px;font-weight:700;color:#3C3489" id="profitMgmtTotal">₩0</span>
+      <div style="padding:8px 14px;background:#EEEDFE;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:600;color:#3C3489">지출 합계</span>
+        <span style="font-size:14px;font-weight:700;color:#3C3489" id="profitExpenseTotal">₩0</span>
       </div>
     </div>
-    <!-- 인건비 -->
-    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
-      <div style="background:#185FA5;padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">👥 인건비</div></div>
-      <div style="padding:10px 14px">
-        <div class="profit-row" data-key="salary" data-label="급여 합계"></div>
-        <div class="profit-row" data-key="insurance4" data-label="4대보험"></div>
-        <div class="profit-row" data-key="severance" data-label="퇴직금"></div>
-      </div>
-      <div style="padding:8px 14px;background:#E6F1FB;display:flex;justify-content:space-between">
-        <span style="font-size:12px;font-weight:600;color:#0C447C">소계</span>
-        <span style="font-size:14px;font-weight:700;color:#0C447C" id="profitLaborTotal">₩0</span>
-      </div>
-    </div>
-    <!-- 재료비 -->
-    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
-      <div style="background:#BA7517;padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">☕ 재료비</div></div>
-      <div style="padding:10px 14px">
-        <div class="profit-row" data-key="bean" data-label="원두"></div>
-        <div class="profit-row" data-key="material" data-label="부재료"></div>
-        <div class="profit-row" data-key="consumable" data-label="소모품"></div>
-        <div class="profit-row" data-key="matEtc" data-label="기타"></div>
-      </div>
-      <div style="padding:8px 14px;background:var(--al);display:flex;justify-content:space-between">
-        <span style="font-size:12px;font-weight:600;color:var(--ad)">소계</span>
-        <span style="font-size:14px;font-weight:700;color:var(--ad)" id="profitMatTotal">₩0</span>
-      </div>
-    </div>
-    <!-- 순이익 -->
+
+    <!-- 영업이익 -->
     <div style="background:var(--green);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9)">💵 순이익</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#fff">💵 영업이익 (VAT포함)</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">매출 - 지출 합계</div>
+      </div>
       <span style="font-size:22px;font-weight:800;color:#fff" id="profitNet">₩0</span>
     </div>
+
     <button class="btn-primary" onclick="saveProfit()">💾 저장</button>
   </div>
 </div>
@@ -2109,15 +2081,27 @@ async function confirmChangeMasterPw(){
 }
 
 // ===== 공지사항 =====
-let notices=[],editingNoticeId=null,noticeImages=[];
+let notices=[],editingNoticeId=null,noticeImages=[],isNoticeMaster=false;
 function loadNotices(){
-  const isMasterUser=false; // 진입 시 마스터 여부 체크 없이 일단 로드
+  isNoticeMaster=false;
+  document.getElementById('noticeWriteBtn').style.display='none';
+  document.getElementById('noticeMasterArea').style.display='flex';
   db.collection('notices').where('cafeId','==',currentCafe.id).orderBy('createdAt','desc').onSnapshot(snap=>{
     notices=[];snap.forEach(d=>notices.push({id:d.id,...d.data()}));
     renderNotices();
   });
-  // 마스터 버튼 표시 (일단 숨김 - 마스터 진입 시 표시)
-  document.getElementById('noticeMasterBtn').style.display='none';
+}
+function checkNoticeMaster(){
+  const pw=prompt('관리자 번호를 입력하세요');
+  if(pw===null)return;
+  if(isMaster(pw)){
+    isNoticeMaster=true;
+    document.getElementById('noticeWriteBtn').style.display='block';
+    document.getElementById('noticeMasterArea').style.display='none';
+    showToast('✅ 관리자 인증됐어요!');
+  } else {
+    alert('번호가 틀렸어요 ❌');
+  }
 }
 function renderNotices(){
   const w=document.getElementById('noticeList');
@@ -2172,7 +2156,9 @@ async function saveNotice(){
 
 // ===== 보건증 관리 =====
 let healthList=[],editingHealthId=null;
+let isHealthMaster=false;
 function loadHealth(){
+  isHealthMaster=false;
   db.collection('healthCerts').where('cafeId','==',currentCafe.id).orderBy('expireDate').onSnapshot(snap=>{
     healthList=[];snap.forEach(d=>healthList.push({id:d.id,...d.data()}));
     renderHealth();checkHealthAlerts();
@@ -2197,15 +2183,30 @@ function checkHealthAlerts(){
 function renderHealth(){
   const today=new Date();today.setHours(0,0,0,0);
   const w=document.getElementById('healthList');
-  // 마스터 버튼
-  w.innerHTML=`<button class="btn-primary" onclick="openHealthModal()" style="margin-bottom:12px">+ 보건증 정보 추가</button>`;
-  if(!healthList.length){w.innerHTML+=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 보건증 정보가 없어요</div>`;return;}
-  w.innerHTML+=healthList.map(h=>{
+  let html=``;
+  // 마스터 인증 영역
+  if(isHealthMaster){
+    html+=`<button class="btn-primary" onclick="openHealthModal()" style="margin-bottom:12px">+ 보건증 정보 추가</button>`;
+  } else {
+    html+=`<div style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
+      <button onclick="checkHealthMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
+    </div>`;
+  }
+  if(!healthList.length){
+    w.innerHTML=html+`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 보건증 정보가 없어요</div>`;
+    return;
+  }
+  html+=healthList.map(h=>{
     const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
     const isAlert=diff<=30&&diff>=0;const isExp=diff<0;
-    const badge=isExp?`<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">만료</span>`:
-      isAlert?`<span style="background:var(--amb);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`:
-      `<span style="background:var(--gl);color:var(--gd);font-size:10px;padding:2px 7px;border-radius:10px">유효</span>`;
+    const badge=isExp
+      ?`<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">만료</span>`
+      :isAlert?`<span style="background:var(--amb);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`
+      :`<span style="background:var(--gl);color:var(--gd);font-size:10px;padding:2px 7px;border-radius:10px">유효</span>`;
+    const btns=isHealthMaster
+      ?`<button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer;margin-right:4px">수정</button>
+        <button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:4px 9px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>`:'';
     return `<div style="background:#fff;border-radius:12px;border:1px solid ${isAlert||isExp?'#fca5a5':'var(--bd)'};padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
       <div style="flex:1">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
@@ -2213,10 +2214,16 @@ function renderHealth(){
         </div>
         <div style="font-size:11px;color:var(--t3)">발행 ${h.issueDate} → 만료 ${h.expireDate}</div>
       </div>
-      <button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer;margin-right:4px">수정</button>
-      <button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:4px 9px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>
+      <div style="display:flex;gap:4px">${btns}</div>
     </div>`;
   }).join('');
+  w.innerHTML=html;
+}
+function checkHealthMaster(){
+  const pw=prompt('관리자 번호를 입력하세요');
+  if(pw===null)return;
+  if(isMaster(pw)){isHealthMaster=true;renderHealth();showToast('✅ 관리자 인증됐어요!');}
+  else alert('번호가 틀렸어요 ❌');
 }
 function openHealthModal(id=null){
   editingHealthId=id;
@@ -2354,7 +2361,21 @@ async function deleteSupply(id){if(!confirm('삭제할까요?'))return;await db.
 // ===== 수익 관리 =====
 let profitY=new Date().getFullYear(),profitM=new Date().getMonth();
 let profitData={},profitFixed={};
-const PROFIT_KEYS=['revenue','rent','royalty','ad','pos','utility','bookkeeping','pest','security','music','mat','insurance','mgmtEtc','salary','insurance4','severance','bean','material','consumable','matEtc'];
+const PROFIT_EXPENSE_ITEMS=[
+  {key:'salary',label:'인건비'},
+  {key:'rent',label:'임대료 (VAT포함)'},
+  {key:'royalty',label:'로열티'},
+  {key:'ad',label:'광고비'},
+  {key:'pos',label:'포스/키오스크'},
+  {key:'utility',label:'관리비 (전기·수도세)'},
+  {key:'bookkeeping',label:'기장료'},
+  {key:'pest',label:'방역'},
+  {key:'security',label:'보안'},
+  {key:'music',label:'음원'},
+  {key:'insurance',label:'보험'},
+  {key:'etc',label:'기타'},
+];
+const PROFIT_KEYS=['revenue',...PROFIT_EXPENSE_ITEMS.map(i=>i.key)];
 
 function changeProfitMonth(dir){
   profitM+=dir;if(profitM>11){profitM=0;profitY++;}if(profitM<0){profitM=11;profitY--;}
@@ -2364,35 +2385,38 @@ function changeProfitMonth(dir){
 async function initProfit(){
   document.getElementById('profitMonthTitle').textContent=`${profitY}년 ${MONTHS[profitM]}`;
   const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
-  // 고정항목 로드
   const fixedSnap=await db.collection('profitFixed').where('cafeId','==',currentCafe.id).limit(1).get();
-  profitFixed={};
-  fixedSnap.forEach(d=>{profitFixed=d.data();});
-  // 해당월 데이터 로드
+  profitFixed={};fixedSnap.forEach(d=>{profitFixed=d.data();});
   const snap=await db.collection('profits').where('cafeId','==',currentCafe.id).where('period','==',period).limit(1).get();
-  profitData={};
-  snap.forEach(d=>{profitData={...d.data(),docId:d.id};});
+  profitData={};snap.forEach(d=>{profitData={...d.data(),docId:d.id};});
   renderProfitRows();
 }
 function renderProfitRows(){
-  document.querySelectorAll('.profit-row').forEach(row=>{
-    const key=row.dataset.key;const label=row.dataset.label;
+  const w=document.getElementById('profitExpenseRows');
+  w.innerHTML=PROFIT_EXPENSE_ITEMS.map(item=>{
+    const key=item.key;
     const val=profitData[key]!==undefined?profitData[key]:(profitFixed[key+'_fixed']?profitFixed[key+'_val']||0:0);
-    const isFixed=profitFixed[key+'_fixed']?true:false;
-    row.innerHTML=`<div class="profit-row-wrap">
-      <span class="profit-label">${label}</span>
-      <button class="profit-pin ${isFixed?'on':''}" onclick="toggleFixed('${key}',this)">📌 고정</button>
-      <input class="profit-input" type="number" id="pi_${key}" value="${val||''}" placeholder="0" oninput="calcProfitTotals()">
+    const isFixed=!!profitFixed[key+'_fixed'];
+    return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f5f5f5">
+      <span style="font-size:12px;color:var(--t1);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.label}</span>
+      <button onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${isFixed?'var(--amb)':'var(--bd)'};background:${isFixed?'var(--amb)':'#fff'};color:${isFixed?'#fff':'var(--t3)'};cursor:pointer">📌</button>
+      <input type="number" id="pi_${key}" value="${val||''}" placeholder="0" oninput="calcProfitTotals()" style="width:90px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
     </div>`;
-  });
+  }).join('');
+  const rev=profitData['revenue']!==undefined?profitData['revenue']:(profitFixed['revenue_fixed']?profitFixed['revenue_val']||0:0);
+  const revInput=document.getElementById('pi_revenue');
+  if(revInput)revInput.value=rev||'';
   calcProfitTotals();
 }
 function toggleFixed(key,btn){
   const isNowFixed=btn.classList.contains('on');
+  const nowFixed=!isNowFixed;
   btn.classList.toggle('on');
-  profitFixed[key+'_fixed']=!isNowFixed;
-  const val=parseInt(document.getElementById('pi_'+key).value)||0;
-  profitFixed[key+'_val']=val;
+  btn.style.border=`1px solid ${nowFixed?'var(--amb)':'var(--bd)'}`;
+  btn.style.background=nowFixed?'var(--amb)':'#fff';
+  btn.style.color=nowFixed?'#fff':'var(--t3)';
+  profitFixed[key+'_fixed']=nowFixed;
+  profitFixed[key+'_val']=parseInt(document.getElementById('pi_'+key)?.value)||0;
   saveProfitFixed();
 }
 async function saveProfitFixed(){
@@ -2404,28 +2428,24 @@ async function saveProfitFixed(){
 function getVal(key){return parseInt(document.getElementById('pi_'+key)?.value)||0;}
 function calcProfitTotals(){
   const income=getVal('revenue');
-  const mgmt=['rent','royalty','ad','pos','utility','bookkeeping','pest','security','music','mat','insurance','mgmtEtc'].reduce((a,k)=>a+getVal(k),0);
-  const labor=['salary','insurance4','severance'].reduce((a,k)=>a+getVal(k),0);
-  const mat=['bean','material','consumable','matEtc'].reduce((a,k)=>a+getVal(k),0);
-  const net=income-mgmt-labor-mat;
+  const expense=PROFIT_EXPENSE_ITEMS.reduce((a,i)=>a+getVal(i.key),0);
+  const net=income-expense;
   document.getElementById('profitIncomeTotal').textContent='₩'+income.toLocaleString();
-  document.getElementById('profitMgmtTotal').textContent='₩'+mgmt.toLocaleString();
-  document.getElementById('profitLaborTotal').textContent='₩'+labor.toLocaleString();
-  document.getElementById('profitMatTotal').textContent='₩'+mat.toLocaleString();
+  document.getElementById('profitExpenseTotal').textContent='₩'+expense.toLocaleString();
   document.getElementById('profitNet').textContent='₩'+net.toLocaleString();
   document.getElementById('profitNet').style.color=net>=0?'#fff':'#fca5a5';
 }
 async function saveProfit(){
   const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
-  const data={cafeId:currentCafe.id,period};
-  PROFIT_KEYS.forEach(k=>data[k]=getVal(k));
-  // 고정항목 값 업데이트
+  const data={cafeId:currentCafe.id,period,revenue:getVal('revenue')};
+  PROFIT_EXPENSE_ITEMS.forEach(i=>data[i.key]=getVal(i.key));
   PROFIT_KEYS.forEach(k=>{if(profitFixed[k+'_fixed'])profitFixed[k+'_val']=getVal(k);});
   saveProfitFixed();
   if(profitData.docId){await db.collection('profits').doc(profitData.docId).update(data);}
   else{const ref=await db.collection('profits').add(data);profitData.docId=ref.id;}
   showToast('✅ 저장됐어요!');
 }
+
 
 // 모달 닫기
 ['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','healthModal','changePwModal','changeMasterPwModal'].forEach(id=>{
