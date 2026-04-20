@@ -686,7 +686,14 @@ input:focus{border-color:var(--green)}
     <div class="hdr-title">월 급여 현황</div>
     <div class="hdr-sub" id="payTablePeriod">2026년 4월</div>
   </div>
-  <div style="padding:12px 14px;overflow-y:auto">
+  <!-- 탭 -->
+  <div class="tabs" style="margin:10px 14px">
+    <button class="tab on" id="ptab1" onclick="switchPayTableTab('monthly')">월별 현황</button>
+    <button class="tab" id="ptab2" onclick="switchPayTableTab('trend')">월별 추이</button>
+  </div>
+
+  <!-- 월별 현황 탭 -->
+  <div id="payTableMonthlyTab" style="padding:0 14px 14px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <button class="btn-outline-s" onclick="changePayMonth(-1)">◀</button>
       <div style="font-size:14px;font-weight:600;color:var(--t1)" id="payTableMonth">2026년 4월</div>
@@ -700,7 +707,25 @@ input:focus{border-color:var(--green)}
       <div style="font-size:22px;font-weight:700;color:var(--gd)" id="payTableTotal">₩0</div>
     </div>
     <button class="btn-primary" onclick="exportExcel()">📊 엑셀로 내보내기</button>
-    <button style="width:100%;padding:11px;border-radius:8px;border:none;background:#FEE500;color:#3C1E1E;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px" onclick="alert('카톡으로 공유할 내용이 복사됐어요!')">📋 카톡으로 공유</button>
+  </div>
+
+  <!-- 월별 추이 탭 -->
+  <div id="payTableTrendTab" style="display:none;padding:0 14px 14px;overflow-y:auto">
+    <!-- 직원 선택 -->
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:6px">직원 선택 (전체 또는 개인)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="trendEmpFilter"></div>
+    </div>
+    <!-- 추이 테이블 -->
+    <div class="pay-tbl-wrap" style="margin-bottom:12px">
+      <table class="pay-tbl" id="trendTable"></table>
+    </div>
+    <!-- 그래프 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:10px">📈 인건비 월별 추이</div>
+      <canvas id="payTrendChart" height="220"></canvas>
+    </div>
+    <button class="btn-primary" onclick="exportTrendExcel()">📊 추이 엑셀 내보내기</button>
   </div>
 </div>
 
@@ -1929,6 +1954,152 @@ async function captureAndShare(){
 }
 
 // 월 급여 테이블
+let payTrendChartInst=null;
+let trendEmpFilter='전체';
+
+function switchPayTableTab(tab){
+  document.getElementById('ptab1').classList.toggle('on',tab==='monthly');
+  document.getElementById('ptab2').classList.toggle('on',tab==='trend');
+  document.getElementById('payTableMonthlyTab').style.display=tab==='monthly'?'block':'none';
+  document.getElementById('payTableTrendTab').style.display=tab==='trend'?'block':'none';
+  if(tab==='trend') loadPayTrend();
+}
+
+async function loadPayTrend(){
+  // 직원 필터 버튼 렌더링
+  const filterDiv=document.getElementById('trendEmpFilter');
+  const empNames=['전체',...employees.map(e=>e.name)];
+  filterDiv.innerHTML=empNames.map(n=>`
+    <button onclick="setTrendEmpFilter('${n}')" style="padding:5px 12px;border-radius:20px;border:1px solid ${trendEmpFilter===n?'var(--green)':'var(--bd)'};background:${trendEmpFilter===n?'var(--green)':'#fff'};color:${trendEmpFilter===n?'#fff':'var(--t2)'};font-size:12px;cursor:pointer">${n}</button>
+  `).join('');
+
+  // 최근 12개월 데이터 수집
+  const months=[];
+  const now=new Date();
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+
+  // 선택 직원 필터
+  const targetEmps=trendEmpFilter==='전체'?employees:employees.filter(e=>e.name===trendEmpFilter);
+
+  // 월별 데이터 수집
+  const monthData={};
+  for(const period of months){
+    monthData[period]={};
+    for(const emp of targetEmps){
+      const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
+      let hrs=0;snap.forEach(d=>hrs+=d.data().hours||0);
+      const base=Math.round(hrs*(emp.rate||0));
+      const holi=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
+      monthData[period][emp.id]={hrs,base,holi,total:base+holi,name:emp.name};
+    }
+  }
+
+  // 추이 테이블 렌더링
+  const tbl=document.getElementById('trendTable');
+  if(trendEmpFilter==='전체'){
+    // 전체 합계 테이블
+    tbl.innerHTML=`<tr><th>월</th><th>근무시간</th><th>시급합계</th><th>주휴합계</th><th>총 인건비</th></tr>`;
+    let totHrs=0,totBase=0,totHoli=0,totTotal=0;
+    months.forEach(m=>{
+      const empVals=Object.values(monthData[m]);
+      const hrs=empVals.reduce((a,v)=>a+v.hrs,0);
+      const base=empVals.reduce((a,v)=>a+v.base,0);
+      const holi=empVals.reduce((a,v)=>a+v.holi,0);
+      const total=base+holi;
+      totHrs+=hrs;totBase+=base;totHoli+=holi;totTotal+=total;
+      tbl.innerHTML+=`<tr>
+        <td class="nm">${m}</td>
+        <td>${hrs.toFixed(1)}h</td>
+        <td>${base.toLocaleString()}</td>
+        <td>${holi.toLocaleString()}</td>
+        <td class="tot">${total.toLocaleString()}</td>
+      </tr>`;
+    });
+    tbl.innerHTML+=`<tr>
+      <td class="nm">합계</td>
+      <td>${totHrs.toFixed(1)}h</td>
+      <td>${totBase.toLocaleString()}</td>
+      <td>${totHoli.toLocaleString()}</td>
+      <td class="tot">${totTotal.toLocaleString()}</td>
+    </tr>`;
+  } else {
+    // 개인별 테이블
+    tbl.innerHTML=`<tr><th>월</th><th>근무시간</th><th>시급합계</th><th>주휴합계</th><th>합계</th></tr>`;
+    months.forEach(m=>{
+      const v=Object.values(monthData[m])[0]||{hrs:0,base:0,holi:0,total:0};
+      tbl.innerHTML+=`<tr>
+        <td class="nm">${m}</td>
+        <td>${(v.hrs||0).toFixed(1)}h</td>
+        <td>${(v.base||0).toLocaleString()}</td>
+        <td>${(v.holi||0).toLocaleString()}</td>
+        <td class="tot">${(v.total||0).toLocaleString()}</td>
+      </tr>`;
+    });
+  }
+
+  // 그래프 렌더링
+  const labels=months.map(m=>m.replace('-','년 ')+'월');
+  const totalData=months.map(m=>{
+    const vals=Object.values(monthData[m]);
+    return vals.reduce((a,v)=>a+v.total,0);
+  });
+  const baseData=months.map(m=>{
+    const vals=Object.values(monthData[m]);
+    return vals.reduce((a,v)=>a+v.base,0);
+  });
+
+  if(payTrendChartInst)payTrendChartInst.destroy();
+  const ctx=document.getElementById('payTrendChart').getContext('2d');
+  payTrendChartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'시급합계',data:baseData,backgroundColor:'rgba(29,158,117,0.65)',borderRadius:4},
+        {label:'총 인건비',data:totalData,type:'line',borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.1)',fill:true,tension:0.3,pointRadius:4,borderWidth:2}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{labels:{font:{size:11}}}},
+      scales:{y:{ticks:{callback:v=>'₩'+(v/10000).toFixed(0)+'만',font:{size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:9}}}}
+    }
+  });
+}
+
+function setTrendEmpFilter(name){
+  trendEmpFilter=name;
+  loadPayTrend();
+}
+
+async function exportTrendExcel(){
+  const months=[];
+  const now=new Date();
+  for(let i=11;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const wb=XLSX.utils.book_new();
+  // 전체 시트
+  const data=[['월','직원','근무시간','시급합계','주휴합계','총합계']];
+  for(const period of months){
+    for(const emp of employees){
+      const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
+      let hrs=0;snap.forEach(d=>hrs+=d.data().hours||0);
+      const base=Math.round(hrs*(emp.rate||0));
+      const holi=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
+      data.push([period,emp.name,hrs,base,holi,base+holi]);
+    }
+  }
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:10},{wch:8},{wch:10},{wch:12},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws,'월별추이');
+  XLSX.writeFile(wb,`인건비추이_${new Date().getFullYear()}.xlsx`);
+}
+
 async function renderPayTable(){
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const tbl=document.getElementById('payTable');
@@ -2533,6 +2704,7 @@ async function deleteSupply(id){if(!confirm('삭제할까요?'))return;await db.
 let profitY=new Date().getFullYear(),profitM=new Date().getMonth();
 let profitData={},profitFixed={};
 const PROFIT_EXPENSE_ITEMS=[
+  {key:'material',label:'재료비 (물류비)'},
   {key:'salary',label:'인건비'},
   {key:'rent',label:'임대료 (VAT포함)'},
   {key:'royalty',label:'로열티'},
