@@ -2031,7 +2031,6 @@ function switchPayTableTab(tab){
 }
 
 async function loadPayTrend(){
-  try{
   // 직원 필터 버튼 렌더링
   const filterDiv=document.getElementById('trendEmpFilter');
   const empNames=['전체',...employees.map(e=>e.name)];
@@ -2134,9 +2133,6 @@ async function loadPayTrend(){
       scales:{y:{ticks:{callback:v=>'₩'+(v/10000).toFixed(0)+'만',font:{size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:9}}}}
     }
   });
-}
-
-  }catch(e){console.error('loadPayTrend error:',e);showToast('데이터 로드 중 오류가 발생했어요');}
 }
 
 function setTrendEmpFilter(name){
