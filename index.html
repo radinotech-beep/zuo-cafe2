@@ -239,6 +239,13 @@ input:focus{border-color:var(--green)}
 .pay-tbl td.nm{text-align:left;font-weight:600;color:var(--t1);padding-left:10px}
 .pay-tbl td.tot{font-weight:700;color:var(--gd)}
 .info-box{border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px}
+.profit-row-wrap{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5}
+.profit-row-wrap:last-child{border-bottom:none}
+.profit-label{font-size:13px;color:var(--t2);flex:1}
+.profit-pin{font-size:11px;padding:3px 7px;border-radius:5px;border:1px solid var(--bd);background:#fff;color:var(--t3);cursor:pointer;margin-right:6px;white-space:nowrap}
+.profit-pin.on{background:var(--amb);border-color:var(--amb);color:#fff}
+.profit-input{width:110px;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;text-align:right;outline:none}
+.profit-input:focus{border-color:var(--green)}
 </style>
 </head>
 <body>
@@ -294,6 +301,23 @@ input:focus{border-color:var(--green)}
   <div class="svc-wrap">
     <div class="svc-title">서비스를 선택해주세요</div>
     <div class="svc-sub">이용할 서비스를 탭하세요</div>
+    <!-- 1. 공지사항 -->
+    <div class="svc-card" onclick="enterSvc('notice')">
+      <div class="svc-icon" style="background:#FFF2CC">📢</div>
+      <div>
+        <div class="svc-name">공지사항 읽어ZUO</div>
+        <div class="svc-desc">매장 공지 · 공지 누적 관리</div>
+      </div>
+    </div>
+    <!-- 2. 근로관리 -->
+    <div class="svc-card" onclick="enterSvc('labor')">
+      <div class="svc-icon" style="background:#E6F1FB">📋</div>
+      <div>
+        <div class="svc-name">근로 관리해ZUO</div>
+        <div class="svc-desc">근무시간 · 급여 계산 · 명세서</div>
+      </div>
+    </div>
+    <!-- 3. 대타 -->
     <div class="svc-card" onclick="enterSvc('sub')">
       <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
       <div>
@@ -301,11 +325,28 @@ input:focus{border-color:var(--green)}
         <div class="svc-desc">대타 요청 · 신청 · 스케줄 관리</div>
       </div>
     </div>
-    <div class="svc-card" onclick="enterSvc('labor')">
-      <div class="svc-icon" style="background:#E6F1FB">📋</div>
+    <!-- 4. 수익관리 -->
+    <div class="svc-card" onclick="enterSvc('profit')">
+      <div class="svc-icon" style="background:#E2EFDA">💰</div>
       <div>
-        <div class="svc-name">근로 관리해ZUO</div>
-        <div class="svc-desc">근무시간 · 급여 계산 · 명세서</div>
+        <div class="svc-name">수익 관리해ZUO</div>
+        <div class="svc-desc">수입 · 지출 · 월별 추이 관리</div>
+      </div>
+    </div>
+    <!-- 5. 보건증 -->
+    <div class="svc-card" onclick="enterSvc('health')">
+      <div class="svc-icon" style="background:#FCEBEB">🏥</div>
+      <div>
+        <div class="svc-name">보건증 관리해ZUO</div>
+        <div class="svc-desc">발행일 · 만료일 · 만료 알림</div>
+      </div>
+    </div>
+    <!-- 6. 소모품 -->
+    <div class="svc-card" onclick="enterSvc('supply')">
+      <div class="svc-icon" style="background:#EEEDFE">🔧</div>
+      <div>
+        <div class="svc-name">소모품 관리해ZUO</div>
+        <div class="svc-desc">교체주기 · 차기교체일 · 알림</div>
       </div>
     </div>
   </div>
@@ -383,7 +424,7 @@ input:focus{border-color:var(--green)}
     <div style="width:40px"></div>
   </div>
   <div class="labor-tabs tabs">
-    <button class="tab on" id="lt1" onclick="switchLaborTab('worker')">근무시간 입력</button>
+    <button class="tab on" id="lt1" onclick="switchLaborTab('worker')">근무시간 입력 (직원 메뉴)</button>
     <button class="tab" id="lt2" onclick="switchLaborTab('master')">관리자 메뉴</button>
   </div>
   <div id="laborWorkerTab" style="padding:12px 14px;overflow-y:auto">
@@ -395,6 +436,7 @@ input:focus{border-color:var(--green)}
     <button class="btn-primary" onclick="openMasterMenu('emp')">👥 직원 관리</button>
     <button class="btn-blue" onclick="openMasterMenu('pay')">💰 급여 관리 · 명세서</button>
     <button class="btn-purple" onclick="openMasterMenu('table')">📊 월 급여 현황 테이블</button>
+    <button onclick="openChangeMasterPw()" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--t2);font-size:13px;cursor:pointer;margin-bottom:8px">🔑 중간관리자 번호 변경</button>
   </div>
 </div>
 
@@ -406,7 +448,7 @@ input:focus{border-color:var(--green)}
       <div class="hdr-title" id="workerInputName">이름</div>
       <div class="hdr-sub">근무시간 입력</div>
     </div>
-    <div style="width:40px"></div>
+    <button onclick="openChangePw()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">🔑 비번변경</button>
   </div>
   <div style="padding:8px 14px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
     <button class="btn-outline-s" onclick="changeWorkMonth(-1)">◀</button>
@@ -662,6 +704,225 @@ input:focus{border-color:var(--green)}
   </div>
 </div>
 
+<!-- 화면13: 공지사항 -->
+<div class="screen" id="scNotice">
+  <div class="hdr" id="noticeHdr">
+    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <div><div class="hdr-title" id="noticeCafeName">카페</div><div class="hdr-sub">공지사항 읽어ZUO</div></div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:12px 14px;overflow-y:auto">
+    <div id="noticeAlertBanner"></div>
+    <div id="noticeMasterBtn" style="display:none;margin-bottom:10px">
+      <button class="btn-primary" onclick="openNoticeWrite()">✏️ 공지 작성</button>
+    </div>
+    <div id="noticeList"></div>
+  </div>
+</div>
+
+<!-- 화면13-1: 공지 작성 -->
+<div class="screen" id="scNoticeWrite">
+  <div class="hdr" id="noticeWriteHdr">
+    <button class="back-btn" onclick="showScreen('scNotice')">← 뒤로</button>
+    <div class="hdr-title" id="noticeWriteTitle">공지 작성</div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:14px;overflow-y:auto">
+    <div class="fr"><label class="fl">제목</label><input type="text" id="noticeTitleInput" placeholder="공지 제목 입력"></div>
+    <div class="fr"><label class="fl">내용</label><textarea id="noticeContentInput" placeholder="공지 내용을 입력하세요" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:14px;min-height:150px;outline:none;resize:vertical"></textarea></div>
+    <div class="fr">
+      <label class="fl">사진 첨부 (선택)</label>
+      <input type="file" id="noticeImageInput" accept="image/*" multiple style="width:100%;padding:8px 0;font-size:13px">
+    </div>
+    <div id="noticeImagePreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div class="fbtns">
+      <button class="fcnl" onclick="showScreen('scNotice')">취소</button>
+      <button class="fok" onclick="saveNotice()">등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 화면14: 보건증 관리 -->
+<div class="screen" id="scHealth">
+  <div class="hdr" id="healthHdr">
+    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <div><div class="hdr-title" id="healthCafeName">카페</div><div class="hdr-sub">보건증 관리해ZUO</div></div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:12px 14px;overflow-y:auto">
+    <div id="healthAlertBanner"></div>
+    <div id="healthList"></div>
+  </div>
+</div>
+
+<!-- 화면15: 소모품 관리 -->
+<div class="screen" id="scSupply">
+  <div class="hdr" id="supplyHdr">
+    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <div><div class="hdr-title" id="supplyCafeName">카페</div><div class="hdr-sub">소모품 관리해ZUO</div></div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:12px 14px;overflow-y:auto">
+    <div id="supplyAlertBanner"></div>
+    <div id="supplyMasterBtn" style="display:none;margin-bottom:10px">
+      <button class="btn-primary" onclick="openSupplyAdd()">+ 소모품 추가</button>
+    </div>
+    <div id="supplyList"></div>
+  </div>
+</div>
+
+<!-- 화면16: 수익 관리 -->
+<div class="screen" id="scProfit">
+  <div class="hdr" id="profitHdr">
+    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <div><div class="hdr-title" id="profitCafeName">카페</div><div class="hdr-sub">수익 관리해ZUO</div></div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:8px 14px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+    <button class="btn-outline-s" onclick="changeProfitMonth(-1)">◀</button>
+    <div style="font-size:14px;font-weight:600;color:var(--t1)" id="profitMonthTitle">2026년 4월</div>
+    <button class="btn-outline-s" onclick="changeProfitMonth(1)">▶</button>
+  </div>
+  <div style="padding:12px 14px;overflow-y:auto">
+    <!-- 수입 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
+      <div style="background:var(--green);padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">📥 수입</div></div>
+      <div style="padding:10px 14px">
+        <div class="profit-row" data-key="revenue" data-label="영업이익 (VAT포함)"></div>
+      </div>
+      <div style="padding:8px 14px;background:var(--gl);display:flex;justify-content:space-between">
+        <span style="font-size:12px;font-weight:600;color:var(--gd)">수입 합계</span>
+        <span style="font-size:14px;font-weight:700;color:var(--gd)" id="profitIncomeTotal">₩0</span>
+      </div>
+    </div>
+    <!-- 일반관리비 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
+      <div style="background:#534AB7;padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">📤 일반 관리비</div></div>
+      <div style="padding:10px 14px" id="profitMgmtRows">
+        <div class="profit-row" data-key="rent" data-label="임대료"></div>
+        <div class="profit-row" data-key="royalty" data-label="로열티"></div>
+        <div class="profit-row" data-key="ad" data-label="광고비"></div>
+        <div class="profit-row" data-key="pos" data-label="포스·키오스크"></div>
+        <div class="profit-row" data-key="utility" data-label="전기·수도"></div>
+        <div class="profit-row" data-key="bookkeeping" data-label="기장료"></div>
+        <div class="profit-row" data-key="pest" data-label="방역(해충)"></div>
+        <div class="profit-row" data-key="security" data-label="보안"></div>
+        <div class="profit-row" data-key="music" data-label="음원"></div>
+        <div class="profit-row" data-key="mat" data-label="발판"></div>
+        <div class="profit-row" data-key="insurance" data-label="매장보험(PL)"></div>
+        <div class="profit-row" data-key="mgmtEtc" data-label="기타"></div>
+      </div>
+      <div style="padding:8px 14px;background:#EEEDFE;display:flex;justify-content:space-between">
+        <span style="font-size:12px;font-weight:600;color:#3C3489">소계</span>
+        <span style="font-size:14px;font-weight:700;color:#3C3489" id="profitMgmtTotal">₩0</span>
+      </div>
+    </div>
+    <!-- 인건비 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
+      <div style="background:#185FA5;padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">👥 인건비</div></div>
+      <div style="padding:10px 14px">
+        <div class="profit-row" data-key="salary" data-label="급여 합계"></div>
+        <div class="profit-row" data-key="insurance4" data-label="4대보험"></div>
+        <div class="profit-row" data-key="severance" data-label="퇴직금"></div>
+      </div>
+      <div style="padding:8px 14px;background:#E6F1FB;display:flex;justify-content:space-between">
+        <span style="font-size:12px;font-weight:600;color:#0C447C">소계</span>
+        <span style="font-size:14px;font-weight:700;color:#0C447C" id="profitLaborTotal">₩0</span>
+      </div>
+    </div>
+    <!-- 재료비 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px">
+      <div style="background:#BA7517;padding:10px 14px"><div style="font-size:13px;font-weight:700;color:#fff">☕ 재료비</div></div>
+      <div style="padding:10px 14px">
+        <div class="profit-row" data-key="bean" data-label="원두"></div>
+        <div class="profit-row" data-key="material" data-label="부재료"></div>
+        <div class="profit-row" data-key="consumable" data-label="소모품"></div>
+        <div class="profit-row" data-key="matEtc" data-label="기타"></div>
+      </div>
+      <div style="padding:8px 14px;background:var(--al);display:flex;justify-content:space-between">
+        <span style="font-size:12px;font-weight:600;color:var(--ad)">소계</span>
+        <span style="font-size:14px;font-weight:700;color:var(--ad)" id="profitMatTotal">₩0</span>
+      </div>
+    </div>
+    <!-- 순이익 -->
+    <div style="background:var(--green);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9)">💵 순이익</span>
+      <span style="font-size:22px;font-weight:800;color:#fff" id="profitNet">₩0</span>
+    </div>
+    <button class="btn-primary" onclick="saveProfit()">💾 저장</button>
+  </div>
+</div>
+
+<!-- 소모품 추가/수정 모달 -->
+<div class="mbg" id="supplyModal">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt" id="supplyModalTitle">소모품 추가</div>
+    <div class="fr"><label class="fl">소모품 이름</label><input type="text" id="supplyName" placeholder="예: 에스프레소 필터" style="width:100%"></div>
+    <div class="fr"><label class="fl">관리주기 (일)</label><input type="number" id="supplyCycle" placeholder="예: 30" oninput="calcSupplyNext()" style="width:100%"></div>
+    <div class="fr"><label class="fl">최근 교체일</label><input type="date" id="supplyLastDate" oninput="calcSupplyNext()" style="width:100%"></div>
+    <div style="background:var(--gl);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;color:var(--gd)">차기 교체일</span>
+      <span style="font-size:14px;font-weight:700;color:var(--gd)" id="supplyNextDate">-</span>
+    </div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="closeSupplyModal()">취소</button>
+      <button class="mok" onclick="saveSupply()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 보건증 추가/수정 모달 -->
+<div class="mbg" id="healthModal">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt" id="healthModalTitle">보건증 정보 입력</div>
+    <div class="fr"><label class="fl">직원 이름</label><input type="text" id="healthEmpName" placeholder="이름 입력" style="width:100%"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label class="fl">발행일</label><input type="date" id="healthIssueDate" oninput="calcHealthDates('issue')" style="width:100%"></div>
+      <div><label class="fl">만료일</label><input type="date" id="healthExpireDate" oninput="calcHealthDates('expire')" style="width:100%"></div>
+    </div>
+    <div style="background:var(--gl);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--gd);line-height:1.6">💡 발행일 입력 시 만료일 자동계산 (1년)<br>만료일 입력 시 발행일 자동계산</div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="closeHealthModal()">취소</button>
+      <button class="mok" onclick="saveHealth()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 비밀번호 변경 모달 -->
+<div class="mbg" id="changePwModal">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt">비밀번호 변경</div>
+    <div class="fr"><label class="fl">현재 비밀번호</label><input type="password" id="changePwCurrent" placeholder="현재 비밀번호" style="width:100%"></div>
+    <div class="fr"><label class="fl">새 비밀번호</label><input type="password" id="changePwNew" placeholder="새 비밀번호" style="width:100%"></div>
+    <div class="fr"><label class="fl">새 비밀번호 확인</label><input type="password" id="changePwConfirm" placeholder="새 비밀번호 재입력" style="width:100%"></div>
+    <div class="pw-error" id="changePwError" style="margin-bottom:8px">비밀번호가 틀렸어요 ❌</div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="closeChangePw()">취소</button>
+      <button class="mok" onclick="confirmChangePw()">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 중간관리자 번호 변경 모달 -->
+<div class="mbg" id="changeMasterPwModal">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt">중간관리자 번호 변경</div>
+    <div style="background:var(--al);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:var(--ad);line-height:1.6">현재 번호 또는 최종관리자 번호로 인증 후 변경 가능해요</div>
+    <div class="fr"><label class="fl">현재 번호</label><input type="password" id="changeMasterCurrent" placeholder="현재 중간관리자 번호" style="width:100%"></div>
+    <div class="fr"><label class="fl">새 번호</label><input type="password" id="changeMasterNew" placeholder="새 번호" style="width:100%"></div>
+    <div class="fr"><label class="fl">새 번호 확인</label><input type="password" id="changeMasterConfirm" placeholder="새 번호 재입력" style="width:100%"></div>
+    <div class="pw-error" id="changeMasterError" style="margin-bottom:8px">번호가 틀렸어요 ❌</div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="closeChangeMasterPw()">취소</button>
+      <button class="mok" onclick="confirmChangeMasterPw()">변경</button>
+    </div>
+  </div>
+</div>
+
 <!-- 화면12: 관리자 -->
 <div class="screen" id="scAdmin">
   <div class="hdr">
@@ -898,8 +1159,9 @@ const db=firebase.firestore();
 const DAYS=["일","월","화","수","목","금","토"];
 const MONTHS=["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
 const RECOVER_CODE="duo1234";
-const APP_URL="https://radinotech-beep.github.io/zuo-cafe";
-const MASTER_PW="0000";
+const APP_URL="https://radinotech-beep.github.io/zuo-cafe2";
+const SUPER_MASTER="2002"; // 최종관리자 고정 번호
+let MASTER_PW="0000"; // 카페별 중간관리자 번호 (Firebase에서 로드)
 
 let ADMIN_PW=localStorage.getItem('adminPw')||"admin1234";
 let cY=new Date().getFullYear(),cM=new Date().getMonth();
@@ -965,6 +1227,11 @@ function loadCafes(){
   });
 }
 
+function loadCafeMasterPw(){
+  if(!currentCafe)return;
+  MASTER_PW=currentCafe.masterPw||'0000';
+}
+
 function renderCafeList(){
   const list=document.getElementById('cafeList');
   if(!cafes.length){list.innerHTML=`<div style="text-align:center;padding:28px;font-size:13px;color:var(--t3)">등록된 카페가 없어요<br>관리자에게 문의해주세요</div>`;return;}
@@ -995,6 +1262,7 @@ function selectCafe(id){
 function checkCafePw(){
   const pw=document.getElementById('pwInput').value;
   if(pw===currentCafe.password){
+    loadCafeMasterPw();
     applyTheme(currentCafe.color||'green');
     const cm=colorMap[currentCafe.color||'green']||colorMap.green;
     document.getElementById('svcHdr').style.background=cm.main;
@@ -1007,19 +1275,21 @@ function checkCafePw(){
   }
 }
 
+function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
+
 function enterSvc(type){
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  if(type==='sub'){
-    document.getElementById('appHdr').style.background=cm.main;
-    document.getElementById('appCafeName').textContent=currentCafe.name;
-    showScreen('scApp');
-    initApp();
-  } else {
-    document.getElementById('laborHdr').style.background=cm.main;
-    document.getElementById('laborCafeName').textContent=currentCafe.name;
-    showScreen('scLabor');
-    loadEmployees();
-  }
+  const hdrIds={sub:'appHdr',labor:'laborHdr',notice:'noticeHdr',health:'healthHdr',supply:'supplyHdr',profit:'profitHdr'};
+  const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName'};
+  if(hdrIds[type]){document.getElementById(hdrIds[type]).style.background=cm.main;}
+  if(nameIds[type])document.getElementById(nameIds[type]).textContent=currentCafe.name;
+
+  if(type==='sub'){showScreen('scApp');initApp();}
+  else if(type==='labor'){showScreen('scLabor');loadEmployees();}
+  else if(type==='notice'){showScreen('scNotice');loadNotices();}
+  else if(type==='health'){showScreen('scHealth');loadHealth();}
+  else if(type==='supply'){showScreen('scSupply');loadSupply();}
+  else if(type==='profit'){showScreen('scProfit');initProfit();}
 }
 
 // ===== 대타 =====
@@ -1311,7 +1581,7 @@ function openWorkerPw(empId){
 function closeWorkerPw(){document.getElementById('workerPwModal').classList.remove('open');}
 function checkWorkerPw(){
   const pw=document.getElementById('workerPwInput').value.trim();
-  if(pw===currentWorkerEmp.password||pw===MASTER_PW){
+  if(pw===currentWorkerEmp.password||isMaster(pw)){
     closeWorkerPw();enterWorkerInput();
   } else {
     document.getElementById('workerPwError').style.display='block';
@@ -1434,7 +1704,7 @@ function openMasterMenu(dest){
 }
 function closeMasterPw(){document.getElementById('masterPwModal').classList.remove('open');}
 function checkMasterPw(){
-  if(document.getElementById('masterPwInput').value===MASTER_PW){
+  if(isMaster(document.getElementById('masterPwInput').value)){
     closeMasterPw();
     if(masterMenuDest==='emp'){showScreen('scEmpManage');renderEmpManageList();}
     else if(masterMenuDest==='pay'){showScreen('scPayManage');renderPayEmpList();}
@@ -1633,11 +1903,9 @@ async function renderPayTable(){
 }
 
 async function exportExcel(){
-  // 해당 월 근무데이터 전체 조회
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const daysInMonth=new Date(payY,payM+1,0).getDate();
-
-  // 직원별 근무데이터 수집
+  const DAY_KR=['일','월','화','수','목','금','토'];
   const empDataMap={};
   for(const emp of employees){
     const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
@@ -1645,29 +1913,29 @@ async function exportExcel(){
     snap.forEach(d=>{const dat=d.data();days[dat.day]={hours:dat.hours,note:dat.note||''};});
     empDataMap[emp.id]={emp,days};
   }
-
   const wb=XLSX.utils.book_new();
   const ws={};
   const range={s:{r:0,c:0},e:{r:0,c:0}};
-
-  // ── 색상 정의 ──
-  const GREEN_HDR ={fgColor:{rgb:'1D9E75'}};
-  const YELLOW_HDR={fgColor:{rgb:'FFF2CC'}};
-  const BLUE_HDR  ={fgColor:{rgb:'BDD7EE'}};
-  const PINK_HDR  ={fgColor:{rgb:'FCE4D6'}};
-  const GREEN_SUM ={fgColor:{rgb:'E1F5EE'}};
-  const ORANGE_SUM={fgColor:{rgb:'FAEEDA'}};
-  const WHITE     ={fgColor:{rgb:'FFFFFF'}};
-  const GRAY_ALT  ={fgColor:{rgb:'F5F5F5'}};
-
-  const thinBorder={style:'thin',color:{rgb:'CCCCCC'}};
-  const border={top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder};
-  const thickBorder={style:'medium',color:{rgb:'1D9E75'}};
-  const hdrBorder={top:thickBorder,bottom:thickBorder,left:thinBorder,right:thinBorder};
-
-  function cell(v,{bold=false,color=null,fill=null,align='center',fmt=null,border:b=border,wrap=false}={}){
+  const solid={style:'thin',color:{rgb:'000000'}};
+  const solidMed={style:'medium',color:{rgb:'000000'}};
+  const bdr={top:solid,bottom:solid,left:solid,right:solid};
+  const bdrMed={top:solidMed,bottom:solidMed,left:solidMed,right:solidMed};
+  const bdrHdr={top:solidMed,bottom:solidMed,left:solid,right:solid};
+  const C_GREEN={fgColor:{rgb:'1D9E75'}};
+  const C_SAT={fgColor:{rgb:'BDD7EE'}};
+  const C_SUN={fgColor:{rgb:'FCE4D6'}};
+  const C_DAY={fgColor:{rgb:'E2EFDA'}};
+  const C_SUM={fgColor:{rgb:'E1F5EE'}};
+  const C_PAY={fgColor:{rgb:'FAEEDA'}};
+  const C_TOTAL={fgColor:{rgb:'FFF2CC'}};
+  const C_ALT={fgColor:{rgb:'F5F5F5'}};
+  const C_WHITE={fgColor:{rgb:'FFFFFF'}};
+  const FMT_WON='"₩"#,##0';
+  const FMT_HRS='0.0"h"';
+  function cell(v,o={}){
+    const {bold=false,color=null,fill=null,align='center',fmt=null,b=bdr,sz=9,wrap=false}=o;
     const c={v,t:typeof v==='number'?'n':'s'};
-    const font={name:'맑은 고딕',sz:9};
+    const font={name:'맑은 고딕',sz};
     if(bold)font.bold=true;
     if(color)font.color={rgb:color};
     c.s={font,alignment:{horizontal:align,vertical:'center',wrapText:wrap},border:b};
@@ -1675,138 +1943,103 @@ async function exportExcel(){
     if(fmt)c.z=fmt;
     return c;
   }
-  function setCell(ws,r,c,cellObj){
+  function sc(ws,r,c,cellObj){
     const addr=XLSX.utils.encode_cell({r,c});
     ws[addr]=cellObj;
     if(r>range.e.r)range.e.r=r;
     if(c>range.e.c)range.e.c=c;
   }
-
-  // ── 행 0: 타이틀 ──
-  const totalCols=7+daysInMonth+7; // 고정7 + 날짜 + 합계7
-  const titleCell={v:`${payY}년 ${payM+1}월 급여 현황`,t:'s',s:{
-    font:{name:'맑은 고딕',sz:13,bold:true,color:{rgb:'FFFFFF'}},
-    fill:{patternType:'solid',...GREEN_HDR},
-    alignment:{horizontal:'center',vertical:'center'},
-    border:{top:thickBorder,bottom:thickBorder,left:thickBorder,right:thickBorder}
-  }};
-  setCell(ws,0,0,titleCell);
-  for(let c=1;c<totalCols;c++){
-    setCell(ws,0,c,{v:'',t:'s',s:{fill:{patternType:'solid',...GREEN_HDR},border:{top:thickBorder,bottom:thickBorder,left:thinBorder,right:c===totalCols-1?thickBorder:thinBorder}}});
-  }
+  const fixedCols=7;
+  const tailCols=8;
+  const totalCols=fixedCols+daysInMonth+tailCols;
+  // 행0: 타이틀
+  sc(ws,0,0,{v:`${payY}년 ${payM+1}월 급여 현황`,t:'s',s:{font:{name:'맑은 고딕',sz:14,bold:true,color:{rgb:'FFFFFF'}},fill:{patternType:'solid',...C_GREEN},alignment:{horizontal:'center',vertical:'center'},border:bdrMed}});
+  for(let c=1;c<totalCols;c++) sc(ws,0,c,{v:'',t:'s',s:{fill:{patternType:'solid',...C_GREEN},border:{top:solidMed,bottom:solidMed,left:solid,right:c===totalCols-1?solidMed:solid}}});
   ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:totalCols-1}}];
-
-  // ── 행 1: 헤더 ──
-  const fixedHdrs=['이름','연락처','주소','은행','계좌번호','시급','메모'];
-  const tailHdrs=['일근무\n시간','시급','시급\n합계','주휴\n단가','주휴\n횟수','주휴\n합계','기타','합계'];
+  // 행1: 헤더
   let col=0;
-  fixedHdrs.forEach(h=>setCell(ws,1,col++,cell(h,{bold:true,fill:GREEN_HDR,color:'FFFFFF',border:hdrBorder,wrap:true})));
+  ['이름','연락처','주소','은행','계좌번호','시급','메모'].forEach(h=>sc(ws,1,col++,cell(h,{bold:true,fill:C_GREEN,color:'FFFFFF',b:bdrHdr,wrap:true})));
   for(let d=1;d<=daysInMonth;d++){
     const dow=new Date(payY,payM,d).getDay();
     const isSun=dow===0,isSat=dow===6;
-    const dayFill=isSun?{fgColor:{rgb:'FCE4D6'}}:isSat?{fgColor:{rgb:'BDD7EE'}}:{fgColor:{rgb:'E2EFDA'}};
-    const dayColor=isSun?'C00000':isSat?'1F497D':'375623';
-    setCell(ws,1,col++,cell(d,{bold:true,fill:dayFill,color:dayColor,border:hdrBorder}));
+    sc(ws,1,col++,cell(d,{bold:true,fill:isSun?C_SUN:isSat?C_SAT:C_DAY,color:isSun||isSat?'C00000':'375623',b:bdrHdr}));
   }
-  tailHdrs.forEach(h=>setCell(ws,1,col++,cell(h,{bold:true,fill:ORANGE_SUM,color:'854F0B',border:hdrBorder,wrap:true})));
-
-  // ── 행 2~: 직원별 데이터 ──
-  let row=2;
+  ['일근무\n시간','시급','시급\n합계','주휴\n단가','주휴\n횟수','주휴\n합계','기타','합계'].forEach(h=>sc(ws,1,col++,cell(h,{bold:true,fill:C_PAY,color:'854F0B',b:bdrHdr,wrap:true})));
+  // 행2: 요일
+  col=0;
+  for(let i=0;i<fixedCols;i++) sc(ws,2,col++,cell('',{fill:C_GREEN,b:bdrHdr}));
+  for(let d=1;d<=daysInMonth;d++){
+    const dow=new Date(payY,payM,d).getDay();
+    const isSun=dow===0,isSat=dow===6;
+    sc(ws,2,col++,cell(DAY_KR[dow],{bold:true,fill:isSun?C_SUN:isSat?C_SAT:C_DAY,color:isSun||isSat?'C00000':'375623',b:bdrHdr}));
+  }
+  for(let i=0;i<tailCols;i++) sc(ws,2,col++,cell('',{fill:C_PAY,b:bdrHdr}));
+  // 행3~: 직원 데이터
+  let row=3;
   const dayTotals=new Array(daysInMonth).fill(0);
   let grandTotal=0,grandBase=0,grandHoli=0,grandEtc=0;
-
   for(let ei=0;ei<employees.length;ei++){
     const emp=employees[ei];
     const {days}=empDataMap[emp.id]||{days:{}};
-    const rowFill=ei%2===0?WHITE:GRAY_ALT;
-
+    const rowFill=ei%2===0?C_WHITE:C_ALT;
     let totalHrs=0;
-    for(let d=1;d<=daysInMonth;d++)totalHrs+=(days[d]?.hours||0);
-
+    for(let d=1;d<=daysInMonth;d++) totalHrs+=(days[d]?.hours||0);
     const base=Math.round(totalHrs*(emp.rate||0));
-    const holiTotal=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
+    const holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
+    const holiTotal=Math.round(holiRate*4);
     const etc=0;
     const grandSum=base+holiTotal+etc;
     grandBase+=base;grandHoli+=holiTotal;grandTotal+=grandSum;
-
     col=0;
-    setCell(ws,row,col++,cell(emp.name,{bold:true,fill:{fgColor:{rgb:'D9EAD3'}},align:'center',border}));
-    setCell(ws,row,col++,cell(emp.phone||'',{fill:rowFill,align:'center',border}));
-    setCell(ws,row,col++,cell(emp.addr||'',{fill:rowFill,align:'left',border,wrap:true}));
-    setCell(ws,row,col++,cell(emp.bank||'',{fill:rowFill,align:'center',border}));
-    setCell(ws,row,col++,cell(emp.acct||'',{fill:rowFill,align:'center',border}));
-    setCell(ws,row,col++,cell(emp.rate||0,{fill:rowFill,align:'center',border,fmt:'#,##0'}));
-    setCell(ws,row,col++,cell('',{fill:rowFill,border}));
-
+    sc(ws,row,col++,cell(emp.name,{bold:true,fill:{fgColor:{rgb:'D9EAD3'}},align:'center',b:bdr}));
+    sc(ws,row,col++,cell(emp.phone||'',{fill:rowFill,align:'center',b:bdr}));
+    sc(ws,row,col++,cell(emp.addr||'',{fill:rowFill,align:'left',b:bdr,wrap:true}));
+    sc(ws,row,col++,cell(emp.bank||'',{fill:rowFill,align:'center',b:bdr}));
+    sc(ws,row,col++,cell(emp.acct||'',{fill:rowFill,align:'center',b:bdr}));
+    sc(ws,row,col++,cell(emp.rate||0,{fill:rowFill,align:'center',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell('',{fill:rowFill,b:bdr}));
     for(let d=1;d<=daysInMonth;d++){
       const h=days[d]?.hours||0;
       const note=days[d]?.note||'';
       const dow=new Date(payY,payM,d).getDay();
       const isSun=dow===0,isSat=dow===6;
-      let dayFill=h>0?{fgColor:{rgb:'E2EFDA'}}:rowFill;
-      if(isSun&&h>0)dayFill={fgColor:{rgb:'FCE4D6'}};
-      if(isSat&&h>0)dayFill={fgColor:{rgb:'BDD7EE'}};
+      const isWeekend=isSun||isSat;
+      const fill=h>0?(isSun?C_SUN:isSat?C_SAT:C_DAY):rowFill;
       const isRed=note.includes('지각')||note.includes('조퇴')||note.includes('결근');
-      setCell(ws,row,col++,{
-        v:h||'',t:h?'n':'s',
-        s:{
-          font:{name:'맑은 고딕',sz:9,bold:h>0,color:{rgb:isRed?'C00000':h>0?'375623':'999999'}},
-          fill:{patternType:'solid',...dayFill},
-          alignment:{horizontal:'center',vertical:'center'},
-          border
-        }
-      });
-      if(h>0)dayTotals[d-1]+=h;
+      const color=isRed?'C00000':isWeekend&&h>0?'C00000':h>0?'375623':'CCCCCC';
+      sc(ws,row,col++,{v:h||'',t:h?'n':'s',s:{font:{name:'맑은 고딕',sz:9,bold:h>0,color:{rgb:color}},fill:{patternType:'solid',...fill},alignment:{horizontal:'center',vertical:'center'},border:bdr}});
+      if(h>0) dayTotals[d-1]+=h;
     }
-
-    // 합계 컬럼들
-    setCell(ws,row,col++,cell(totalHrs,{bold:true,fill:GREEN_SUM,color:'0F6E56',border,fmt:'0.0'}));
-    setCell(ws,row,col++,cell(emp.rate||0,{fill:GREEN_SUM,color:'0F6E56',border,fmt:'#,##0'}));
-    setCell(ws,row,col++,cell(base,{bold:true,fill:GREEN_SUM,color:'0F6E56',border,fmt:'#,##0'}));
-    setCell(ws,row,col++,cell((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0,{fill:ORANGE_SUM,color:'854F0B',border,fmt:'#,##0'}));
-    setCell(ws,row,col++,cell(4,{fill:ORANGE_SUM,color:'854F0B',border}));
-    setCell(ws,row,col++,cell(holiTotal,{bold:true,fill:ORANGE_SUM,color:'854F0B',border,fmt:'#,##0'}));
-    setCell(ws,row,col++,cell(etc,{fill:PINK_HDR,color:'833C00',border,fmt:'#,##0'}));
-    setCell(ws,row,col++,cell(grandSum,{bold:true,fill:{fgColor:{rgb:'FFF2CC'}},color:'7F6000',border,fmt:'#,##0'}));
-
+    sc(ws,row,col++,cell(totalHrs,{bold:true,fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_HRS}));
+    sc(ws,row,col++,cell(emp.rate||0,{fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(base,{bold:true,fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(holiRate,{fill:C_PAY,color:'854F0B',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(4,{fill:C_PAY,color:'854F0B',b:bdr}));
+    sc(ws,row,col++,cell(holiTotal,{bold:true,fill:C_PAY,color:'854F0B',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(etc,{fill:{fgColor:{rgb:'FCE4D6'}},color:'833C00',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(grandSum,{bold:true,fill:C_TOTAL,color:'7F6000',b:bdr,fmt:FMT_WON}));
     row++;
   }
-
-  // ── 합계행 ──
+  // 합계행
   col=0;
-  const sumFill={fgColor:{rgb:'1D9E75'}};
-  const sumBorder={top:{style:'medium',color:{rgb:'1D9E75'}},bottom:{style:'medium',color:{rgb:'1D9E75'}},left:thinBorder,right:thinBorder};
-  setCell(ws,row,col++,cell('합계',{bold:true,fill:sumFill,color:'FFFFFF',border:sumBorder}));
-  for(let i=0;i<5;i++)setCell(ws,row,col++,cell('',{fill:sumFill,border:sumBorder}));
-  setCell(ws,row,col++,cell('',{fill:sumFill,border:sumBorder}));
-  for(let d=0;d<daysInMonth;d++){
-    setCell(ws,row,col++,cell(dayTotals[d]||'',{bold:true,fill:sumFill,color:'FFFFFF',border:sumBorder,fmt:'0.0'}));
-  }
-  setCell(ws,row,col++,cell(dayTotals.reduce((a,b)=>a+b,0),{bold:true,fill:sumFill,color:'FFFFFF',border:sumBorder,fmt:'0.0'}));
-  setCell(ws,row,col++,cell('',{fill:sumFill,border:sumBorder}));
-  setCell(ws,row,col++,cell(grandBase,{bold:true,fill:sumFill,color:'FFFFFF',border:sumBorder,fmt:'#,##0'}));
-  setCell(ws,row,col++,cell('',{fill:sumFill,border:sumBorder}));
-  setCell(ws,row,col++,cell('',{fill:sumFill,border:sumBorder}));
-  setCell(ws,row,col++,cell(grandHoli,{bold:true,fill:sumFill,color:'FFFFFF',border:sumBorder,fmt:'#,##0'}));
-  setCell(ws,row,col++,cell(grandEtc,{fill:sumFill,color:'FFFFFF',border:sumBorder,fmt:'#,##0'}));
-  setCell(ws,row,col++,cell(grandTotal,{bold:true,fill:sumFill,color:'FFFFFF',border:sumBorder,fmt:'#,##0'}));
-
-  // ── 열 너비 설정 ──
-  const colWidths=[
-    {wch:8},{wch:13},{wch:28},{wch:6},{wch:16},{wch:8},{wch:10},
-    ...Array(daysInMonth).fill({wch:4.5}),
-    {wch:6},{wch:8},{wch:10},{wch:8},{wch:4},{wch:10},{wch:8},{wch:11}
-  ];
-  ws['!cols']=colWidths;
-
-  // ── 행 높이 ──
-  ws['!rows']=[{hpt:22},{hpt:36},...Array(employees.length).fill({hpt:18}),{hpt:20}];
-
+  const SB={top:solidMed,bottom:solidMed,left:solid,right:solid};
+  sc(ws,row,col++,cell('합계',{bold:true,fill:C_GREEN,color:'FFFFFF',b:bdrMed}));
+  for(let i=0;i<fixedCols-1;i++) sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
+  for(let d=0;d<daysInMonth;d++) sc(ws,row,col++,cell(dayTotals[d]||'',{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_HRS}));
+  sc(ws,row,col++,cell(dayTotals.reduce((a,b)=>a+b,0),{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_HRS}));
+  sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
+  sc(ws,row,col++,cell(grandBase,{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
+  sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
+  sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
+  sc(ws,row,col++,cell(grandHoli,{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
+  sc(ws,row,col++,cell(grandEtc,{fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
+  sc(ws,row,col++,cell(grandTotal,{bold:true,fill:C_GREEN,color:'FFFFFF',b:{top:solidMed,bottom:solidMed,left:solid,right:solidMed},fmt:FMT_WON}));
+  ws['!cols']=[{wch:8},{wch:13},{wch:26},{wch:6},{wch:16},{wch:10},{wch:8},...Array(daysInMonth).fill({wch:4.2}),{wch:7},{wch:10},{wch:11},{wch:10},{wch:4},{wch:11},{wch:8},{wch:12}];
+  ws['!rows']=[{hpt:22},{hpt:30},{hpt:18},...Array(employees.length).fill({hpt:18}),{hpt:20}];
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.utils.book_append_sheet(wb,ws,`${payY}년 ${payM+1}월`);
   XLSX.writeFile(wb,`급여현황_${payY}년${payM+1}월.xlsx`);
 }
-
 // 주휴수당 계산기
 function openHoliCalc(){
   const curRate=document.getElementById('empRate').value||'';
@@ -1831,8 +2064,371 @@ function applyHoliCalc(){
   closeHoliCalc();
 }
 
+// ===== 비밀번호 변경 =====
+function openChangePw(){
+  document.getElementById('changePwCurrent').value='';
+  document.getElementById('changePwNew').value='';
+  document.getElementById('changePwConfirm').value='';
+  document.getElementById('changePwError').style.display='none';
+  document.getElementById('changePwModal').classList.add('open');
+}
+function closeChangePw(){document.getElementById('changePwModal').classList.remove('open');}
+async function confirmChangePw(){
+  const cur=document.getElementById('changePwCurrent').value.trim();
+  const nw=document.getElementById('changePwNew').value.trim();
+  const cf=document.getElementById('changePwConfirm').value.trim();
+  const err=document.getElementById('changePwError');
+  if(cur!==currentWorkerEmp.password&&!isMaster(cur)){err.textContent='현재 비밀번호가 틀렸어요 ❌';err.style.display='block';return;}
+  if(!nw){err.textContent='새 비밀번호를 입력해주세요';err.style.display='block';return;}
+  if(nw!==cf){err.textContent='새 비밀번호가 일치하지 않아요 ❌';err.style.display='block';return;}
+  await db.collection('employees').doc(currentWorkerEmp.id).update({password:nw});
+  currentWorkerEmp.password=nw;
+  closeChangePw();showToast('✅ 비밀번호가 변경됐어요!');
+}
+
+// ===== 중간관리자 번호 변경 =====
+function openChangeMasterPw(){
+  document.getElementById('changeMasterCurrent').value='';
+  document.getElementById('changeMasterNew').value='';
+  document.getElementById('changeMasterConfirm').value='';
+  document.getElementById('changeMasterError').style.display='none';
+  document.getElementById('changeMasterPwModal').classList.add('open');
+}
+function closeChangeMasterPw(){document.getElementById('changeMasterPwModal').classList.remove('open');}
+async function confirmChangeMasterPw(){
+  const cur=document.getElementById('changeMasterCurrent').value.trim();
+  const nw=document.getElementById('changeMasterNew').value.trim();
+  const cf=document.getElementById('changeMasterConfirm').value.trim();
+  const err=document.getElementById('changeMasterError');
+  if(cur!==MASTER_PW&&cur!==SUPER_MASTER){err.textContent='현재 번호가 틀렸어요 ❌';err.style.display='block';return;}
+  if(!nw){err.textContent='새 번호를 입력해주세요';err.style.display='block';return;}
+  if(nw!==cf){err.textContent='새 번호가 일치하지 않아요 ❌';err.style.display='block';return;}
+  await db.collection('cafes').doc(currentCafe.id).update({masterPw:nw});
+  MASTER_PW=nw;currentCafe.masterPw=nw;
+  closeChangeMasterPw();showToast('✅ 중간관리자 번호가 변경됐어요!');
+}
+
+// ===== 공지사항 =====
+let notices=[],editingNoticeId=null,noticeImages=[];
+function loadNotices(){
+  const isMasterUser=false; // 진입 시 마스터 여부 체크 없이 일단 로드
+  db.collection('notices').where('cafeId','==',currentCafe.id).orderBy('createdAt','desc').onSnapshot(snap=>{
+    notices=[];snap.forEach(d=>notices.push({id:d.id,...d.data()}));
+    renderNotices();
+  });
+  // 마스터 버튼 표시 (일단 숨김 - 마스터 진입 시 표시)
+  document.getElementById('noticeMasterBtn').style.display='none';
+}
+function renderNotices(){
+  const w=document.getElementById('noticeList');
+  if(!notices.length){w.innerHTML=`<div style="text-align:center;padding:36px;font-size:13px;color:var(--t3)">등록된 공지사항이 없어요</div>`;return;}
+  w.innerHTML=notices.map(n=>{
+    const d=new Date(n.createdAt);
+    const dateStr=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    const imgs=n.images&&n.images.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${n.images.map(url=>`<img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">`).join('')}</div>`:'';
+    return `<div style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:700;color:var(--t1);flex:1">${n.title}</div>
+        <div style="font-size:10px;color:var(--t3);flex-shrink:0;margin-left:8px">${dateStr}</div>
+      </div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.7;white-space:pre-line">${n.content}</div>
+      ${imgs}
+    </div>`;
+  }).join('');
+}
+function openNoticeWrite(){
+  editingNoticeId=null;noticeImages=[];
+  document.getElementById('noticeTitleInput').value='';
+  document.getElementById('noticeContentInput').value='';
+  document.getElementById('noticeImageInput').value='';
+  document.getElementById('noticeImagePreview').innerHTML='';
+  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+  document.getElementById('noticeWriteHdr').style.background=cm.main;
+  document.getElementById('noticeWriteTitle').textContent='공지 작성';
+  showScreen('scNoticeWrite');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const ni=document.getElementById('noticeImageInput');
+  if(ni)ni.addEventListener('change',function(){
+    const preview=document.getElementById('noticeImagePreview');
+    preview.innerHTML='';noticeImages=[];
+    [...this.files].forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=e=>{
+        noticeImages.push(e.target.result);
+        preview.innerHTML+=`<img src="${e.target.result}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">`;
+      };reader.readAsDataURL(file);
+    });
+  });
+});
+async function saveNotice(){
+  const title=document.getElementById('noticeTitleInput').value.trim();
+  const content=document.getElementById('noticeContentInput').value.trim();
+  if(!title){alert('제목을 입력해주세요');return;}
+  if(!content){alert('내용을 입력해주세요');return;}
+  await db.collection('notices').add({cafeId:currentCafe.id,title,content,images:noticeImages,createdAt:Date.now()});
+  showScreen('scNotice');showToast('✅ 공지가 등록됐어요!');
+}
+
+// ===== 보건증 관리 =====
+let healthList=[],editingHealthId=null;
+function loadHealth(){
+  db.collection('healthCerts').where('cafeId','==',currentCafe.id).orderBy('expireDate').onSnapshot(snap=>{
+    healthList=[];snap.forEach(d=>healthList.push({id:d.id,...d.data()}));
+    renderHealth();checkHealthAlerts();
+  });
+}
+function checkHealthAlerts(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const alerts=healthList.filter(h=>{
+    const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
+    return diff<=30&&diff>=0;
+  });
+  const banner=document.getElementById('healthAlertBanner');
+  if(!alerts.length){banner.innerHTML='';return;}
+  banner.innerHTML=`<div style="background:#FCEBEB;border-radius:10px;padding:12px 14px;margin-bottom:12px;border:1px solid #fca5a5">
+    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px">⚠️ 보건증 만료 임박!</div>
+    ${alerts.map(h=>{
+      const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
+      return `<div style="font-size:12px;color:var(--t1);padding:3px 0">${h.empName} — <b style="color:var(--red)">D-${diff}</b> (${h.expireDate})</div>`;
+    }).join('')}
+  </div>`;
+}
+function renderHealth(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const w=document.getElementById('healthList');
+  // 마스터 버튼
+  w.innerHTML=`<button class="btn-primary" onclick="openHealthModal()" style="margin-bottom:12px">+ 보건증 정보 추가</button>`;
+  if(!healthList.length){w.innerHTML+=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 보건증 정보가 없어요</div>`;return;}
+  w.innerHTML+=healthList.map(h=>{
+    const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
+    const isAlert=diff<=30&&diff>=0;const isExp=diff<0;
+    const badge=isExp?`<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">만료</span>`:
+      isAlert?`<span style="background:var(--amb);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`:
+      `<span style="background:var(--gl);color:var(--gd);font-size:10px;padding:2px 7px;border-radius:10px">유효</span>`;
+    return `<div style="background:#fff;border-radius:12px;border:1px solid ${isAlert||isExp?'#fca5a5':'var(--bd)'};padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:14px;font-weight:700;color:var(--t1)">${h.empName}</span>${badge}
+        </div>
+        <div style="font-size:11px;color:var(--t3)">발행 ${h.issueDate} → 만료 ${h.expireDate}</div>
+      </div>
+      <button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer;margin-right:4px">수정</button>
+      <button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:4px 9px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>
+    </div>`;
+  }).join('');
+}
+function openHealthModal(id=null){
+  editingHealthId=id;
+  document.getElementById('healthModalTitle').textContent=id?'보건증 수정':'보건증 추가';
+  if(id){
+    const h=healthList.find(x=>x.id===id);
+    document.getElementById('healthEmpName').value=h.empName;
+    document.getElementById('healthIssueDate').value=h.issueDate;
+    document.getElementById('healthExpireDate').value=h.expireDate;
+  } else {
+    document.getElementById('healthEmpName').value='';
+    document.getElementById('healthIssueDate').value='';
+    document.getElementById('healthExpireDate').value='';
+  }
+  document.getElementById('healthModal').classList.add('open');
+}
+function closeHealthModal(){document.getElementById('healthModal').classList.remove('open');}
+function calcHealthDates(changed){
+  if(changed==='issue'){
+    const issue=document.getElementById('healthIssueDate').value;
+    if(!issue)return;
+    const d=new Date(issue);d.setFullYear(d.getFullYear()+1);
+    document.getElementById('healthExpireDate').value=d.toISOString().split('T')[0];
+  } else {
+    const expire=document.getElementById('healthExpireDate').value;
+    if(!expire)return;
+    const d=new Date(expire);d.setFullYear(d.getFullYear()-1);
+    document.getElementById('healthIssueDate').value=d.toISOString().split('T')[0];
+  }
+}
+async function saveHealth(){
+  const empName=document.getElementById('healthEmpName').value.trim();
+  const issueDate=document.getElementById('healthIssueDate').value;
+  const expireDate=document.getElementById('healthExpireDate').value;
+  if(!empName||!issueDate||!expireDate){alert('모든 항목을 입력해주세요');return;}
+  const data={cafeId:currentCafe.id,empName,issueDate,expireDate};
+  if(editingHealthId){await db.collection('healthCerts').doc(editingHealthId).update(data);}
+  else{await db.collection('healthCerts').add(data);}
+  closeHealthModal();showToast('✅ 보건증 정보가 저장됐어요!');
+}
+async function deleteHealth(id){
+  if(!confirm('삭제할까요?'))return;
+  await db.collection('healthCerts').doc(id).delete();
+  showToast('삭제됐어요');
+}
+
+// ===== 소모품 관리 =====
+let supplyList=[],editingSupplyId=null;
+function loadSupply(){
+  db.collection('supplies').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{
+    supplyList=[];snap.forEach(d=>supplyList.push({id:d.id,...d.data()}));
+    renderSupply();checkSupplyAlerts();
+  });
+}
+function checkSupplyAlerts(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const alerts=supplyList.filter(s=>{
+    const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
+    return diff<=1&&diff>=0;
+  });
+  const banner=document.getElementById('supplyAlertBanner');
+  if(!alerts.length){banner.innerHTML='';return;}
+  banner.innerHTML=`<div style="background:var(--al);border-radius:10px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--amb)">
+    <div style="font-size:12px;font-weight:700;color:var(--ad);margin-bottom:6px">⚠️ 교체 임박!</div>
+    ${alerts.map(s=>{
+      const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
+      return `<div style="font-size:12px;color:var(--t1);padding:3px 0">${s.name} — <b style="color:var(--ad)">${diff===0?'오늘 교체일!':'내일 교체일!'}</b></div>`;
+    }).join('')}
+  </div>`;
+}
+function renderSupply(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const w=document.getElementById('supplyList');
+  w.innerHTML=`<button class="btn-primary" onclick="openSupplyAdd()" style="margin-bottom:12px">+ 소모품 추가</button>`;
+  if(!supplyList.length){w.innerHTML+=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 소모품이 없어요</div>`;return;}
+  w.innerHTML+=supplyList.map(s=>{
+    const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
+    const isAlert=diff<=1&&diff>=0;const isOver=diff<0;
+    const badge=isOver?`<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">교체필요</span>`:
+      isAlert?`<span style="background:var(--amb);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`:
+      `<span style="background:var(--gl);color:var(--gd);font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`;
+    return `<div style="background:#fff;border-radius:12px;border:1px solid ${isAlert||isOver?'var(--amb)':'var(--bd)'};padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:14px;font-weight:700;color:var(--t1);flex:1">${s.name}</span>${badge}
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:6px">관리주기 ${s.cycle}일 · 최근교체 ${s.lastDate} · 차기교체 ${s.nextDate}</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="openSupplyEdit('${s.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer">수정</button>
+        <button onclick="completeSupply('${s.id}')" style="background:var(--green);border:none;border-radius:7px;padding:4px 9px;font-size:11px;color:#fff;cursor:pointer">✅ 교체 완료</button>
+        <button onclick="deleteSupply('${s.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:4px 9px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openSupplyAdd(){editingSupplyId=null;document.getElementById('supplyModalTitle').textContent='소모품 추가';document.getElementById('supplyName').value='';document.getElementById('supplyCycle').value='';document.getElementById('supplyLastDate').value='';document.getElementById('supplyNextDate').textContent='-';document.getElementById('supplyModal').classList.add('open');}
+function openSupplyEdit(id){
+  editingSupplyId=id;const s=supplyList.find(x=>x.id===id);
+  document.getElementById('supplyModalTitle').textContent='소모품 수정';
+  document.getElementById('supplyName').value=s.name;
+  document.getElementById('supplyCycle').value=s.cycle;
+  document.getElementById('supplyLastDate').value=s.lastDate;
+  document.getElementById('supplyNextDate').textContent=s.nextDate;
+  document.getElementById('supplyModal').classList.add('open');
+}
+function closeSupplyModal(){document.getElementById('supplyModal').classList.remove('open');}
+function calcSupplyNext(){
+  const cycle=parseInt(document.getElementById('supplyCycle').value)||0;
+  const last=document.getElementById('supplyLastDate').value;
+  if(!cycle||!last){document.getElementById('supplyNextDate').textContent='-';return;}
+  const d=new Date(last);d.setDate(d.getDate()+cycle);
+  document.getElementById('supplyNextDate').textContent=d.toISOString().split('T')[0];
+}
+async function saveSupply(){
+  const name=document.getElementById('supplyName').value.trim();
+  const cycle=parseInt(document.getElementById('supplyCycle').value)||0;
+  const lastDate=document.getElementById('supplyLastDate').value;
+  if(!name||!cycle||!lastDate){alert('모든 항목을 입력해주세요');return;}
+  const d=new Date(lastDate);d.setDate(d.getDate()+cycle);
+  const nextDate=d.toISOString().split('T')[0];
+  const data={cafeId:currentCafe.id,name,cycle,lastDate,nextDate};
+  if(editingSupplyId){await db.collection('supplies').doc(editingSupplyId).update(data);}
+  else{await db.collection('supplies').add(data);}
+  closeSupplyModal();showToast('✅ 저장됐어요!');
+}
+async function completeSupply(id){
+  const s=supplyList.find(x=>x.id===id);if(!s)return;
+  const today=new Date().toISOString().split('T')[0];
+  const d=new Date(today);d.setDate(d.getDate()+s.cycle);
+  const nextDate=d.toISOString().split('T')[0];
+  await db.collection('supplies').doc(id).update({lastDate:today,nextDate});
+  showToast('✅ 교체 완료 처리됐어요!');
+}
+async function deleteSupply(id){if(!confirm('삭제할까요?'))return;await db.collection('supplies').doc(id).delete();showToast('삭제됐어요');}
+
+// ===== 수익 관리 =====
+let profitY=new Date().getFullYear(),profitM=new Date().getMonth();
+let profitData={},profitFixed={};
+const PROFIT_KEYS=['revenue','rent','royalty','ad','pos','utility','bookkeeping','pest','security','music','mat','insurance','mgmtEtc','salary','insurance4','severance','bean','material','consumable','matEtc'];
+
+function changeProfitMonth(dir){
+  profitM+=dir;if(profitM>11){profitM=0;profitY++;}if(profitM<0){profitM=11;profitY--;}
+  document.getElementById('profitMonthTitle').textContent=`${profitY}년 ${MONTHS[profitM]}`;
+  initProfit();
+}
+async function initProfit(){
+  document.getElementById('profitMonthTitle').textContent=`${profitY}년 ${MONTHS[profitM]}`;
+  const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
+  // 고정항목 로드
+  const fixedSnap=await db.collection('profitFixed').where('cafeId','==',currentCafe.id).limit(1).get();
+  profitFixed={};
+  fixedSnap.forEach(d=>{profitFixed=d.data();});
+  // 해당월 데이터 로드
+  const snap=await db.collection('profits').where('cafeId','==',currentCafe.id).where('period','==',period).limit(1).get();
+  profitData={};
+  snap.forEach(d=>{profitData={...d.data(),docId:d.id};});
+  renderProfitRows();
+}
+function renderProfitRows(){
+  document.querySelectorAll('.profit-row').forEach(row=>{
+    const key=row.dataset.key;const label=row.dataset.label;
+    const val=profitData[key]!==undefined?profitData[key]:(profitFixed[key+'_fixed']?profitFixed[key+'_val']||0:0);
+    const isFixed=profitFixed[key+'_fixed']?true:false;
+    row.innerHTML=`<div class="profit-row-wrap">
+      <span class="profit-label">${label}</span>
+      <button class="profit-pin ${isFixed?'on':''}" onclick="toggleFixed('${key}',this)">📌 고정</button>
+      <input class="profit-input" type="number" id="pi_${key}" value="${val||''}" placeholder="0" oninput="calcProfitTotals()">
+    </div>`;
+  });
+  calcProfitTotals();
+}
+function toggleFixed(key,btn){
+  const isNowFixed=btn.classList.contains('on');
+  btn.classList.toggle('on');
+  profitFixed[key+'_fixed']=!isNowFixed;
+  const val=parseInt(document.getElementById('pi_'+key).value)||0;
+  profitFixed[key+'_val']=val;
+  saveProfitFixed();
+}
+async function saveProfitFixed(){
+  const fixedSnap=await db.collection('profitFixed').where('cafeId','==',currentCafe.id).limit(1).get();
+  const data={cafeId:currentCafe.id,...profitFixed};
+  if(!fixedSnap.empty){await db.collection('profitFixed').doc(fixedSnap.docs[0].id).update(data);}
+  else{await db.collection('profitFixed').add(data);}
+}
+function getVal(key){return parseInt(document.getElementById('pi_'+key)?.value)||0;}
+function calcProfitTotals(){
+  const income=getVal('revenue');
+  const mgmt=['rent','royalty','ad','pos','utility','bookkeeping','pest','security','music','mat','insurance','mgmtEtc'].reduce((a,k)=>a+getVal(k),0);
+  const labor=['salary','insurance4','severance'].reduce((a,k)=>a+getVal(k),0);
+  const mat=['bean','material','consumable','matEtc'].reduce((a,k)=>a+getVal(k),0);
+  const net=income-mgmt-labor-mat;
+  document.getElementById('profitIncomeTotal').textContent='₩'+income.toLocaleString();
+  document.getElementById('profitMgmtTotal').textContent='₩'+mgmt.toLocaleString();
+  document.getElementById('profitLaborTotal').textContent='₩'+labor.toLocaleString();
+  document.getElementById('profitMatTotal').textContent='₩'+mat.toLocaleString();
+  document.getElementById('profitNet').textContent='₩'+net.toLocaleString();
+  document.getElementById('profitNet').style.color=net>=0?'#fff':'#fca5a5';
+}
+async function saveProfit(){
+  const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
+  const data={cafeId:currentCafe.id,period};
+  PROFIT_KEYS.forEach(k=>data[k]=getVal(k));
+  // 고정항목 값 업데이트
+  PROFIT_KEYS.forEach(k=>{if(profitFixed[k+'_fixed'])profitFixed[k+'_val']=getVal(k);});
+  saveProfitFixed();
+  if(profitData.docId){await db.collection('profits').doc(profitData.docId).update(data);}
+  else{const ref=await db.collection('profits').add(data);profitData.docId=ref.id;}
+  showToast('✅ 저장됐어요!');
+}
+
 // 모달 닫기
-['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal'].forEach(id=>{
+['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','healthModal','changePwModal','changeMasterPwModal'].forEach(id=>{
   const el=document.getElementById(id);
   if(el)el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
