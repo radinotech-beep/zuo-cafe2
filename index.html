@@ -780,27 +780,88 @@ input:focus{border-color:var(--green)}
   <div class="hdr" id="healthHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
     <div><div class="hdr-title" id="healthCafeName">카페</div><div class="hdr-sub">보건증 관리해ZUO</div></div>
-    <div style="width:40px"></div>
+    <button id="healthAddBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openHealthModal()">+ 추가</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div id="healthAlertBanner"></div>
+    <div id="healthMasterArea" style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
+      <button onclick="checkHealthMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
+    </div>
     <div id="healthList"></div>
   </div>
 </div>
 
-<!-- 화면15: 소모품 관리 -->
+<!-- 화면15: 소모품 관리 (테이블) -->
 <div class="screen" id="scSupply">
   <div class="hdr" id="supplyHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
     <div><div class="hdr-title" id="supplyCafeName">카페</div><div class="hdr-sub">소모품 관리해ZUO</div></div>
-    <div style="width:40px"></div>
+    <button id="supplyAddBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyAdd()">+ 추가</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div id="supplyAlertBanner"></div>
-    <div id="supplyMasterBtn" style="display:none;margin-bottom:10px">
-      <button class="btn-primary" onclick="openSupplyAdd()">+ 소모품 추가</button>
+    <div id="supplyMasterArea" style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
+      <button onclick="checkSupplyMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
     </div>
-    <div id="supplyList"></div>
+    <!-- 테이블 헤더 -->
+    <div style="display:grid;grid-template-columns:1fr 80px 80px 44px;background:var(--green);border-radius:10px 10px 0 0;padding:8px 12px;gap:4px">
+      <div style="font-size:11px;font-weight:700;color:#fff">소모품</div>
+      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">최근교체일</div>
+      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">차기교체일</div>
+      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">D-day</div>
+    </div>
+    <div id="supplyList" style="border:1px solid var(--bd);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:#fff"></div>
+  </div>
+</div>
+
+<!-- 화면15-1: 소모품 상세 -->
+<div class="screen" id="scSupplyDetail">
+  <div class="hdr" id="supplyDetailHdr">
+    <button class="back-btn" onclick="showScreen('scSupply')">← 뒤로</button>
+    <div><div class="hdr-title" id="supplyDetailName">소모품</div><div class="hdr-sub">교체 이력</div></div>
+    <button id="supplyDetailEditBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyEditFromDetail()">수정</button>
+  </div>
+  <div style="padding:12px 14px;overflow-y:auto">
+    <!-- 정보 카드 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:12px" id="supplyDetailCard"></div>
+    <!-- 교체 이력 테이블 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:12px">
+      <div style="background:#534AB7;padding:8px 14px"><span style="font-size:13px;font-weight:700;color:#fff">📋 교체 이력</span></div>
+      <div style="display:grid;grid-template-columns:80px 70px 1fr;background:#EEEDFE;padding:7px 12px;gap:4px">
+        <div style="font-size:11px;font-weight:600;color:#3C3489">교체일</div>
+        <div style="font-size:11px;font-weight:600;color:#3C3489">비용</div>
+        <div style="font-size:11px;font-weight:600;color:#3C3489">업체/메모</div>
+      </div>
+      <div id="supplyHistoryList"></div>
+      <!-- 새 이력 추가 -->
+      <div id="supplyHistoryAddRow" style="border-top:2px solid var(--green);padding:10px 12px;background:#f9fffc">
+        <div style="font-size:11px;font-weight:600;color:var(--gd);margin-bottom:8px">+ 새 교체 이력 추가</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div><label class="fl" style="font-size:10px">교체일 <span style="color:var(--red)">*</span></label><input type="date" id="newHistoryDate" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
+          <div><label class="fl" style="font-size:10px">비용 <span style="color:var(--t3)">(선택)</span></label><input type="number" id="newHistoryCost" placeholder="0" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none;text-align:right"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div><label class="fl" style="font-size:10px">업체명 <span style="color:var(--t3)">(선택)</span></label><input type="text" id="newHistoryVendor" placeholder="업체명" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
+          <div><label class="fl" style="font-size:10px">연락처 <span style="color:var(--t3)">(선택)</span></label><input type="tel" id="newHistoryTel" placeholder="010-0000-0000" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
+        </div>
+        <div style="margin-bottom:8px"><label class="fl" style="font-size:10px">메모 <span style="color:var(--t3)">(선택)</span></label><input type="text" id="newHistoryMemo" placeholder="메모 입력" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
+        <button onclick="addSupplyHistory()" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer">✅ 교체 이력 추가</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 화면17: 공지사항 상세 -->
+<div class="screen" id="scNoticeDetail">
+  <div class="hdr" id="noticeDetailHdr">
+    <button class="back-btn" onclick="showScreen('scNotice')">← 뒤로</button>
+    <div class="hdr-title">공지사항</div>
+    <div style="width:40px"></div>
+  </div>
+  <div style="padding:14px;overflow-y:auto">
+    <div id="noticeDetailContent"></div>
   </div>
 </div>
 
@@ -845,12 +906,17 @@ input:focus{border-color:var(--green)}
 
     <!-- 영업이익 -->
     <div style="background:var(--green);border-radius:12px;padding:16px;margin-bottom:10px">
-      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:8px">💵 영업이익 (VAT포함)</div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between">
-        <span style="font-size:26px;font-weight:800;color:#fff" id="profitNet">₩0</span>
-        <span style="font-size:28px;font-weight:900;color:rgba(255,255,255,0.95)" id="profitNetPct">0%</span>
+      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:10px">💵 영업이익 (VAT포함)</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:4px">영업이익</div>
+          <span style="font-size:24px;font-weight:800;color:#fff" id="profitNet">₩0</span>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:4px">영업이익률</div>
+          <span style="font-size:28px;font-weight:900;color:rgba(255,255,255,0.95)" id="profitNetPct">0%</span>
+        </div>
       </div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:4px">매출 대비 영업이익률</div>
     </div>
 
     <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -1966,6 +2032,7 @@ function switchPayTableTab(tab){
 }
 
 async function loadPayTrend(){
+  try{
   // 직원 필터 버튼 렌더링
   const filterDiv=document.getElementById('trendEmpFilter');
   const empNames=['전체',...employees.map(e=>e.name)];
@@ -2068,6 +2135,9 @@ async function loadPayTrend(){
       scales:{y:{ticks:{callback:v=>'₩'+(v/10000).toFixed(0)+'만',font:{size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:9}}}}
     }
   });
+}
+
+  }catch(e){console.error('loadPayTrend error:',e);showToast('데이터 로드 중 오류가 발생했어요');}
 }
 
 function setTrendEmpFilter(name){
@@ -2368,20 +2438,42 @@ function renderNotices(){
     const d=new Date(n.createdAt);
     const dateStr=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
     const catBadge=n.category?`<span style="background:${catColor[n.category]||'var(--green)'};color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;flex-shrink:0">${n.category}</span>`:'';
-    const imgs=n.images&&n.images.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${n.images.map(url=>`<img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">`).join('')}</div>`:'';
-    const delBtn=isNoticeMaster?`<button onclick="deleteNotice('${n.id}')" style="background:none;border:none;color:var(--t3);font-size:11px;cursor:pointer;padding:0 4px">삭제</button>`:'';
-    return `<div style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:10px">
-      <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-        ${catBadge}
-        <span style="font-size:14px;font-weight:700;color:var(--t1);flex:1">${n.title}</span>
-        <span style="font-size:10px;color:var(--t3);flex-shrink:0">${dateStr}</span>
-        ${delBtn}
+    const delBtn=isNoticeMaster?`<button onclick="event.stopPropagation();deleteNotice('${n.id}')" style="background:none;border:none;color:var(--t3);font-size:11px;cursor:pointer;padding:0 4px">삭제</button>`:'';
+    const hasImg=n.images&&n.images.length>0;
+    return `<div onclick="openNoticeDetail('${n.id}')" style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:8px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+          ${catBadge}
+          <span style="font-size:14px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.title}</span>
+          ${hasImg?`<span style="font-size:10px">🖼️</span>`:''}
+        </div>
+        <span style="font-size:10px;color:var(--t3)">${dateStr}</span>
       </div>
-      <div style="font-size:13px;color:var(--t2);line-height:1.7;white-space:pre-line">${n.content}</div>
-      ${imgs}
+      ${delBtn}
+      <span style="color:var(--t3);font-size:16px;flex-shrink:0">›</span>
     </div>`;
   }).join('');
   w.innerHTML=html;
+}
+function openNoticeDetail(id){
+  const n=notices.find(x=>x.id===id);if(!n)return;
+  const d=new Date(n.createdAt);
+  const dateStr=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const catColor={'일반공지':'#1D9E75','신메뉴 공지':'#BA7517','우리 매장 수칙':'#534AB7'};
+  const catBadge=n.category?`<span style="background:${catColor[n.category]||'var(--green)'};color:#fff;font-size:11px;padding:3px 10px;border-radius:10px">${n.category}</span>`:'';
+  const imgs=n.images&&n.images.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${n.images.map(url=>`<img src="${url}" style="max-width:100%;border-radius:10px;border:1px solid var(--bd)">`).join('')}</div>`:'';
+  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+  document.getElementById('noticeDetailHdr').style.background=cm.main;
+  document.getElementById('noticeDetailContent').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      ${catBadge}
+      <span style="font-size:11px;color:var(--t3)">${dateStr}</span>
+    </div>
+    <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:14px;line-height:1.4">${n.title}</div>
+    <div style="border-top:1px solid var(--bd);padding-top:14px;font-size:14px;color:var(--t2);line-height:1.8;white-space:pre-line">${n.content}</div>
+    ${imgs}
+  `;
+  showScreen('scNoticeDetail');
 }
 function openNoticeWrite(){
   editingNoticeId=null;noticeImages=[];
@@ -2419,12 +2511,14 @@ async function saveNotice(){
 }
 
 // ===== 보건증 관리 =====
-let healthList=[],editingHealthId=null;
-let isHealthMaster=false;
+let healthList=[],editingHealthId=null,isHealthMaster=false;
 function loadHealth(){
   isHealthMaster=false;
-  db.collection('healthCerts').where('cafeId','==',currentCafe.id).orderBy('expireDate').onSnapshot(snap=>{
+  document.getElementById('healthAddBtn').style.display='none';
+  document.getElementById('healthMasterArea').style.display='flex';
+  db.collection('healthCerts').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{
     healthList=[];snap.forEach(d=>healthList.push({id:d.id,...d.data()}));
+    healthList.sort((a,b)=>a.expireDate.localeCompare(b.expireDate));
     renderHealth();checkHealthAlerts();
   });
 }
@@ -2447,21 +2541,11 @@ function checkHealthAlerts(){
 function renderHealth(){
   const today=new Date();today.setHours(0,0,0,0);
   const w=document.getElementById('healthList');
-  let html=``;
-  // 마스터 인증 영역
-  if(isHealthMaster){
-    html+=`<button class="btn-primary" onclick="openHealthModal()" style="margin-bottom:12px">+ 보건증 정보 추가</button>`;
-  } else {
-    html+=`<div style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
-      <button onclick="checkHealthMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
-    </div>`;
-  }
   if(!healthList.length){
-    w.innerHTML=html+`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 보건증 정보가 없어요</div>`;
+    w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 보건증 정보가 없어요</div>`;
     return;
   }
-  html+=healthList.map(h=>{
+  w.innerHTML=healthList.map(h=>{
     const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
     const isAlert=diff<=30&&diff>=0;const isExp=diff<0;
     const badge=isExp
@@ -2481,13 +2565,17 @@ function renderHealth(){
       <div style="display:flex;gap:4px">${btns}</div>
     </div>`;
   }).join('');
-  w.innerHTML=html;
 }
 function checkHealthMaster(){
   const pw=prompt('관리자 번호를 입력하세요');
   if(pw===null)return;
-  if(isMaster(pw)){isHealthMaster=true;renderHealth();showToast('✅ 관리자 인증됐어요!');}
-  else alert('번호가 틀렸어요 ❌');
+  if(isMaster(pw)){
+    isHealthMaster=true;
+    document.getElementById('healthAddBtn').style.display='block';
+    document.getElementById('healthMasterArea').style.display='none';
+    renderHealth();
+    showToast('✅ 관리자 인증됐어요!');
+  } else alert('번호가 틀렸어요 ❌');
 }
 function openHealthModal(id=null){
   editingHealthId=id;
@@ -2564,52 +2652,130 @@ function cycleLabel(s){
   const u={day:'일',month:'월',year:'년'};
   return `${s.cycleNum}${u[s.cycleUnit]||'일'}`;
 }
+let isSupplyMaster=false;
+function checkSupplyMaster(){
+  const pw=prompt('관리자 번호를 입력하세요');
+  if(pw===null)return;
+  if(isMaster(pw)){
+    isSupplyMaster=true;
+    document.getElementById('supplyAddBtn').style.display='block';
+    document.getElementById('supplyMasterArea').style.display='none';
+    showToast('✅ 관리자 인증됐어요!');
+  } else alert('번호가 틀렸어요 ❌');
+}
 function renderSupply(){
   const today=new Date();today.setHours(0,0,0,0);
   const w=document.getElementById('supplyList');
-  w.innerHTML=`<button class="btn-primary" onclick="openSupplyAdd()" style="margin-bottom:12px">+ 소모품 추가</button>`;
-  if(!supplyList.length){w.innerHTML+=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 소모품이 없어요</div>`;return;}
-  w.innerHTML+=supplyList.map(s=>{
+  if(!supplyList.length){
+    w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 소모품이 없어요</div>`;
+    return;
+  }
+  w.innerHTML=supplyList.map((s,i)=>{
     const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
     const isAlert=diff<=1&&diff>=0;const isOver=diff<0;
-    const nextColor=isOver?'var(--red)':isAlert?'var(--amb)':'var(--gd)';
+    const dColor=isOver?'var(--red)':isAlert?'var(--amb)':'var(--gd)';
     const dLabel=isOver?`D+${Math.abs(diff)}`:`D-${diff}`;
-    // 교체 이력
-    const history=(s.history||[]).slice().reverse();
-    const historyHtml=history.length?`
-      <details style="margin-top:8px">
-        <summary style="font-size:11px;color:var(--t3);cursor:pointer">📋 교체 이력 ${history.length}건</summary>
-        <div style="margin-top:6px;border-top:1px solid #f5f5f5;padding-top:6px">
-          ${history.map(h=>`<div style="font-size:11px;color:var(--t2);padding:3px 0;border-bottom:1px solid #fafafa">
-            ${h.date} ${h.cost?`· ₩${parseInt(h.cost).toLocaleString()}`:''}${h.vendor?` · ${h.vendor}`:''}${h.memo?` · ${h.memo}`:''}
-          </div>`).join('')}
-        </div>
-      </details>`:'';
-    // 메모 요약
-    const lastH=s.history&&s.history.length?s.history[s.history.length-1]:null;
-    const memoLine=lastH&&(lastH.vendor||lastH.tel||lastH.memo)?
-      `<div style="font-size:10px;color:var(--t3);margin-top:2px">${[lastH.vendor,lastH.tel,lastH.memo].filter(Boolean).join(' · ')}</div>`:'';
-    return `<div style="background:#fff;border-radius:14px;border:2px solid ${isAlert||isOver?'var(--amb)':'var(--bd)'};padding:14px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="font-size:15px;font-weight:700;color:var(--t1);flex:1">${s.name}</span>
-        <span style="font-size:12px;color:var(--t3)">주기 ${cycleLabel(s)}</span>
+    const bg=i%2===0?'#fff':'#fafafa';
+    return `<div onclick="openSupplyDetail('${s.id}')" style="display:grid;grid-template-columns:1fr 80px 80px 44px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${bg};cursor:pointer;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--t1)">${s.name}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">주기 ${cycleLabel(s)}</div>
       </div>
-      <div style="background:${isOver?'#FCEBEB':isAlert?'var(--al)':'var(--gl)'};border-radius:10px;padding:10px 14px;margin-bottom:8px;text-align:center">
-        <div style="font-size:11px;color:${nextColor};margin-bottom:4px">차기 교체일</div>
-        <div style="font-size:22px;font-weight:900;color:${nextColor}">${s.nextDate}</div>
-        <div style="font-size:16px;font-weight:700;color:${nextColor};margin-top:2px">${dLabel}</div>
-      </div>
-      <div style="font-size:11px;color:var(--t3);margin-bottom:6px">최근 교체: ${s.lastDate}</div>
-      ${memoLine}
-      ${historyHtml}
-      <div style="display:flex;gap:6px;margin-top:8px">
-        <button onclick="openSupplyEdit('${s.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--t2);cursor:pointer">수정</button>
-        <button onclick="openCompleteSupply('${s.id}')" style="background:var(--green);border:none;border-radius:7px;padding:5px 10px;font-size:11px;color:#fff;cursor:pointer;flex:1">✅ 교체 완료 등록</button>
-        <button onclick="deleteSupply('${s.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:5px 10px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>
+      <div style="font-size:11px;color:var(--t2);text-align:center">${s.lastDate||'-'}</div>
+      <div style="font-size:11px;font-weight:600;color:${dColor};text-align:center">${s.nextDate||'-'}</div>
+      <div style="text-align:center">
+        <div style="font-size:10px;font-weight:700;color:${dColor};background:${isOver?'#FCEBEB':isAlert?'var(--al)':'var(--gl)'};border-radius:6px;padding:2px 4px">${dLabel}</div>
       </div>
     </div>`;
   }).join('');
 }
+let currentSupplyId=null;
+function openSupplyDetail(id){
+  currentSupplyId=id;
+  const s=supplyList.find(x=>x.id===id);if(!s)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
+  const isOver=diff<0;const isAlert=diff<=1&&diff>=0;
+  const dColor=isOver?'var(--red)':isAlert?'var(--amb)':'var(--gd)';
+  const dLabel=isOver?`D+${Math.abs(diff)}`:`D-${diff}`;
+  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+  document.getElementById('supplyDetailHdr').style.background=cm.main;
+  document.getElementById('supplyDetailName').textContent=s.name;
+  document.getElementById('supplyDetailEditBtn').style.display=isSupplyMaster?'block':'none';
+  // 정보 카드
+  document.getElementById('supplyDetailCard').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--t1)">${s.name}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:2px">관리주기: ${cycleLabel(s)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3)">최근 교체</div>
+        <div style="font-size:13px;font-weight:600;color:var(--t2)">${s.lastDate||'-'}</div>
+      </div>
+    </div>
+    <div style="background:${isOver?'#FCEBEB':isAlert?'var(--al)':'var(--gl)'};border-radius:12px;padding:14px;text-align:center">
+      <div style="font-size:11px;color:${dColor};margin-bottom:4px">차기 교체일</div>
+      <div style="font-size:26px;font-weight:900;color:${dColor}">${s.nextDate||'-'}</div>
+      <div style="font-size:20px;font-weight:700;color:${dColor};margin-top:4px">${dLabel}</div>
+    </div>`;
+  // 이력 렌더
+  renderSupplyHistory(s);
+  // 오늘 날짜 기본값
+  document.getElementById('newHistoryDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('newHistoryCost').value='';
+  document.getElementById('newHistoryVendor').value='';
+  document.getElementById('newHistoryTel').value='';
+  document.getElementById('newHistoryMemo').value='';
+  showScreen('scSupplyDetail');
+}
+function openSupplyEditFromDetail(){
+  if(currentSupplyId)openSupplyEdit(currentSupplyId);
+}
+function renderSupplyHistory(s){
+  const list=document.getElementById('supplyHistoryList');
+  const history=(s.history||[]).slice().reverse();
+  if(!history.length){
+    list.innerHTML=`<div style="text-align:center;padding:16px;font-size:12px;color:var(--t3)">교체 이력이 없어요</div>`;
+    return;
+  }
+  list.innerHTML=history.map((h,i)=>`
+    <div style="display:grid;grid-template-columns:80px 70px 1fr;padding:8px 12px;border-bottom:1px solid #f5f5f5;background:${i%2===0?'#fff':'#fafafa'};align-items:center;gap:4px">
+      <div style="font-size:12px;color:var(--t1)">${h.date}</div>
+      <div style="font-size:12px;color:var(--t2)">${h.cost?'₩'+parseInt(h.cost).toLocaleString():'-'}</div>
+      <div style="font-size:11px;color:var(--t3)">${[h.vendor,h.tel,h.memo].filter(Boolean).join(' · ')||'-'}</div>
+    </div>`).join('');
+}
+async function addSupplyHistory(){
+  const date=document.getElementById('newHistoryDate').value;
+  if(!date){alert('교체일을 입력해주세요');return;}
+  const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
+  const entry={
+    date,
+    cost:document.getElementById('newHistoryCost').value.trim(),
+    vendor:document.getElementById('newHistoryVendor').value.trim(),
+    tel:document.getElementById('newHistoryTel').value.trim(),
+    memo:document.getElementById('newHistoryMemo').value.trim()
+  };
+  const history=[...(s.history||[]),entry];
+  // 차기 교체일 업데이트
+  const days=s.cycle||0;
+  const d=new Date(date);d.setDate(d.getDate()+days);
+  const nextDate=d.toISOString().split('T')[0];
+  await db.collection('supplies').doc(currentSupplyId).update({history,lastDate:date,nextDate});
+  // 로컬 업데이트
+  s.history=history;s.lastDate=date;s.nextDate=nextDate;
+  renderSupplyHistory(s);
+  // 정보카드 갱신
+  openSupplyDetail(currentSupplyId);
+  document.getElementById('newHistoryDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('newHistoryCost').value='';
+  document.getElementById('newHistoryVendor').value='';
+  document.getElementById('newHistoryTel').value='';
+  document.getElementById('newHistoryMemo').value='';
+  showToast('✅ 교체 이력이 추가됐어요!');
+}
+
 function calcCycleDays(){
   const num=parseInt(document.getElementById('supplyCycleNum').value)||0;
   const unit=document.getElementById('supplyCycleUnit').value;
@@ -2738,20 +2904,23 @@ function renderProfitRows(){
   const w=document.getElementById('profitExpenseRows');
   w.innerHTML=PROFIT_EXPENSE_ITEMS.map(item=>{
     const key=item.key;
-    const val=profitData[key]!==undefined?profitData[key]:(profitFixed[key+'_fixed']?profitFixed[key+'_val']||0:0);
+    // 저장된 데이터 있으면 저장값 우선, 없는 미래 월만 고정항목 적용
+    const hasSaved=profitData[key]!==undefined;
+    const val=hasSaved?profitData[key]:(profitFixed[key+'_fixed']?profitFixed[key+'_val']||'':'');
     const isFixed=!!profitFixed[key+'_fixed'];
     const isSalary=key==='salary';
     return `<div style="display:flex;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid #f5f5f5">
       <span style="font-size:12px;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</span>
-      ${isSalary?`<button onclick="loadSalaryFromLabor()" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid var(--green);background:#fff;color:var(--green);cursor:pointer;white-space:nowrap">📂</button>`:''}
+      ${isSalary?`<button onclick="loadSalaryFromLabor()" style="flex-shrink:0;font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--green);background:#fff;color:var(--green);cursor:pointer;white-space:nowrap">📂 불러오기</button>`:''}
       <span style="font-size:10px;color:var(--t3);flex-shrink:0;min-width:32px;text-align:right" id="pct_${key}">0%</span>
       <button onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${isFixed?'var(--amb)':'var(--bd)'};background:${isFixed?'var(--amb)':'#fff'};color:${isFixed?'#fff':'var(--t3)'};cursor:pointer;white-space:nowrap">📌 ${isFixed?'고정항목':''}</button>
-      <input type="number" id="pi_${key}" value="${val||''}" placeholder="0" oninput="calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
+      <input type="number" id="pi_${key}" value="${val}" placeholder="0" oninput="calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
     </div>`;
   }).join('');
-  const rev=profitData['revenue']!==undefined?profitData['revenue']:(profitFixed['revenue_fixed']?profitFixed['revenue_val']||0:0);
+  const hasSavedRev=profitData['revenue']!==undefined;
+  const rev=hasSavedRev?profitData['revenue']:(profitFixed['revenue_fixed']?profitFixed['revenue_val']||'':'');
   const revInput=document.getElementById('pi_revenue');
-  if(revInput)revInput.value=rev||'';
+  if(revInput)revInput.value=rev;
   calcProfitTotals();
 }
 function toggleFixed(key,btn){
