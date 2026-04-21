@@ -814,35 +814,68 @@ input:focus{border-color:var(--green)}
 <div class="screen" id="scSupplyDetail">
   <div class="hdr" id="supplyDetailHdr">
     <button class="back-btn" onclick="showScreen('scSupply')">← 뒤로</button>
-    <div><div class="hdr-title" id="supplyDetailName">소모품</div><div class="hdr-sub">교체 이력</div></div>
+    <div class="hdr-title" id="supplyDetailName">소모품</div>
     <button id="supplyDetailEditBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyEditFromDetail()">수정</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
-    <!-- 정보 카드 -->
-    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:12px" id="supplyDetailCard"></div>
-    <!-- 교체 이력 테이블 -->
+
+    <!-- 상단 3분할 현황 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--bd);padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px">최근 교체일</div>
+        <div style="font-size:12px;font-weight:600;color:var(--t1)" id="detailLastDate">-</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--bd);padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px">차기 교체일</div>
+        <div style="font-size:12px;font-weight:600" id="detailNextDate">-</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;border:1px solid var(--bd);padding:10px 8px;text-align:center">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px">D-day</div>
+        <div style="font-size:18px;font-weight:800" id="detailDday">-</div>
+      </div>
+    </div>
+
+    <!-- 교체 등록 -->
     <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:12px">
-      <div style="background:#534AB7;padding:8px 14px"><span style="font-size:13px;font-weight:700;color:#fff">📋 교체 이력</span></div>
-      <div style="display:grid;grid-template-columns:80px 70px 1fr;background:#EEEDFE;padding:7px 12px;gap:4px">
-        <div style="font-size:11px;font-weight:600;color:#3C3489">교체일</div>
-        <div style="font-size:11px;font-weight:600;color:#3C3489">비용</div>
-        <div style="font-size:11px;font-weight:600;color:#3C3489">업체/메모</div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bd)">
+        <span style="font-size:13px;font-weight:600;color:var(--t1)">교체 등록</span>
+      </div>
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:8px">
+        <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">교체일 <span style="color:var(--red)">*</span></span>
+        <input type="date" id="newHistoryDate" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:8px">
+        <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">비용</span>
+        <input type="number" id="newHistoryCost" placeholder="0" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none;text-align:right">
+      </div>
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:8px">
+        <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">업체명</span>
+        <input type="text" id="newHistoryVendor" placeholder="업체명 입력" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:8px">
+        <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">연락처</span>
+        <input type="tel" id="newHistoryTel" placeholder="010-0000-0000" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--bd);gap:8px">
+        <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">메모</span>
+        <input type="text" id="newHistoryMemo" placeholder="메모 입력" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none">
+      </div>
+      <div style="padding:10px 14px">
+        <button onclick="addSupplyHistory()" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer">✅ 교체 완료 등록</button>
+      </div>
+    </div>
+
+    <!-- 교체 이력 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:12px">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--bd)">
+        <span style="font-size:13px;font-weight:600;color:var(--t1)">교체 이력</span>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 70px 1fr;background:var(--gl);padding:7px 12px;gap:4px">
+        <div style="font-size:11px;font-weight:600;color:var(--gd)">교체일</div>
+        <div style="font-size:11px;font-weight:600;color:var(--gd)">비용</div>
+        <div style="font-size:11px;font-weight:600;color:var(--gd)">업체/메모</div>
       </div>
       <div id="supplyHistoryList"></div>
-      <!-- 새 이력 추가 -->
-      <div id="supplyHistoryAddRow" style="border-top:2px solid var(--green);padding:10px 12px;background:#f9fffc">
-        <div style="font-size:11px;font-weight:600;color:var(--gd);margin-bottom:8px">+ 새 교체 이력 추가</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div><label class="fl" style="font-size:10px">교체일 <span style="color:var(--red)">*</span></label><input type="date" id="newHistoryDate" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
-          <div><label class="fl" style="font-size:10px">비용 <span style="color:var(--t3)">(선택)</span></label><input type="number" id="newHistoryCost" placeholder="0" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none;text-align:right"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <div><label class="fl" style="font-size:10px">업체명 <span style="color:var(--t3)">(선택)</span></label><input type="text" id="newHistoryVendor" placeholder="업체명" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
-          <div><label class="fl" style="font-size:10px">연락처 <span style="color:var(--t3)">(선택)</span></label><input type="tel" id="newHistoryTel" placeholder="010-0000-0000" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
-        </div>
-        <div style="margin-bottom:8px"><label class="fl" style="font-size:10px">메모 <span style="color:var(--t3)">(선택)</span></label><input type="text" id="newHistoryMemo" placeholder="메모 입력" style="width:100%;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none"></div>
-        <button onclick="addSupplyHistory()" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer">✅ 교체 이력 추가</button>
-      </div>
     </div>
   </div>
 </div>
@@ -2761,31 +2794,22 @@ function openSupplyDetail(id){
   const s=supplyList.find(x=>x.id===id);if(!s)return;
   const today=new Date();today.setHours(0,0,0,0);
   const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
-  const isOver=diff<0;const isAlert=diff<=1&&diff>=0;
+  const isOver=diff<0;const isAlert=diff<=3&&diff>=0;
   const dColor=isOver?'var(--red)':isAlert?'var(--amb)':'var(--gd)';
   const dLabel=isOver?`D+${Math.abs(diff)}`:`D-${diff}`;
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
   document.getElementById('supplyDetailHdr').style.background=cm.main;
   document.getElementById('supplyDetailName').textContent=s.name;
   document.getElementById('supplyDetailEditBtn').style.display=isSupplyMaster?'block':'none';
-  // 정보 카드
-  document.getElementById('supplyDetailCard').innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-      <div>
-        <div style="font-size:18px;font-weight:800;color:var(--t1)">${s.name}</div>
-        <div style="font-size:12px;color:var(--t3);margin-top:2px">관리주기: ${cycleLabel(s)}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--t3)">최근 교체</div>
-        <div style="font-size:13px;font-weight:600;color:var(--t2)">${s.lastDate||'-'}</div>
-      </div>
-    </div>
-    <div style="background:${isOver?'#FCEBEB':isAlert?'var(--al)':'var(--gl)'};border-radius:12px;padding:14px;text-align:center">
-      <div style="font-size:11px;color:${dColor};margin-bottom:4px">차기 교체일</div>
-      <div style="font-size:26px;font-weight:900;color:${dColor}">${s.nextDate||'-'}</div>
-      <div style="font-size:20px;font-weight:700;color:${dColor};margin-top:4px">${dLabel}</div>
-    </div>`;
-  // 이력 렌더
+  // 3분할 현황 업데이트
+  document.getElementById('detailLastDate').textContent=s.lastDate||'-';
+  const nextEl=document.getElementById('detailNextDate');
+  nextEl.textContent=s.nextDate||'-';
+  nextEl.style.color=dColor;
+  const ddayEl=document.getElementById('detailDday');
+  ddayEl.textContent=dLabel;
+  ddayEl.style.color=dColor;
+  // 교체 이력
   renderSupplyHistory(s);
   // 오늘 날짜 기본값
   document.getElementById('newHistoryDate').value=new Date().toISOString().split('T')[0];
