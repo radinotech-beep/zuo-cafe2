@@ -2471,11 +2471,8 @@ async function loadPayTrend(){
   for(const period of months){
     monthData[period]={};
     for(const emp of targetEmps){
-      const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-      let hrs=0;snap.forEach(d=>hrs+=d.data().hours||0);
-      const base=Math.round(hrs*(emp.rate||0));
-      const holi=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
-      monthData[period][emp.id]={hrs,base,holi,total:base+holi,name:emp.name};
+      const pay=await calcEmpPay(emp,period);
+      monthData[period][emp.id]={hrs:pay.h,base:pay.base,holi:pay.holi,bonus:pay.bonus,etc:pay.etc,total:pay.net,name:emp.name};
     }
   }
 
@@ -2582,28 +2579,39 @@ async function exportTrendExcel(){
   XLSX.writeFile(wb,`인건비추이_${new Date().getFullYear()}.xlsx`);
 }
 
-// 공통 급여 계산 함수 - 명세서/월현황/인건비불러오기 모두 동일 로직
+// 공통 급여 계산 함수 - 명세서 저장 데이터 기준 (없으면 모두 0)
 async function calcEmpPay(emp,period){
+  // 근무시간 조회
   const wSnap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
   let h=0;wSnap.forEach(d=>h+=d.data().hours||0);
-  const base=Math.round(h*(emp.rate||0));
+  // 명세서 저장 데이터 조회
   const psSnap=await db.collection('payslips').where('empId','==',emp.id).where('period','==',period).get();
-  let holiRate,weekCnt,bonus=0,etc=0;
-  if(!psSnap.empty){
+  const hasWorkData=h>0;
+  const hasPsData=!psSnap.empty;
+  // 근무기록도 없고 명세서도 없으면 → 모두 0
+  if(!hasWorkData&&!hasPsData){
+    return {h:0,base:0,holi:0,bonus:0,etc:0,gross:0,totalDeduct:0,net:0,hasData:false};
+  }
+  const base=Math.round(h*(emp.rate||0));
+  let holiRate=0,weekCnt=0,bonus=0,etc=0;
+  if(hasPsData){
+    // 명세서 저장값 우선 사용
     const saved=psSnap.docs[0].data();
-    holiRate=saved.holiRateVal!==undefined?saved.holiRateVal:((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0);
-    weekCnt=saved.weekCntVal!==undefined?saved.weekCntVal:4;
+    holiRate=saved.holiRateVal!==undefined?saved.holiRateVal:0;
+    weekCnt=saved.weekCntVal!==undefined?saved.weekCntVal:0;
     bonus=saved.bonus||0;
     etc=saved.etc||0;
-  } else {
+  } else if(hasWorkData){
+    // 근무기록만 있고 명세서 미저장 → 주휴수당은 직원 설정값, 주수는 해당월 일요일
     holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
-    weekCnt=(()=>{let s=0;const dim=new Date(parseInt(period.split('-')[0]),parseInt(period.split('-')[1]),0).getDate();for(let d=1;d<=dim;d++){if(new Date(parseInt(period.split('-')[0]),parseInt(period.split('-')[1])-1,d).getDay()===0)s++;}return s;})();
+    const yr=parseInt(period.split('-')[0]),mo=parseInt(period.split('-')[1]);
+    weekCnt=(()=>{let s=0;const dim=new Date(yr,mo,0).getDate();for(let d=1;d<=dim;d++){if(new Date(yr,mo-1,d).getDay()===0)s++;}return s;})();
   }
   const holi=Math.round(holiRate*weekCnt);
   const gross=base+holi+bonus+etc;
   const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
-  const net=gross-totalDeduct;
-  return {h,base,holi,bonus,etc,gross,totalDeduct,net,hasData:h>0||!psSnap.empty};
+  const net=Math.max(0,gross-totalDeduct);
+  return {h,base,holi,bonus,etc,gross,totalDeduct,net,hasData:true};
 }
 
 async function renderPayTable(){
@@ -3606,12 +3614,15 @@ async function loadSalaryFromLabor(){
 }
 let profitChartInst=null;
 async function loadProfitChart(){
+  try{
   document.getElementById('profitChartEmpty').style.display='none';
-  const snap=await db.collection('profits').where('cafeId','==',currentCafe.id).orderBy('period').get();
+  const snap=await db.collection('profits').where('cafeId','==',currentCafe.id).get();
   if(snap.empty){document.getElementById('profitChartEmpty').style.display='block';document.getElementById('profitChartEmpty').textContent='저장된 데이터가 없어요';return;}
+  const rows=[];
+  snap.forEach(d=>rows.push(d.data()));
+  rows.sort((a,b)=>a.period.localeCompare(b.period));
   const labels=[],revenues=[],expenses=[],nets=[];
-  snap.forEach(d=>{
-    const dat=d.data();
+  rows.forEach(dat=>{
     const income=dat.revenue||0;
     const exp=PROFIT_EXPENSE_ITEMS.reduce((a,i)=>a+(dat[i.key]||0),0);
     labels.push(dat.period);revenues.push(income);expenses.push(exp);nets.push(income-exp);
@@ -3623,10 +3634,11 @@ async function loadProfitChart(){
     data:{labels,datasets:[
       {label:'매출',data:revenues,backgroundColor:'rgba(29,158,117,0.7)',borderRadius:4},
       {label:'지출',data:expenses,backgroundColor:'rgba(83,74,183,0.7)',borderRadius:4},
-      {label:'영업이익',data:nets,backgroundColor:'rgba(186,117,23,0.7)',borderRadius:4,type:'line',fill:false,borderColor:'#BA7517',tension:0.3}
+      {label:'영업이익',data:nets,type:'line',fill:false,borderColor:'#BA7517',backgroundColor:'rgba(186,117,23,0.15)',tension:0.3,pointRadius:4,borderWidth:2}
     ]},
     options:{responsive:true,plugins:{legend:{labels:{font:{size:11}}}},scales:{y:{ticks:{callback:v=>'₩'+(v/10000).toFixed(0)+'만'}}}}
   });
+  }catch(e){console.error('loadProfitChart:',e);document.getElementById('profitChartEmpty').style.display='block';document.getElementById('profitChartEmpty').textContent='그래프 로드 오류: '+e.message;}
 }
 async function exportProfitExcel(){
   const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
