@@ -301,54 +301,32 @@ input:focus{border-color:var(--green)}
   <div class="svc-wrap">
     <div class="svc-title">서비스를 선택해주세요</div>
     <div class="svc-sub">이용할 서비스를 탭하세요</div>
-    <!-- 1. 공지사항 -->
     <div class="svc-card" onclick="enterSvc('notice')">
       <div class="svc-icon" style="background:#FFF2CC">📢</div>
-      <div>
-        <div class="svc-name">공지사항 읽어ZUO</div>
-        <div class="svc-desc">매장 공지 · 공지 누적 관리</div>
-      </div>
+      <div><div class="svc-name">공지사항 읽어ZUO</div><div class="svc-desc">매장 공지 · 공지 누적 관리</div></div>
     </div>
-    <!-- 2. 근로관리 -->
     <div class="svc-card" onclick="enterSvc('labor')">
       <div class="svc-icon" style="background:#E6F1FB">📋</div>
-      <div>
-        <div class="svc-name">근로 관리해ZUO</div>
-        <div class="svc-desc">근무시간 · 급여 계산 · 명세서</div>
-      </div>
+      <div><div class="svc-name">근로 관리해ZUO</div><div class="svc-desc">근무시간 · 급여 계산 · 명세서</div></div>
     </div>
-    <!-- 3. 대타 -->
     <div class="svc-card" onclick="enterSvc('sub')">
       <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
-      <div>
-        <div class="svc-name">대타해ZUO</div>
-        <div class="svc-desc">대타 요청 · 신청 · 스케줄 관리</div>
-      </div>
+      <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">대타 요청 · 신청 · 스케줄 관리</div></div>
     </div>
-    <!-- 4. 수익관리 -->
-    <div class="svc-card" onclick="enterSvc('profit')">
+    <div class="svc-card" onclick="enterSvcWithMaster('profit')">
       <div class="svc-icon" style="background:#E2EFDA">💰</div>
-      <div>
-        <div class="svc-name">수익 관리해ZUO</div>
-        <div class="svc-desc">수입 · 지출 · 월별 추이 관리</div>
-      </div>
+      <div><div class="svc-name">수익 관리해ZUO</div><div class="svc-desc">수입 · 지출 · 월별 추이 관리</div></div>
     </div>
-    <!-- 5. 보건증 -->
-    <div class="svc-card" onclick="enterSvc('health')">
+    <div class="svc-card" onclick="enterSvcWithMaster('health')">
       <div class="svc-icon" style="background:#FCEBEB">🏥</div>
-      <div>
-        <div class="svc-name">보건증 관리해ZUO</div>
-        <div class="svc-desc">발행일 · 만료일 · 만료 알림</div>
-      </div>
+      <div><div class="svc-name">보건증 관리해ZUO</div><div class="svc-desc">발행일 · 만료일 · 만료 알림</div></div>
     </div>
-    <!-- 6. 소모품 -->
-    <div class="svc-card" onclick="enterSvc('supply')">
+    <div class="svc-card" onclick="enterSvcWithMaster('supply')">
       <div class="svc-icon" style="background:#EEEDFE">🔧</div>
-      <div>
-        <div class="svc-name">소모품 관리해ZUO</div>
-        <div class="svc-desc">교체주기 · 차기교체일 · 알림</div>
-      </div>
+      <div><div class="svc-name">소모품 관리해ZUO</div><div class="svc-desc">교체주기 · 차기교체일 · 알림</div></div>
     </div>
+    <!-- 중간관리자 번호 변경 -->
+    <button onclick="openChangeMasterPw()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔑 중간관리자 번호 변경</button>
   </div>
 </div>
 
@@ -417,26 +395,50 @@ input:focus{border-color:var(--green)}
 <div class="screen" id="scLabor">
   <div class="hdr" id="laborHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
-    <div>
-      <div class="hdr-title" id="laborCafeName">카페</div>
-      <div class="hdr-sub">근로 관리해ZUO</div>
-    </div>
+    <div><div class="hdr-title" id="laborCafeName">카페</div><div class="hdr-sub">근로 관리해ZUO</div></div>
     <div style="width:40px"></div>
   </div>
-  <div class="labor-tabs tabs">
-    <button class="tab on" id="lt1" onclick="switchLaborTab('worker')">근무시간 입력 (직원 메뉴)</button>
-    <button class="tab" id="lt2" onclick="switchLaborTab('master')">관리자 메뉴</button>
-  </div>
-  <div id="laborWorkerTab" style="padding:12px 14px;overflow-y:auto">
-    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">본인 이름을 선택하고 근무시간을 입력하세요</div>
-    <div id="empListForWorker"></div>
-  </div>
-  <div id="laborMasterTab" style="display:none;padding:12px 14px">
-    <div class="info-box" style="background:var(--al);color:var(--ad)">🔐 마스터 번호로 접근하는 관리자 메뉴예요</div>
-    <button class="btn-primary" onclick="openMasterMenu('emp')">👥 직원 관리</button>
-    <button class="btn-blue" onclick="openMasterMenu('pay')">💰 급여 관리 · 명세서</button>
-    <button class="btn-purple" onclick="openMasterMenu('table')">📊 월 급여 현황 테이블</button>
-    <button onclick="openChangeMasterPw()" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--t2);font-size:13px;cursor:pointer;margin-bottom:8px">🔑 중간관리자 번호 변경</button>
+  <div style="padding:12px 14px;overflow-y:auto">
+    <!-- 직원 메뉴 -->
+    <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:0.5px;margin-bottom:8px;padding-left:2px">직원 메뉴</div>
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:20px">
+      <div onclick="enterWorkerMenu()" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:10px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:20px">📋</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--t1)">근무시간 입력</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">본인 이름 선택 후 근무시간 입력</div>
+        </div>
+        <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
+      </div>
+    </div>
+    <!-- 관리자 메뉴 -->
+    <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:0.5px;margin-bottom:8px;padding-left:2px">관리자 메뉴</div>
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden">
+      <div onclick="openMasterMenu('emp')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;border-bottom:1px solid #f5f5f5">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:20px">👥</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--t1)">직원 관리</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">기초 정보 입력</div>
+        </div>
+        <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
+      </div>
+      <div onclick="openMasterMenu('pay')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;border-bottom:1px solid #f5f5f5">
+        <div style="width:40px;height:40px;border-radius:10px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:20px">💰</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--t1)">급여 관리 · 명세서</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">월별 급여 계산 및 명세서 발행</div>
+        </div>
+        <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
+      </div>
+      <div onclick="openMasterMenu('table')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:20px">📊</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--t1)">월 급여 현황 테이블</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">전체 직원 급여 현황 및 엑셀 export</div>
+        </div>
+        <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -733,25 +735,18 @@ input:focus{border-color:var(--green)}
   <div class="hdr" id="noticeHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
     <div><div class="hdr-title" id="noticeCafeName">카페</div><div class="hdr-sub">공지사항 읽어ZUO</div></div>
-    <button id="noticeWriteBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openNoticeWrite()">✏️ 작성</button>
+    <button onclick="openNoticeWrite()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">✏️ 작성</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
-    <div id="noticeMasterArea" style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
-      <button onclick="checkNoticeMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
-    </div>
     <div id="noticeList"></div>
   </div>
 </div>
 
-<!-- 화면13-1: 공지 작성 -->
-<div class="screen" id="scNoticeWrite">
-  <div class="hdr" id="noticeWriteHdr">
-    <button class="back-btn" onclick="showScreen('scNotice')">← 뒤로</button>
-    <div class="hdr-title" id="noticeWriteTitle">공지 작성</div>
-    <div style="width:40px"></div>
-  </div>
-  <div style="padding:14px;overflow-y:auto">
+<!-- 공지 작성 모달 -->
+<div class="mbg" id="noticeWriteModal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div class="mh"></div>
+    <div class="mt">✏️ 공지 작성</div>
     <div class="fr">
       <label class="fl">카테고리</label>
       <select id="noticeCatInput" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;outline:none;background:#fff;color:var(--t1)">
@@ -760,16 +755,16 @@ input:focus{border-color:var(--green)}
         <option value="우리 매장 수칙">📋 우리 매장 수칙</option>
       </select>
     </div>
-    <div class="fr"><label class="fl">제목</label><input type="text" id="noticeTitleInput" placeholder="공지 제목 입력"></div>
-    <div class="fr"><label class="fl">내용</label><textarea id="noticeContentInput" placeholder="공지 내용을 입력하세요" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:14px;min-height:150px;outline:none;resize:vertical"></textarea></div>
+    <div class="fr"><label class="fl">작성자</label><input type="text" id="noticeAuthorInput" placeholder="이름 입력" style="width:100%"></div>
+    <div class="fr"><label class="fl">제목</label><input type="text" id="noticeTitleInput" placeholder="공지 제목 입력" style="width:100%"></div>
+    <div class="fr"><label class="fl">내용</label><textarea id="noticeContentInput" placeholder="공지 내용을 입력하세요" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:14px;min-height:120px;outline:none;resize:vertical"></textarea></div>
     <div class="fr">
-      <label class="fl">사진 첨부 (선택)</label>
-      <input type="file" id="noticeImageInput" accept="image/*" multiple style="width:100%;padding:8px 0;font-size:13px">
+      <label class="fl">비밀번호 (수정/삭제용)</label>
+      <input type="password" id="noticeAuthorPw" placeholder="본인만 아는 비밀번호" style="width:100%">
     </div>
-    <div id="noticeImagePreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
     <div class="fbtns">
-      <button class="fcnl" onclick="showScreen('scNotice')">취소</button>
-      <button class="fok" onclick="saveNotice()">등록</button>
+      <button class="mcnl" onclick="closeNoticeWrite()">취소</button>
+      <button class="mok" onclick="saveNotice()">등록</button>
     </div>
   </div>
 </div>
@@ -852,17 +847,7 @@ input:focus{border-color:var(--green)}
   </div>
 </div>
 
-<!-- 화면17: 공지사항 상세 -->
-<div class="screen" id="scNoticeDetail">
-  <div class="hdr" id="noticeDetailHdr">
-    <button class="back-btn" onclick="showScreen('scNotice')">← 뒤로</button>
-    <div class="hdr-title">공지사항</div>
-    <div style="width:40px"></div>
-  </div>
-  <div style="padding:14px;overflow-y:auto">
-    <div id="noticeDetailContent"></div>
-  </div>
-</div>
+
 
 <!-- 화면16: 수익 관리 -->
 <div class="screen" id="scProfit">
@@ -1160,6 +1145,19 @@ input:focus{border-color:var(--green)}
     <div class="mbtns">
       <button class="mcnl" onclick="closeAdminPw()">취소</button>
       <button class="mok" onclick="checkAdminPw()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 직원 선택 모달 (근무시간 입력) -->
+<div class="mbg" id="workerSelectModal">
+  <div class="modal" style="padding-bottom:28px">
+    <div class="mh"></div>
+    <div class="mt">근무시간 입력 - 직원 선택</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">본인 이름을 선택하세요</div>
+    <div id="workerSelectList" style="border:1px solid var(--bd);border-radius:10px;overflow:hidden;max-height:50vh;overflow-y:auto"></div>
+    <div class="mbtns" style="margin-top:14px">
+      <button class="mcnl" onclick="document.getElementById('workerSelectModal').classList.remove('open')">닫기</button>
     </div>
   </div>
 </div>
@@ -1694,7 +1692,8 @@ function loadEmployees(){
 }
 
 function renderEmpListForWorker(){
-  const w=document.getElementById('empListForWorker');
+  const w=document.getElementById('workerSelectList');
+  if(!w)return;
   if(!employees.length){w.innerHTML=`<div style="text-align:center;padding:28px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
   const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
   const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
@@ -1831,6 +1830,30 @@ async function saveWkHours(){
 }
 
 // 직원 관리 (마스터)
+let svcMasterDest='';
+function enterSvcWithMaster(type){
+  svcMasterDest=type;
+  masterMenuDest='svc';
+  document.getElementById('masterPwInput').value='';
+  document.getElementById('masterPwError').style.display='none';
+  document.getElementById('masterPwModal').classList.add('open');
+}
+function enterWorkerMenu(){
+  const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
+  const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
+  const w=document.getElementById('workerSelectList');
+  if(!employees.length){
+    w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 직원이 없어요</div>`;
+  } else {
+    w.innerHTML=employees.map((e,i)=>`
+      <div onclick="openWorkerPw('${e.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f5f5f5;cursor:pointer">
+        <div style="width:38px;height:38px;border-radius:50%;background:${colors[i%5]};color:${tcolors[i%5]};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.name.substring(0,2)}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--t1)">${e.name}</div>
+        <div style="margin-left:auto;color:var(--t3);font-size:16px">›</div>
+      </div>`).join('');
+  }
+  document.getElementById('workerSelectModal').classList.add('open');
+}
 function openMasterMenu(dest){
   masterMenuDest=dest;
   document.getElementById('masterPwInput').value='';
@@ -1841,7 +1864,10 @@ function closeMasterPw(){document.getElementById('masterPwModal').classList.remo
 function checkMasterPw(){
   if(isMaster(document.getElementById('masterPwInput').value)){
     closeMasterPw();
-    if(masterMenuDest==='emp'){showScreen('scEmpManage');renderEmpManageList();}
+    if(masterMenuDest==='svc'){
+      // 서비스 선택에서 진입
+      enterSvc(svcMasterDest);
+    } else if(masterMenuDest==='emp'){showScreen('scEmpManage');renderEmpManageList();}
     else if(masterMenuDest==='pay'){showScreen('scPayManage');renderPayEmpList();}
     else{showScreen('scPayTable');renderPayTable();}
   } else {
@@ -2394,25 +2420,11 @@ let notices=[],editingNoticeId=null,noticeImages=[],isNoticeMaster=false;
 const NOTICE_CATS=['일반공지','신메뉴 공지','우리 매장 수칙'];
 let noticeCatFilter='전체';
 function loadNotices(){
-  isNoticeMaster=false;
-  document.getElementById('noticeWriteBtn').style.display='none';
-  document.getElementById('noticeMasterArea').style.display='flex';
   db.collection('notices').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{
     notices=[];snap.forEach(d=>notices.push({id:d.id,...d.data()}));
     notices.sort((a,b)=>b.createdAt-a.createdAt);
     renderNotices();
   });
-}
-function checkNoticeMaster(){
-  const pw=prompt('관리자 번호를 입력하세요');
-  if(pw===null)return;
-  if(isMaster(pw)){
-    isNoticeMaster=true;
-    document.getElementById('noticeWriteBtn').style.display='block';
-    document.getElementById('noticeMasterArea').style.display='none';
-    renderNotices();
-    showToast('✅ 관리자 인증됐어요!');
-  } else alert('번호가 틀렸어요 ❌');
 }
 function setNoticeCat(cat){noticeCatFilter=cat;renderNotices();}
 async function deleteNotice(id){
@@ -2433,53 +2445,73 @@ function renderNotices(){
     const d=new Date(n.createdAt);
     const dateStr=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
     const catBadge=n.category?`<span style="background:${catColor[n.category]||'var(--green)'};color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;flex-shrink:0">${n.category}</span>`:'';
-    const delBtn=isNoticeMaster?`<button onclick="event.stopPropagation();deleteNotice('${n.id}')" style="background:none;border:none;color:var(--t3);font-size:11px;cursor:pointer;padding:0 4px">삭제</button>`:'';
-    const hasImg=n.images&&n.images.length>0;
-    return `<div onclick="openNoticeDetail('${n.id}')" style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:8px">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
+    const imgs=n.images&&n.images.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${n.images.map(url=>`<img src="${url}" style="max-width:100%;border-radius:8px;border:1px solid var(--bd)">`).join('')}</div>`:'';
+    return `<div style="background:#fff;border-radius:12px;border:1px solid var(--bd);padding:14px;margin-bottom:8px">
+      <div onclick="toggleNotice('notice_${n.id}')" style="cursor:pointer">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
           ${catBadge}
-          <span style="font-size:14px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.title}</span>
-          ${hasImg?`<span style="font-size:10px">🖼️</span>`:''}
+          <span style="font-size:14px;font-weight:700;color:var(--t1);flex:1">${n.title}</span>
+          <span style="color:var(--t3);font-size:14px" id="notice_arrow_${n.id}">▼</span>
         </div>
-        <span style="font-size:10px;color:var(--t3)">${dateStr}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--t3)">✍️ ${n.author||'관리자'}</span>
+          <span style="font-size:11px;color:var(--t3)">·</span>
+          <span style="font-size:11px;color:var(--t3)">${dateStr}</span>
+        </div>
       </div>
-      ${delBtn}
-      <span style="color:var(--t3);font-size:16px;flex-shrink:0">›</span>
+      <div id="notice_${n.id}" style="display:none;margin-top:10px;border-top:1px solid #f5f5f5;padding-top:10px">
+        <div style="font-size:13px;color:var(--t2);line-height:1.8;white-space:pre-line;margin-bottom:8px">${n.content}</div>
+        ${imgs}
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button onclick="editNotice('${n.id}')" style="background:none;border:1px solid var(--bd);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--t2);cursor:pointer">수정</button>
+          <button onclick="deleteNoticeWithPw('${n.id}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:4px 10px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>
+        </div>
+      </div>
     </div>`;
   }).join('');
   w.innerHTML=html;
 }
-function openNoticeDetail(id){
-  const n=notices.find(x=>x.id===id);if(!n)return;
-  const d=new Date(n.createdAt);
-  const dateStr=`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-  const catColor={'일반공지':'#1D9E75','신메뉴 공지':'#BA7517','우리 매장 수칙':'#534AB7'};
-  const catBadge=n.category?`<span style="background:${catColor[n.category]||'var(--green)'};color:#fff;font-size:11px;padding:3px 10px;border-radius:10px">${n.category}</span>`:'';
-  const imgs=n.images&&n.images.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${n.images.map(url=>`<img src="${url}" style="max-width:100%;border-radius:10px;border:1px solid var(--bd)">`).join('')}</div>`:'';
-  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  document.getElementById('noticeDetailHdr').style.background=cm.main;
-  document.getElementById('noticeDetailContent').innerHTML=`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-      ${catBadge}
-      <span style="font-size:11px;color:var(--t3)">${dateStr}</span>
-    </div>
-    <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:14px;line-height:1.4">${n.title}</div>
-    <div style="border-top:1px solid var(--bd);padding-top:14px;font-size:14px;color:var(--t2);line-height:1.8;white-space:pre-line">${n.content}</div>
-    ${imgs}
-  `;
-  showScreen('scNoticeDetail');
+function toggleNotice(id){
+  const el=document.getElementById(id);
+  const nid=id.replace('notice_','');
+  const arrow=document.getElementById('notice_arrow_'+nid);
+  if(el.style.display==='none'){el.style.display='block';if(arrow)arrow.textContent='▲';}
+  else{el.style.display='none';if(arrow)arrow.textContent='▼';}
 }
+async function deleteNoticeWithPw(id){
+  const n=notices.find(x=>x.id===id);if(!n)return;
+  const pw=prompt('비밀번호를 입력하세요');
+  if(pw===null)return;
+  if(pw!==n.password&&!isMaster(pw)){alert('비밀번호가 틀렸어요 ❌');return;}
+  await db.collection('notices').doc(id).delete();
+  showToast('삭제됐어요');
+}
+async function editNotice(id){
+  const n=notices.find(x=>x.id===id);if(!n)return;
+  const pw=prompt('비밀번호를 입력하세요');
+  if(pw===null)return;
+  if(pw!==n.password&&!isMaster(pw)){alert('비밀번호가 틀렸어요 ❌');return;}
+  editingNoticeId=id;
+  document.getElementById('noticeCatInput').value=n.category||'일반공지';
+  document.getElementById('noticeAuthorInput').value=n.author||'';
+  document.getElementById('noticeTitleInput').value=n.title;
+  document.getElementById('noticeContentInput').value=n.content;
+  document.getElementById('noticeAuthorPw').value=n.password||'';
+  document.getElementById('noticeWriteModal').classList.add('open');
+}
+
+
 function openNoticeWrite(){
   editingNoticeId=null;noticeImages=[];
   document.getElementById('noticeTitleInput').value='';
   document.getElementById('noticeContentInput').value='';
-  document.getElementById('noticeImageInput').value='';
-  document.getElementById('noticeImagePreview').innerHTML='';
-  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  document.getElementById('noticeWriteHdr').style.background=cm.main;
-  document.getElementById('noticeWriteTitle').textContent='공지 작성';
-  showScreen('scNoticeWrite');
+  document.getElementById('noticeAuthorInput').value='';
+  document.getElementById('noticeAuthorPw').value='';
+  document.getElementById('noticeCatInput').value='일반공지';
+  document.getElementById('noticeWriteModal').classList.add('open');
+}
+function closeNoticeWrite(){
+  document.getElementById('noticeWriteModal').classList.remove('open');
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const ni=document.getElementById('noticeImageInput');
@@ -2497,12 +2529,21 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 async function saveNotice(){
   const title=document.getElementById('noticeTitleInput').value.trim();
-  const content=document.getElementById('noticeContentInput').value.trim();
+  const body=document.getElementById('noticeContentInput').value.trim();
   const category=document.getElementById('noticeCatInput').value;
+  const author=document.getElementById('noticeAuthorInput').value.trim()||'관리자';
+  const pw=document.getElementById('noticeAuthorPw').value.trim();
   if(!title){alert('제목을 입력해주세요');return;}
-  if(!content){alert('내용을 입력해주세요');return;}
-  await db.collection('notices').add({cafeId:currentCafe.id,title,content,category,images:noticeImages,createdAt:Date.now()});
-  showScreen('scNotice');showToast('✅ 공지가 등록됐어요!');
+  if(!body){alert('내용을 입력해주세요');return;}
+  if(!pw){alert('비밀번호를 입력해주세요');return;}
+  if(editingNoticeId){
+    await db.collection('notices').doc(editingNoticeId).update({title,content:body,category,author,password:pw});
+    editingNoticeId=null;
+    closeNoticeWrite();showToast('✅ 공지가 수정됐어요!');
+  } else {
+    await db.collection('notices').add({cafeId:currentCafe.id,title,content:body,category,author,password:pw,images:noticeImages,createdAt:Date.now()});
+    closeNoticeWrite();showToast('✅ 공지가 등록됐어요!');
+  }
 }
 
 // ===== 보건증 관리 =====
@@ -2660,6 +2701,7 @@ function checkSupplyMaster(){
 }
 function renderSupply(){
   const today=new Date();today.setHours(0,0,0,0);
+  const thisMonth=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
   const w=document.getElementById('supplyList');
   if(!supplyList.length){
     w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 소모품이 없어요</div>`;
@@ -2683,6 +2725,35 @@ function renderSupply(){
       </div>
     </div>`;
   }).join('');
+
+  // 금월 소모품 비용 합계
+  const monthCosts=[];
+  let monthTotal=0;
+  supplyList.forEach(s=>{
+    (s.history||[]).forEach(h=>{
+      if(h.date&&h.date.startsWith(thisMonth)&&h.cost&&parseInt(h.cost)>0){
+        monthCosts.push({name:s.name,cost:parseInt(h.cost)});
+        monthTotal+=parseInt(h.cost);
+      }
+    });
+  });
+  const costHtml=monthCosts.length?`
+    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-top:12px">
+      <div style="background:#534AB7;padding:8px 14px"><span style="font-size:12px;font-weight:700;color:#fff">📊 금월 소모품 비용 (${today.getMonth()+1}월)</span></div>
+      ${monthCosts.map(c=>`<div style="display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:12px">
+        <span style="color:var(--t2)">${c.name}</span>
+        <span style="color:var(--t1);font-weight:500">₩${c.cost.toLocaleString()}</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:10px 14px;background:#EEEDFE">
+        <span style="font-size:13px;font-weight:700;color:#3C3489">합계</span>
+        <span style="font-size:15px;font-weight:800;color:#3C3489">₩${monthTotal.toLocaleString()}</span>
+      </div>
+    </div>`:'';
+  // 비용 카드를 supplyList div 다음에 추가
+  const container=document.getElementById('supplyList').parentNode;
+  let costCard=document.getElementById('supplyCostCard');
+  if(!costCard){costCard=document.createElement('div');costCard.id='supplyCostCard';container.appendChild(costCard);}
+  costCard.innerHTML=costHtml;
 }
 let currentSupplyId=null;
 function openSupplyDetail(id){
@@ -3024,7 +3095,7 @@ async function saveProfit(){
 
 
 // 모달 닫기
-['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','supplyCompleteModal','healthModal','changePwModal','changeMasterPwModal'].forEach(id=>{
+['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','supplyCompleteModal','healthModal','changePwModal','changeMasterPwModal','noticeWriteModal','workerSelectModal'].forEach(id=>{
   const el=document.getElementById(id);
   if(el)el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
