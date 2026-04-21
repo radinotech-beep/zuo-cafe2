@@ -2587,8 +2587,8 @@ async function renderPayTable(){
   const tbl=document.getElementById('payTable');
   tbl.innerHTML=`<tr><th>이름</th><th>근무시간</th><th>시급합계</th><th>주휴수당</th><th>상여</th><th>기타</th><th>공제</th><th>실수령액</th></tr>`;
   let sumH=0,sumB=0,sumHoli=0,sumBonus=0,sumEtc=0,sumDeduct=0,sumNet=0;
-  const activeEmps=employees.filter(e=>!e.resigned);
-  for(const emp of activeEmps){
+  // 퇴사자 포함 전체 직원 - 해당 월 근무 기록 있으면 표시
+  for(const emp of employees){
     // 근무시간
     const wSnap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
     let h=0;wSnap.forEach(d=>h+=d.data().hours||0);
@@ -2604,17 +2604,18 @@ async function renderPayTable(){
       etc=saved.etc||0;
     } else {
       holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
-      // 해당 월 일요일 개수
       weekCnt=(()=>{let s=0;const dim=new Date(payY,payM+1,0).getDate();for(let d=1;d<=dim;d++){if(new Date(payY,payM,d).getDay()===0)s++;}return s;})();
     }
+    // 퇴사자는 해당 월 근무기록 또는 명세서가 있을 때만 표시
+    if(emp.resigned&&h===0&&psSnap.empty)continue;
     const holi=Math.round(holiRate*weekCnt);
     const gross=base+holi+bonus+etc;
-    // 세금 계산
     const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
     const net=gross-totalDeduct;
     sumH+=h;sumB+=base;sumHoli+=holi;sumBonus+=bonus;sumEtc+=etc;sumDeduct+=totalDeduct;sumNet+=net;
+    const resignBadge=emp.resigned?`<span style="font-size:9px;background:#f5f5f5;color:var(--t3);padding:1px 4px;border-radius:4px;margin-left:3px">퇴사</span>`:'';
     tbl.innerHTML+=`<tr>
-      <td class="nm">${emp.name}</td>
+      <td class="nm">${emp.name}${resignBadge}</td>
       <td>${h.toFixed(1)}h</td>
       <td>${base.toLocaleString()}</td>
       <td>${holi.toLocaleString()}</td>
