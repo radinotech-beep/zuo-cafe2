@@ -633,19 +633,27 @@ input:focus{border-color:var(--green)}
         <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:6px">📥 지급 항목</div>
 
         <!-- 주휴수당 -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5">
-          <div>
+        <div style="padding:7px 0;border-bottom:1px solid #f5f5f5">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600;color:var(--t1)">주휴수당</div>
-            <div style="font-size:10px;color:var(--t3);margin-top:1px">단가 <span id="psHoliRate">₩0</span> × <span id="psWeekCntDisp">4</span>주</div>
+            <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right" id="psHoliTotal">₩0</div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:10px;color:var(--t3)">단가</div>
+            <div class="no-capture" style="display:flex;align-items:center;gap:4px">
+              <button class="hc-btn-sm" onclick="changeHoliRate(-500)">−</button>
+              <span style="font-size:12px;font-weight:600;color:var(--t1);min-width:70px;text-align:center" id="psHoliRate">₩0</span>
+              <button class="hc-btn-sm" onclick="changeHoliRate(500)">+</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+            <div style="font-size:10px;color:var(--t3)">횟수</div>
             <div class="no-capture" style="display:flex;align-items:center;gap:4px">
               <button class="hc-btn-sm" onclick="changePayWeeks(-1)">−</button>
               <div class="hc-val-sm" id="psWeekCnt">4</div>
               <button class="hc-btn-sm" onclick="changePayWeeks(1)">+</button>
-              <span style="font-size:11px;color:var(--t2)">주</span>
+              <span style="font-size:11px;color:var(--t2)">주 (<span id="psWeekCntDisp">4</span>주)</span>
             </div>
-            <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right" id="psHoliTotal">₩0</div>
           </div>
         </div>
 
@@ -1870,7 +1878,16 @@ function loadWorkHours(){
   });
 }
 
-function changeWorkMonth(dir){wkM+=dir;if(wkM>11){wkM=0;wkY++;}if(wkM<0){wkM=11;wkY--;}document.getElementById('workMonthTitle').textContent=`${wkY}년 ${MONTHS[wkM]}`;wkSelDay=null;document.getElementById('wkPanel').style.display='none';loadWorkHours();}
+function changeWorkMonth(dir){
+  wkM+=dir;
+  if(wkM>11){wkM=0;wkY++;}
+  if(wkM<0){wkM=11;wkY--;}
+  document.getElementById('workMonthTitle').textContent=`${wkY}년 ${MONTHS[wkM]}`;
+  wkSelDay=null;
+  document.getElementById('wkPanel').style.display='none';
+  loadWorkHours();
+  loadConfirmStatus();
+}
 
 function renderWkGrid(){
   const g=document.getElementById('wkGrid');
@@ -2141,7 +2158,7 @@ function setupEmpEdit(id){
   document.getElementById('empBank').value=emp.bank||'';
   document.getElementById('empAcct').value=emp.acct||'';
   document.getElementById('empRate').value=emp.rate||10320;
-  document.getElementById('empHoliRate').value=(emp.holidayRate!==undefined&&emp.holidayRate!==null)?emp.holidayRate:41280;
+  document.getElementById('empHoliRate').value=(emp.holidayRate!==undefined&&emp.holidayRate!==null)?emp.holidayRate:'';
   document.getElementById('empType').value=emp.empType||'정규직';
   document.getElementById('empPw').value='';
   showScreen('scEmpAdd');
@@ -2180,6 +2197,7 @@ async function openPayslip(empId){
   const emp=employees.find(e=>e.id===empId);if(!emp)return;
   psCurrentEmp=emp;
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
+  // 근무시간 로드
   const snap=await db.collection('workHours').where('empId','==',empId).where('period','==',period).get();
   let total=0;snap.forEach(d=>total+=d.data().hours||0);
   const base=Math.round(total*(emp.rate||0));
@@ -2193,16 +2211,27 @@ async function openPayslip(empId){
     return sundays;
   })();
   const weeklyHrs=total/weeksInMonth;
+  // 주휴단가 기본값
   if(emp.holidayRate!==null&&emp.holidayRate!==undefined){
-    // 직원이 설정한 주휴단가 사용
     psHoliRateVal=emp.holidayRate;
   } else if(weeklyHrs>=15){
-    // 주 15시간 이상이면 자동계산
     psHoliRateVal=Math.round((weeklyHrs/40)*8*(emp.rate||0));
   } else {
     psHoliRateVal=0;
   }
   psWeekCntVal=weeksInMonth;
+  // ★ 저장된 명세서 데이터 불러오기
+  const psSnap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).get();
+  let savedBonus=0,savedBonusMemo='',savedEtc=0,savedEtcMemo='';
+  if(!psSnap.empty){
+    const saved=psSnap.docs[0].data();
+    if(saved.holiRateVal!==undefined)psHoliRateVal=saved.holiRateVal;
+    if(saved.weekCntVal!==undefined)psWeekCntVal=saved.weekCntVal;
+    savedBonus=saved.bonus||0;
+    savedBonusMemo=saved.bonusMemo||'';
+    savedEtc=saved.etc||0;
+    savedEtcMemo=saved.etcMemo||'';
+  }
   // 고용형태 표시
   const empType=emp.empType||'기타';
   const typeLabel={정규직:'정규직 (4대보험)',프리랜서:'프리랜서 (3.3%)',일용직:'일용직 (2.97%+고용보험)',기타:'기타 (공제없음)'};
@@ -2216,9 +2245,16 @@ async function openPayslip(empId){
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
   document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
-  document.getElementById('psBonus').value='0';document.getElementById('psBonusMemo').value='';
-  document.getElementById('psEtc').value='0';document.getElementById('psEtcMemo').value='';
+  document.getElementById('psBonus').value=savedBonus;
+  document.getElementById('psBonusMemo').value=savedBonusMemo;
+  document.getElementById('psEtc').value=savedEtc;
+  document.getElementById('psEtcMemo').value=savedEtcMemo;
   calcPayTotal();showScreen('scPayslip');
+}
+function changeHoliRate(v){
+  psHoliRateVal=Math.max(0,psHoliRateVal+v);
+  document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
+  calcPayTotal();
 }
 function changePayWeeks(v){
   psWeekCntVal=Math.max(0,Math.min(6,psWeekCntVal+v));
@@ -2286,7 +2322,28 @@ function calcPayTotal(){
   document.getElementById('psTotal').textContent='₩'+net.toLocaleString();
 }
 
-function savePayslip(){ showToast('저장됐어요 😊'); }
+async function savePayslip(){
+  if(!psCurrentEmp)return;
+  const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
+  const bonus=parseFloat(document.getElementById('psBonus').value)||0;
+  const bonusMemo=document.getElementById('psBonusMemo').value.trim();
+  const etc=parseFloat(document.getElementById('psEtc').value)||0;
+  const etcMemo=document.getElementById('psEtcMemo').value.trim();
+  const data={
+    empId:psCurrentEmp.id,
+    cafeId:currentCafe.id,
+    period,
+    holiRateVal:psHoliRateVal,
+    weekCntVal:psWeekCntVal,
+    bonus,bonusMemo,
+    etc,etcMemo,
+    updatedAt:Date.now()
+  };
+  const snap=await db.collection('payslips').where('empId','==',psCurrentEmp.id).where('period','==',period).get();
+  if(!snap.empty){await db.collection('payslips').doc(snap.docs[0].id).update(data);}
+  else{await db.collection('payslips').add(data);}
+  showToast('✅ 저장됐어요!');
+}
 
 function prepareCapture(){
   const bonus=parseInt(document.getElementById('psBonus').value)||0;
