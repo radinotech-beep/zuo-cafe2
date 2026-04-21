@@ -383,6 +383,10 @@ input:focus{border-color:var(--green)}
         </div>
       </div>
       <div class="slist" id="slist"></div>
+      <!-- 카톡 공유 상시 버튼 -->
+      <div style="padding:10px 14px;border-top:1px solid var(--bd)">
+        <button onclick="copySubForKakao()" style="width:100%;padding:10px;border-radius:8px;border:none;background:#FEE500;color:#3C1E1E;font-size:13px;font-weight:600;cursor:pointer">📋 카톡으로 공유 (복사)</button>
+      </div>
     </div>
     <div class="hint" id="hint">날짜를 선택하면<br>대타 현황을 확인할 수 있어요</div>
   </div>
@@ -509,9 +513,18 @@ input:focus{border-color:var(--green)}
     <div class="hdr-title">직원 관리</div>
     <div class="hdr-sub">관리자</div>
   </div>
+  <div class="tabs">
+    <button class="tab on" id="empTab1" onclick="switchEmpTab('active')">재직중</button>
+    <button class="tab" id="empTab2" onclick="switchEmpTab('resigned')">퇴사자</button>
+  </div>
   <div style="padding:12px 14px;overflow-y:auto">
-    <button class="btn-primary" onclick="showScreen('scEmpAdd');setupEmpAdd()">+ 직원 추가</button>
-    <div id="empManageList"></div>
+    <div id="empActiveArea">
+      <button class="btn-primary" onclick="showScreen('scEmpAdd');setupEmpAdd()">+ 직원 추가</button>
+      <div id="empManageList"></div>
+    </div>
+    <div id="empResignedArea" style="display:none">
+      <div id="empResignedList"></div>
+    </div>
   </div>
 </div>
 
@@ -524,6 +537,15 @@ input:focus{border-color:var(--green)}
   </div>
   <div class="body" style="padding:14px">
     <div class="fr"><label class="fl">이름</label><input type="text" id="empName" placeholder="이름 입력"></div>
+    <div class="fr">
+      <label class="fl">고용형태</label>
+      <select id="empType" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;outline:none;background:#fff;color:var(--t1)">
+        <option value="정규직">정규직</option>
+        <option value="프리랜서">프리랜서</option>
+        <option value="일용직">일용직</option>
+        <option value="기타">기타</option>
+      </select>
+    </div>
     <div class="fr"><label class="fl">연락처</label><input type="tel" id="empPhone" placeholder="010-0000-0000"></div>
     <div class="fr"><label class="fl">주소</label><input type="text" id="empAddr" placeholder="주소 입력"></div>
     <div class="fr">
@@ -1182,6 +1204,23 @@ input:focus{border-color:var(--green)}
   </div>
 </div>
 
+<!-- 퇴사 처리 모달 -->
+<div class="mbg" id="resignModal">
+  <div class="modal">
+    <div class="mh"></div>
+    <div class="mt">퇴사 처리</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6" id="resignModalMsg"></div>
+    <div class="fr">
+      <label class="fl">퇴사일</label>
+      <input type="date" id="resignDate" style="width:100%">
+    </div>
+    <div class="mbtns">
+      <button class="mcnl" onclick="document.getElementById('resignModal').classList.remove('open')">취소</button>
+      <button style="flex:2;padding:11px;border-radius:8px;border:none;background:var(--red);color:#fff;font-size:13px;cursor:pointer" onclick="confirmResign()">퇴사 처리</button>
+    </div>
+  </div>
+</div>
+
 <!-- 직원 선택 모달 (근무시간 입력) -->
 <div class="mbg" id="workerSelectModal">
   <div class="modal" style="padding-bottom:28px">
@@ -1552,6 +1591,22 @@ function renderSubList(){
     return `<div class="si"><div class="sr"><div class="snum">${i+1}</div><div class="sb"><div class="sn">${names}</div><div class="stm">${s.timeStart} – ${s.timeEnd}</div>${s.note?`<div class="snt">${s.note}</div>`:''}<div class="sbtns">${btns}</div></div>${bdg}</div></div>`;
   }).join('');
 }
+function copySubForKakao(){
+  if(!selDate){showToast('날짜를 먼저 선택해주세요');return;}
+  const list=allSubs[selDate]||[];
+  const d=new Date(selDate);
+  const ds=`${d.getMonth()+1}월 ${d.getDate()}일(${DAYS[d.getDay()]})`;
+  if(!list.length){
+    const txt=`[${currentCafe.name}] 대타 공지\n📅 ${ds}\n\n등록된 대타 요청이 없어요\n\n👉 ${APP_URL}`;
+    copyText(txt);showToast('📋 카톡 내용이 복사됐어요!');return;
+  }
+  const lines=list.map((s,i)=>{
+    const status=s.takenBy?`✅ ${s.name} → ${s.takenBy}`:`🔄 ${s.name} (대타 구해요)`;
+    return `${i+1}. ${s.timeStart}~${s.timeEnd} ${status}${s.note?' ('+s.note+')':''}`;
+  }).join('\n');
+  const txt=`[${currentCafe.name}] 대타 공지\n📅 ${ds}\n\n${lines}\n\n👉 ${APP_URL}`;
+  copyText(txt);showToast('📋 카톡 내용이 복사됐어요!');
+}
 
 async function cancelTake(fid){if(!confirm('대타 신청을 취소할까요?'))return;await db.collection('subs').doc(fid).update({takenBy:null});}
 function openTake(fid){pendTake=fid;document.getElementById('tkName').value='';document.getElementById('takeModal').classList.add('open');}
@@ -1908,21 +1963,75 @@ function checkMasterPw(){
   }
 }
 
+let currentEmpTab='active';
+function switchEmpTab(tab){
+  currentEmpTab=tab;
+  document.getElementById('empTab1').classList.toggle('on',tab==='active');
+  document.getElementById('empTab2').classList.toggle('on',tab==='resigned');
+  document.getElementById('empActiveArea').style.display=tab==='active'?'block':'none';
+  document.getElementById('empResignedArea').style.display=tab==='resigned'?'block':'none';
+  if(tab==='resigned')renderResignedList();
+}
 function renderEmpManageList(){
   const w=document.getElementById('empManageList');
-  if(!employees.length){w.innerHTML=`<div style="text-align:center;padding:24px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
+  const active=employees.filter(e=>!e.resigned);
   const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
   const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
-  w.innerHTML=employees.map((e,i)=>`
-    <div class="emp-list-item">
+  const typeBadge={정규직:'background:#E6F1FB;color:#0C447C',프리랜서:'background:#EEEDFE;color:#3C3489',일용직:'background:#FAEEDA;color:#633806',기타:'background:#F1EFE8;color:#5F5E5A'};
+  if(!active.length){w.innerHTML=`<div style="text-align:center;padding:24px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
+  w.innerHTML=active.map((e,i)=>{
+    const badge=e.empType?`<span style="font-size:10px;padding:2px 7px;border-radius:10px;${typeBadge[e.empType]||typeBadge['기타']}">${e.empType}</span>`:'';
+    return `<div class="emp-list-item">
       <div class="emp-avatar" style="background:${colors[i%5]};color:${tcolors[i%5]}">${e.name.substring(0,2)}</div>
-      <div style="flex:1"><div class="emp-nm">${e.name}</div><div class="emp-info">시급 ₩${(e.rate||0).toLocaleString()} · 주휴단가 ₩${((e.holidayRate!==null&&e.holidayRate!==undefined)?e.holidayRate:0).toLocaleString()}</div></div>
-      <button class="btn-sm-g" onclick="setupEmpEdit('${e.id}')" style="margin-right:5px">수정</button>
-      <button onclick="deleteEmp('${e.id}','${e.name}')" style="background:none;border:1px solid #fca5a5;color:var(--red);padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="emp-nm">${e.name}</span>${badge}
+        </div>
+        <div class="emp-info">시급 ₩${(e.rate||0).toLocaleString()} · 주휴 ₩${((e.holidayRate!==null&&e.holidayRate!==undefined)?e.holidayRate:0).toLocaleString()}</div>
+      </div>
+      <button class="btn-sm-g" onclick="setupEmpEdit('${e.id}')" style="margin-right:4px">수정</button>
+      <button onclick="openResignModal('${e.id}','${e.name}')" style="background:none;border:1px solid var(--amb);color:var(--ad);padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer;margin-right:4px">퇴사</button>
+      <button onclick="deleteEmp('${e.id}','${e.name}')" style="background:none;border:1px solid #fca5a5;color:var(--red);padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button>
+    </div>`;
+  }).join('');
+}
+function renderResignedList(){
+  const w=document.getElementById('empResignedList');
+  const resigned=employees.filter(e=>e.resigned);
+  if(!resigned.length){w.innerHTML=`<div style="text-align:center;padding:24px;font-size:12px;color:var(--t3)">퇴사자가 없어요</div>`;return;}
+  const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
+  const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
+  w.innerHTML=resigned.map((e,i)=>`
+    <div class="emp-list-item">
+      <div class="emp-avatar" style="background:#F1EFE8;color:#5F5E5A;opacity:0.7">${e.name.substring(0,2)}</div>
+      <div style="flex:1">
+        <div class="emp-nm" style="color:var(--t3)">${e.name}</div>
+        <div class="emp-info">퇴사일: ${e.resignDate||'-'}</div>
+      </div>
+      <button onclick="restoreEmp('${e.id}','${e.name}')" style="background:none;border:1px solid var(--gm);color:var(--gd);padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer;margin-right:4px">복직</button>
+      <button onclick="deleteEmp('${e.id}','${e.name}')" style="background:none;border:1px solid #fca5a5;color:var(--red);padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">삭제</button>
     </div>`).join('');
 }
-
-async function deleteEmp(id, name){
+let resigningEmpId='';
+function openResignModal(id,name){
+  resigningEmpId=id;
+  document.getElementById('resignModalMsg').textContent=`${name} 직원을 퇴사 처리할까요? 퇴사자 탭으로 이동되며 삭제되지 않아요.`;
+  document.getElementById('resignDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('resignModal').classList.add('open');
+}
+async function confirmResign(){
+  const date=document.getElementById('resignDate').value;
+  if(!date){alert('퇴사일을 입력해주세요');return;}
+  await db.collection('employees').doc(resigningEmpId).update({resigned:true,resignDate:date});
+  document.getElementById('resignModal').classList.remove('open');
+  showToast('✅ 퇴사 처리됐어요');
+}
+async function restoreEmp(id,name){
+  if(!confirm(`${name} 직원을 복직 처리할까요?`))return;
+  await db.collection('employees').doc(id).update({resigned:false,resignDate:null});
+  showToast(`✅ ${name} 복직 처리됐어요`);
+}
+async function deleteEmp(id,name){
   if(!confirm(`'${name}' 직원을 삭제할까요?\n삭제하면 복구할 수 없어요.`))return;
   await db.collection('employees').doc(id).delete();
   showToast(`${name} 직원이 삭제됐어요`);
@@ -1935,6 +2044,7 @@ function setupEmpAdd(){
   ['empName','empPhone','empAddr','empBank','empAcct','empPw'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('empRate').value='10320';
   document.getElementById('empHoliRate').value='';
+  document.getElementById('empType').value='정규직';
 }
 function setupEmpEdit(id){
   const emp=employees.find(e=>e.id===id);if(!emp)return;
@@ -1947,15 +2057,16 @@ function setupEmpEdit(id){
   document.getElementById('empAcct').value=emp.acct||'';
   document.getElementById('empRate').value=emp.rate||10320;
   document.getElementById('empHoliRate').value=(emp.holidayRate!==undefined&&emp.holidayRate!==null)?emp.holidayRate:41280;
+  document.getElementById('empType').value=emp.empType||'정규직';
   document.getElementById('empPw').value='';
   showScreen('scEmpAdd');
 }
 async function saveEmp(){
   const name=document.getElementById('empName').value.trim();
   if(!name){alert('이름을 입력해주세요');return;}
-  const holiRateRaw = document.getElementById('empHoliRate').value;
-  const holiRate = holiRateRaw === '' ? null : parseInt(holiRateRaw);
-  const data={cafeId:currentCafe.id,name,phone:document.getElementById('empPhone').value.trim(),addr:document.getElementById('empAddr').value.trim(),bank:document.getElementById('empBank').value.trim(),acct:document.getElementById('empAcct').value.trim(),rate:parseInt(document.getElementById('empRate').value)||10320,holidayRate:holiRate};
+  const holiRateRaw=document.getElementById('empHoliRate').value;
+  const holiRate=holiRateRaw===''?null:parseInt(holiRateRaw);
+  const data={cafeId:currentCafe.id,name,empType:document.getElementById('empType').value,phone:document.getElementById('empPhone').value.trim(),addr:document.getElementById('empAddr').value.trim(),bank:document.getElementById('empBank').value.trim(),acct:document.getElementById('empAcct').value.trim(),rate:parseInt(document.getElementById('empRate').value)||10320,holidayRate:holiRate};
   const pw=document.getElementById('empPw').value.trim();
   if(pw)data.password=pw;
   if(editingEmpId){await db.collection('employees').doc(editingEmpId).update(data);}
@@ -2591,6 +2702,84 @@ function loadHealth(){
     renderHealth();checkHealthAlerts();
   });
 }
+function renderHealth(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const w=document.getElementById('healthList');
+  // 재직중 직원 + 수기 추가 항목 모두 표시
+  const activeEmps=employees.filter(e=>!e.resigned);
+  // 직원별 보건증 매핑
+  const certByEmpId={};
+  const manualCerts=[];
+  healthList.forEach(h=>{
+    if(h.empId)certByEmpId[h.empId]=h;
+    else manualCerts.push(h);
+  });
+  let html='';
+  // 재직중 직원 카드
+  activeEmps.forEach((emp,i)=>{
+    const h=certByEmpId[emp.id];
+    const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
+    const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
+    if(h){
+      const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
+      const isAlert=diff<=30&&diff>=0;const isExp=diff<0;
+      const badge=isExp
+        ?`<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">만료</span>`
+        :isAlert?`<span style="background:var(--amb);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`
+        :`<span style="background:var(--gl);color:var(--gd);font-size:10px;padding:2px 7px;border-radius:10px">유효</span>`;
+      const btns=isHealthMaster?`<button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer;margin-right:4px">수정</button><button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:4px 9px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>`:'';
+      html+=`<div style="background:#fff;border-radius:12px;border:1px solid ${isAlert||isExp?'#fca5a5':'var(--bd)'};padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${colors[i%5]};color:${tcolors[i%5]};font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${emp.name.substring(0,2)}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <span style="font-size:14px;font-weight:700;color:var(--t1)">${emp.name}</span>${badge}
+          </div>
+          <div style="font-size:11px;color:var(--t3)">발행 ${h.issueDate} → 만료 ${h.expireDate}</div>
+        </div>
+        <div style="display:flex;gap:4px">${btns}</div>
+      </div>`;
+    } else {
+      const editBtn=isHealthMaster?`<button onclick="openHealthModalForEmp('${emp.id}','${emp.name}')" style="background:var(--green);border:none;border-radius:7px;padding:4px 10px;font-size:11px;color:#fff;cursor:pointer">입력</button>`:'<span style="font-size:11px;color:var(--t3)">미등록</span>';
+      html+=`<div style="background:#fff;border-radius:12px;border:1px dashed var(--bd);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:${colors[i%5]};color:${tcolors[i%5]};font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0.6">${emp.name.substring(0,2)}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t2)">${emp.name}</div>
+          <div style="font-size:11px;color:var(--t3)">보건증 미등록</div>
+        </div>
+        ${editBtn}
+      </div>`;
+    }
+  });
+  // 수기 추가 항목
+  manualCerts.forEach(h=>{
+    const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
+    const isAlert=diff<=30&&diff>=0;const isExp=diff<0;
+    const badge=isExp?`<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">만료</span>`:isAlert?`<span style="background:var(--amb);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">D-${diff}</span>`:`<span style="background:var(--gl);color:var(--gd);font-size:10px;padding:2px 7px;border-radius:10px">유효</span>`;
+    const btns=isHealthMaster?`<button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;font-size:11px;color:var(--t2);cursor:pointer;margin-right:4px">수정</button><button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:7px;padding:4px 9px;font-size:11px;color:var(--red);cursor:pointer">삭제</button>`:'';
+    html+=`<div style="background:#fff;border-radius:12px;border:1px solid ${isAlert||isExp?'#fca5a5':'var(--bd)'};padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span style="font-size:14px;font-weight:700;color:var(--t1)">${h.empName}</span>${badge}
+          <span style="font-size:10px;color:var(--t3)">(수기)</span>
+        </div>
+        <div style="font-size:11px;color:var(--t3)">발행 ${h.issueDate} → 만료 ${h.expireDate}</div>
+      </div>
+      <div style="display:flex;gap:4px">${btns}</div>
+    </div>`;
+  });
+  if(!html)html=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 직원이 없어요</div>`;
+  w.innerHTML=html;
+}
+function openHealthModalForEmp(empId,empName){
+  editingHealthId=null;
+  document.getElementById('healthModalTitle').textContent='보건증 입력';
+  document.getElementById('healthEmpName').value=empName;
+  document.getElementById('healthEmpName').readOnly=true;
+  document.getElementById('healthIssueDate').value='';
+  document.getElementById('healthExpireDate').value='';
+  document.getElementById('healthModal').dataset.empId=empId;
+  document.getElementById('healthModal').classList.add('open');
+}
 function checkHealthAlerts(){
   const today=new Date();today.setHours(0,0,0,0);
   const alerts=healthList.filter(h=>{
@@ -3119,7 +3308,7 @@ async function saveProfit(){
 
 
 // 모달 닫기
-['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','supplyCompleteModal','healthModal','changePwModal','changeMasterPwModal','noticeWriteModal','workerSelectModal'].forEach(id=>{
+['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','supplyCompleteModal','healthModal','changePwModal','changeMasterPwModal','noticeWriteModal','workerSelectModal','resignModal'].forEach(id=>{
   const el=document.getElementById(id);
   if(el)el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
