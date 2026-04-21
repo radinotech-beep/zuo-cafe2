@@ -2463,8 +2463,10 @@ async function loadPayTrend(){
     months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   }
 
-  // 선택 직원 필터
-  const targetEmps=trendEmpFilter==='전체'?employees:employees.filter(e=>e.name===trendEmpFilter);
+  // Firebase에서 직원 직접 조회
+  const trendEmpSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const allTrendEmps=[];trendEmpSnap.forEach(d=>allTrendEmps.push({id:d.id,...d.data()}));
+  const targetEmps=trendEmpFilter==='전체'?allTrendEmps:allTrendEmps.filter(e=>e.name===trendEmpFilter);
 
   // 월별 데이터 수집
   const monthData={};
@@ -2487,7 +2489,7 @@ async function loadPayTrend(){
       const hrs=empVals.reduce((a,v)=>a+v.hrs,0);
       const base=empVals.reduce((a,v)=>a+v.base,0);
       const holi=empVals.reduce((a,v)=>a+v.holi,0);
-      const total=base+holi;
+      const total=empVals.reduce((a,v)=>a+v.total,0);
       totHrs+=hrs;totBase+=base;totHoli+=holi;totTotal+=total;
       tbl.innerHTML+=`<tr>
         <td class="nm">${m}</td>
@@ -2726,22 +2728,33 @@ async function exportExcel(){
     sc(ws,2,col++,cell(DAY_KR[dow],{bold:true,fill:isSun?C_SUN:isSat?C_SAT:C_DAY,color:isSun||isSat?'C00000':'375623',b:bdrHdr}));
   }
   for(let i=0;i<tailCols;i++) sc(ws,2,col++,cell('',{fill:C_PAY,b:bdrHdr}));
-  // 행3~: 직원 데이터
+  // 행3~: 직원 데이터 (calcEmpPay 사용 - 월급여현황과 동일)
+  // Firebase에서 전체 직원 직접 조회
+  const excelEmpSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const excelEmps=[];excelEmpSnap.forEach(d=>excelEmps.push({id:d.id,...d.data()}));
+  excelEmps.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  // calcEmpPay로 급여 미리 계산
+  const empPayMap={};
+  for(const emp of excelEmps){
+    empPayMap[emp.id]=await calcEmpPay(emp,period);
+  }
   let row=3;
   const dayTotals=new Array(daysInMonth).fill(0);
-  let grandTotal=0,grandBase=0,grandHoli=0,grandEtc=0;
-  for(let ei=0;ei<employees.length;ei++){
-    const emp=employees[ei];
+  let grandTotal=0,grandBase=0,grandHoli=0,grandBonus=0,grandEtc=0,grandDeduct=0,grandNet=0;
+  for(let ei=0;ei<excelEmps.length;ei++){
+    const emp=excelEmps[ei];
+    if(emp.resigned&&!empPayMap[emp.id]?.hasData)continue;
     const {days}=empDataMap[emp.id]||{days:{}};
+    const pay=empPayMap[emp.id]||{h:0,base:0,holi:0,bonus:0,etc:0,gross:0,totalDeduct:0,net:0};
     const rowFill=ei%2===0?C_WHITE:C_ALT;
     let totalHrs=0;
     for(let d=1;d<=daysInMonth;d++) totalHrs+=(days[d]?.hours||0);
-    const base=Math.round(totalHrs*(emp.rate||0));
-    const holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
-    const holiTotal=Math.round(holiRate*4);
-    const etc=0;
-    const grandSum=base+holiTotal+etc;
-    grandBase+=base;grandHoli+=holiTotal;grandTotal+=grandSum;
+    const holiRate=pay.holi>0&&pay.h>0?Math.round(pay.holi/(pay.h>0?1:1)):0;
+    const holiTotal=pay.holi;
+    const etc=pay.etc||0;
+    const bonus=pay.bonus||0;
+    grandBase+=pay.base;grandHoli+=holiTotal;grandBonus+=bonus;grandEtc+=etc;
+    grandDeduct+=pay.totalDeduct;grandNet+=pay.net;grandTotal+=pay.gross;
     col=0;
     sc(ws,row,col++,cell(emp.name,{bold:true,fill:{fgColor:{rgb:'D9EAD3'}},align:'center',b:bdr}));
     sc(ws,row,col++,cell(emp.phone||'',{fill:rowFill,align:'center',b:bdr}));
@@ -2764,12 +2777,12 @@ async function exportExcel(){
     }
     sc(ws,row,col++,cell(totalHrs,{bold:true,fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_HRS}));
     sc(ws,row,col++,cell(emp.rate||0,{fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_WON}));
-    sc(ws,row,col++,cell(base,{bold:true,fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_WON}));
-    sc(ws,row,col++,cell(holiRate,{fill:C_PAY,color:'854F0B',b:bdr,fmt:FMT_WON}));
-    sc(ws,row,col++,cell(4,{fill:C_PAY,color:'854F0B',b:bdr}));
-    sc(ws,row,col++,cell(holiTotal,{bold:true,fill:C_PAY,color:'854F0B',b:bdr,fmt:FMT_WON}));
-    sc(ws,row,col++,cell(etc,{fill:{fgColor:{rgb:'FCE4D6'}},color:'833C00',b:bdr,fmt:FMT_WON}));
-    sc(ws,row,col++,cell(grandSum,{bold:true,fill:C_TOTAL,color:'7F6000',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(pay.base,{bold:true,fill:C_SUM,color:'0F6E56',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(pay.holi,{fill:C_PAY,color:'854F0B',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(pay.bonus,{fill:{fgColor:{rgb:'FCE4D6'}},color:'833C00',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(pay.etc,{fill:{fgColor:{rgb:'FCE4D6'}},color:'833C00',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(pay.totalDeduct,{fill:{fgColor:{rgb:'FCEBEB'}},color:'A32D2D',b:bdr,fmt:FMT_WON}));
+    sc(ws,row,col++,cell(pay.net,{bold:true,fill:C_TOTAL,color:'7F6000',b:bdr,fmt:FMT_WON}));
     row++;
   }
   // 합계행
@@ -2785,9 +2798,10 @@ async function exportExcel(){
   sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
   sc(ws,row,col++,cell(grandHoli,{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
   sc(ws,row,col++,cell(grandEtc,{fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
-  sc(ws,row,col++,cell(grandTotal,{bold:true,fill:C_GREEN,color:'FFFFFF',b:{top:solidMed,bottom:solidMed,left:solid,right:solidMed},fmt:FMT_WON}));
+  sc(ws,row,col++,cell(grandDeduct,{fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
+  sc(ws,row,col++,cell(grandNet,{bold:true,fill:C_GREEN,color:'FFFFFF',b:{top:solidMed,bottom:solidMed,left:solid,right:solidMed},fmt:FMT_WON}));
   ws['!cols']=[{wch:8},{wch:13},{wch:26},{wch:6},{wch:16},{wch:10},{wch:8},...Array(daysInMonth).fill({wch:4.2}),{wch:7},{wch:10},{wch:11},{wch:10},{wch:4},{wch:11},{wch:8},{wch:12}];
-  ws['!rows']=[{hpt:22},{hpt:30},{hpt:18},...Array(employees.length).fill({hpt:18}),{hpt:20}];
+  ws['!rows']=[{hpt:22},{hpt:30},{hpt:18},...Array(excelEmps.length).fill({hpt:18}),{hpt:20}];
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.utils.book_append_sheet(wb,ws,`${payY}년 ${payM+1}월`);
   XLSX.writeFile(wb,`급여현황_${payY}년${payM+1}월.xlsx`);
