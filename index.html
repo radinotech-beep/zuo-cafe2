@@ -598,8 +598,6 @@ input:focus{border-color:var(--green)}
     <div style="width:40px"></div>
   </div>
   <div style="padding:12px 14px 24px;overflow-y:auto">
-
-    <!-- ★ 캡처 대상 카드 -->
     <div id="payslipCard" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.10);margin-bottom:14px">
 
       <!-- 카드 헤더 -->
@@ -607,10 +605,11 @@ input:focus{border-color:var(--green)}
         <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-bottom:4px" id="psCafeName">☕ 카페 · 급여 명세서</div>
         <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px" id="psName">이름</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.85)" id="psPeriod">2026년 4월 급여 명세서</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px" id="psEmpType"></div>
         <div style="position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:44px;opacity:0.18">💰</div>
       </div>
 
-      <!-- 근무 요약 띠 -->
+      <!-- 근무 요약 -->
       <div style="background:var(--gl);padding:10px 18px;display:flex;gap:0;border-bottom:1px solid var(--bd)">
         <div style="flex:1;text-align:center;border-right:1px solid var(--gm)">
           <div style="font-size:10px;color:var(--gd);margin-bottom:2px">총 근무시간</div>
@@ -626,32 +625,30 @@ input:focus{border-color:var(--green)}
         </div>
       </div>
 
-      <!-- 항목 상세 -->
-      <div style="padding:4px 0">
+      <!-- 지급 항목 -->
+      <div style="padding:8px 18px 4px;border-bottom:1px solid var(--bd)">
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:6px">📥 지급 항목</div>
 
         <!-- 주휴수당 -->
-        <div style="padding:11px 18px;border-bottom:1px solid #f5f5f5">
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--t1)">주휴수당</div>
-              <div style="font-size:10px;color:var(--t3);margin-top:2px">단가 <span id="psHoliRate">₩0</span> × <span id="psWeekCntDisp">4</span>주</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--t1)">주휴수당</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:1px">단가 <span id="psHoliRate">₩0</span> × <span id="psWeekCntDisp">4</span>주</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="no-capture" style="display:flex;align-items:center;gap:4px">
+              <button class="hc-btn-sm" onclick="changePayWeeks(-1)">−</button>
+              <div class="hc-val-sm" id="psWeekCnt">4</div>
+              <button class="hc-btn-sm" onclick="changePayWeeks(1)">+</button>
+              <span style="font-size:11px;color:var(--t2)">주</span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <!-- 횟수 조작 (캡처 제외용 클래스) -->
-              <div class="no-capture" style="display:flex;align-items:center;gap:4px">
-                <button class="hc-btn-sm" onclick="changePayWeeks(-1)">−</button>
-                <div class="hc-val-sm" id="psWeekCnt">4</div>
-                <button class="hc-btn-sm" onclick="changePayWeeks(1)">+</button>
-                <span style="font-size:11px;color:var(--t2)">주</span>
-              </div>
-              <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right" id="psHoliTotal">₩0</div>
-            </div>
+            <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right" id="psHoliTotal">₩0</div>
           </div>
         </div>
 
         <!-- 상여 -->
-        <div style="padding:11px 18px;border-bottom:1px solid #f5f5f5">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="padding:7px 0;border-bottom:1px solid #f5f5f5">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600;color:var(--t1)">상여</div>
             <div style="display:flex;align-items:center;gap:6px">
               <div class="no-capture"><input class="amt-input" id="psBonus" value="0" oninput="calcPayTotal()" style="width:100px"></div>
@@ -663,8 +660,8 @@ input:focus{border-color:var(--green)}
         </div>
 
         <!-- 기타 -->
-        <div style="padding:11px 18px;border-bottom:1px solid #f5f5f5">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="padding:7px 0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="font-size:13px;font-weight:600;color:var(--t1)">기타</div>
             <div style="display:flex;align-items:center;gap:6px">
               <div class="no-capture"><input class="amt-input" id="psEtc" value="0" oninput="calcPayTotal()" style="width:100px"></div>
@@ -674,12 +671,30 @@ input:focus{border-color:var(--green)}
           <div class="no-capture"><input class="ps-memo" id="psEtcMemo" placeholder="예: 교통비, 식대 등"></div>
           <div style="font-size:11px;color:var(--t2);display:none" id="psEtcMemoDisp"></div>
         </div>
-
       </div>
 
-      <!-- 최종 합계 -->
+      <!-- 총 지급액 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid var(--bd);background:var(--gl)">
+        <span style="font-size:13px;font-weight:600;color:var(--gd)">총 지급액</span>
+        <span style="font-size:18px;font-weight:800;color:var(--gd)" id="psGross">₩0</span>
+      </div>
+
+      <!-- 공제 항목 -->
+      <div style="padding:8px 18px 4px;border-bottom:1px solid var(--bd)" id="psDeductArea">
+        <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:6px">📤 공제 항목</div>
+        <div id="psDeductList"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0">
+          <span style="font-size:13px;font-weight:600;color:var(--t1)">공제 합계</span>
+          <span style="font-size:15px;font-weight:700;color:var(--red)" id="psDeductTotal">₩0</span>
+        </div>
+      </div>
+
+      <!-- 실수령액 -->
       <div style="background:var(--green);padding:16px 18px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9)">💳 최종 합계</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9)">💳 실수령액</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px">총 지급액 - 공제 합계</div>
+        </div>
         <span style="font-size:24px;font-weight:800;color:#fff" id="psTotal">₩0</span>
       </div>
 
@@ -689,7 +704,6 @@ input:focus{border-color:var(--green)}
         <div style="font-size:10px;color:var(--t3)" id="psIssuedAt"></div>
       </div>
     </div>
-    <!-- 캡처 대상 카드 끝 -->
 
     <!-- 버튼들 -->
     <div style="display:flex;gap:8px;margin-bottom:6px">
@@ -2090,58 +2104,127 @@ function renderPayEmpList(){
     </div>`).join('');
 }
 
+let psCurrentEmp=null;
 async function openPayslip(empId){
   const emp=employees.find(e=>e.id===empId);if(!emp)return;
+  psCurrentEmp=emp;
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const snap=await db.collection('workHours').where('empId','==',empId).where('period','==',period).get();
   let total=0;snap.forEach(d=>total+=d.data().hours||0);
   const base=Math.round(total*(emp.rate||0));
-  psHoliRateVal=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;psWeekCntVal=4;
+  // 주휴수당 자동계산
+  const weeksInMonth=4;
+  const weeklyHrs=total/weeksInMonth;
+  let autoHoli=0;
+  if(weeklyHrs>=15){
+    // 주휴수당 = (주간평균 ÷ 40) × 8 × 시급
+    const holiRate=Math.round((weeklyHrs/40)*8*(emp.rate||0));
+    psHoliRateVal=holiRate;
+  } else {
+    psHoliRateVal=0;
+  }
+  psWeekCntVal=weeksInMonth;
+  // 고용형태 표시
+  const empType=emp.empType||'기타';
+  const typeLabel={정규직:'정규직 (4대보험)',프리랜서:'프리랜서 (3.3%)',일용직:'일용직 (2.97%+고용보험)',기타:'기타 (공제없음)'};
   document.getElementById('psCafeName').textContent=`☕ ${currentCafe.name} · 급여 명세서`;
   document.getElementById('psName').textContent=emp.name;
   document.getElementById('psPeriod').textContent=`${payY}년 ${payM+1}월 급여 명세서`;
+  document.getElementById('psEmpType').textContent=typeLabel[empType]||empType;
   document.getElementById('psHours').textContent=total.toFixed(1)+'시간';
   document.getElementById('psRate').textContent='₩'+(emp.rate||0).toLocaleString();
   document.getElementById('psBase').textContent='₩'+base.toLocaleString();
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
   document.getElementById('psBonus').value='0';document.getElementById('psBonusMemo').value='';
   document.getElementById('psEtc').value='0';document.getElementById('psEtcMemo').value='';
   calcPayTotal();showScreen('scPayslip');
 }
-function changePayWeeks(v){psWeekCntVal=Math.max(0,Math.min(6,psWeekCntVal+v));document.getElementById('psWeekCnt').textContent=psWeekCntVal;document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;calcPayTotal();}
+function changePayWeeks(v){
+  psWeekCntVal=Math.max(0,Math.min(6,psWeekCntVal+v));
+  document.getElementById('psWeekCnt').textContent=psWeekCntVal;
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
+  calcPayTotal();
+}
+function calcTax(empType,gross,totalHrs){
+  const deductions=[];
+  let totalDeduct=0;
+  if(empType==='정규직'){
+    const pension=Math.round(gross*0.045);
+    const health=Math.round(gross*0.03545);
+    const ltc=Math.round(health*0.1295);
+    const employ=Math.round(gross*0.009);
+    deductions.push({label:'국민연금 (4.5%)',amt:pension});
+    deductions.push({label:'건강보험 (3.545%)',amt:health});
+    deductions.push({label:'장기요양 (건강보험×12.95%)',amt:ltc});
+    deductions.push({label:'고용보험 (0.9%)',amt:employ});
+    totalDeduct=pension+health+ltc+employ;
+  } else if(empType==='프리랜서'){
+    const tax=Math.round(gross*0.033);
+    deductions.push({label:'소득세+지방세 (3.3%)',amt:tax});
+    totalDeduct=tax;
+  } else if(empType==='일용직'){
+    // 일 15만원 초과분에 2.97% + 고용보험 0.9%
+    const dailyLimit=150000;
+    const workDays=totalHrs>0?Math.ceil(totalHrs/8):0;
+    const taxableBase=Math.max(0,gross-dailyLimit*workDays);
+    const incomeTax=Math.round(taxableBase*0.0297);
+    const employ=Math.round(gross*0.009);
+    if(incomeTax>0)deductions.push({label:`소득세+지방세 2.97% (15만원 초과분)`,amt:incomeTax});
+    deductions.push({label:'고용보험 (0.9%)',amt:employ});
+    totalDeduct=incomeTax+employ;
+  }
+  return {deductions,totalDeduct};
+}
 function calcPayTotal(){
   const base=parseFloat((document.getElementById('psBase').textContent||'0').replace(/[₩,]/g,''))||0;
   const holi=psHoliRateVal*psWeekCntVal;
   document.getElementById('psHoliTotal').textContent='₩'+holi.toLocaleString();
   const bonus=parseFloat(document.getElementById('psBonus').value)||0;
   const etc=parseFloat(document.getElementById('psEtc').value)||0;
-  document.getElementById('psTotal').textContent='₩'+Math.round(base+holi+bonus+etc).toLocaleString();
+  const gross=Math.round(base+holi+bonus+etc);
+  document.getElementById('psGross').textContent='₩'+gross.toLocaleString();
+  // 세금 계산
+  const empType=psCurrentEmp?.empType||'기타';
+  const totalHrs=parseFloat((document.getElementById('psHours').textContent||'0').replace('시간',''))||0;
+  const {deductions,totalDeduct}=calcTax(empType,gross,totalHrs);
+  // 공제 항목 렌더링
+  const deductList=document.getElementById('psDeductList');
+  const deductArea=document.getElementById('psDeductArea');
+  if(deductions.length===0){
+    deductArea.style.display='none';
+  } else {
+    deductArea.style.display='block';
+    deductList.innerHTML=deductions.map(d=>`
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
+        <span style="color:var(--t2)">${d.label}</span>
+        <span style="color:var(--red);font-weight:500">-₩${d.amt.toLocaleString()}</span>
+      </div>`).join('');
+    document.getElementById('psDeductTotal').textContent='₩'+totalDeduct.toLocaleString();
+  }
+  const net=Math.round(gross-totalDeduct);
+  document.getElementById('psTotal').textContent='₩'+net.toLocaleString();
 }
-function savePayslip(){ alert('저장됐어요 😊'); }
 
-// 캡처 전: 입력 UI 숨기고 표시용 값 보이게
+function savePayslip(){ showToast('저장됐어요 😊'); }
+
 function prepareCapture(){
-  // 상여
   const bonus=parseInt(document.getElementById('psBonus').value)||0;
   const bonusMemo=document.getElementById('psBonusMemo').value.trim();
   document.getElementById('psBonusDisp').textContent='₩'+bonus.toLocaleString();
   document.getElementById('psBonusDisp').style.display='block';
   document.getElementById('psBonusMemoDisp').textContent=bonusMemo||'';
   document.getElementById('psBonusMemoDisp').style.display=bonusMemo?'block':'none';
-  // 기타
   const etc=parseInt(document.getElementById('psEtc').value)||0;
   const etcMemo=document.getElementById('psEtcMemo').value.trim();
   document.getElementById('psEtcDisp').textContent='₩'+etc.toLocaleString();
   document.getElementById('psEtcDisp').style.display='block';
   document.getElementById('psEtcMemoDisp').textContent=etcMemo||'';
   document.getElementById('psEtcMemoDisp').style.display=etcMemo?'block':'none';
-  // 주휴횟수 표시
   document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
-  // 발행일
   const now=new Date();
   document.getElementById('psIssuedAt').textContent=`발행일 ${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
-  // 입력 UI 숨기기
   document.querySelectorAll('.no-capture').forEach(el=>el.style.visibility='hidden');
 }
 // 캡처 후: 원상복구
@@ -2869,9 +2952,14 @@ async function saveHealth(){
   const issueDate=document.getElementById('healthIssueDate').value;
   const expireDate=document.getElementById('healthExpireDate').value;
   if(!empName||!issueDate||!expireDate){alert('모든 항목을 입력해주세요');return;}
+  const empId=document.getElementById('healthModal').dataset.empId||null;
   const data={cafeId:currentCafe.id,empName,issueDate,expireDate};
+  if(empId)data.empId=empId;
   if(editingHealthId){await db.collection('healthCerts').doc(editingHealthId).update(data);}
   else{await db.collection('healthCerts').add(data);}
+  // 이름 readonly 해제
+  document.getElementById('healthEmpName').readOnly=false;
+  document.getElementById('healthModal').dataset.empId='';
   closeHealthModal();showToast('✅ 보건증 정보가 저장됐어요!');
 }
 async function deleteHealth(id){
