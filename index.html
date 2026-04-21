@@ -515,6 +515,11 @@ input:focus{border-color:var(--green)}
     <button class="back-btn" onclick="showScreen('scLabor')">← 뒤로</button>
     <div class="hdr-title">직원 관리</div>
     <div class="hdr-sub">관리자</div>
+  </div>  <!-- 관리자 빠른 이동 탭 -->
+  <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
+    <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
   </div>
   <div class="tabs">
     <button class="tab on" id="empTab1" onclick="switchEmpTab('active')">재직중</button>
@@ -582,6 +587,11 @@ input:focus{border-color:var(--green)}
     <button class="back-btn" onclick="showScreen('scLabor')">← 뒤로</button>
     <div class="hdr-title">급여 관리</div>
     <div class="hdr-sub" id="payManagePeriod">2026년 4월</div>
+  </div>  <!-- 관리자 빠른 이동 탭 -->
+  <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
+    <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -638,15 +648,16 @@ input:focus{border-color:var(--green)}
             <div style="font-size:13px;font-weight:600;color:var(--t1)">주휴수당</div>
             <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right" id="psHoliTotal">₩0</div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:10px;color:var(--t3)">단가</div>
-            <div class="no-capture" style="display:flex;align-items:center;gap:4px">
-              <button class="hc-btn-sm" onclick="changeHoliRate(-500)">−</button>
-              <span style="font-size:12px;font-weight:600;color:var(--t1);min-width:70px;text-align:center" id="psHoliRate">₩0</span>
-              <button class="hc-btn-sm" onclick="changeHoliRate(500)">+</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:10px;color:var(--t3)">단가 (직접 수정 가능)</div>
+            <div class="no-capture">
+              <input type="number" id="psHoliRateInput" min="0" step="100"
+                oninput="psHoliRateVal=parseInt(this.value)||0;document.getElementById('psHoliRate').textContent='₩'+(psHoliRateVal).toLocaleString();calcPayTotal()"
+                style="width:110px;text-align:right;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:600;color:var(--t1);outline:none">
+              <span id="psHoliRate" style="display:none">₩0</span>
             </div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
             <div style="font-size:10px;color:var(--t3)">횟수</div>
             <div class="no-capture" style="display:flex;align-items:center;gap:4px">
               <button class="hc-btn-sm" onclick="changePayWeeks(-1)">−</button>
@@ -733,6 +744,11 @@ input:focus{border-color:var(--green)}
     <button class="back-btn" onclick="showScreen('scLabor')">← 뒤로</button>
     <div class="hdr-title">월 급여 현황</div>
     <div class="hdr-sub" id="payTablePeriod">2026년 4월</div>
+  </div>  <!-- 관리자 빠른 이동 탭 -->
+  <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
+    <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
   </div>
   <!-- 탭 -->
   <div class="tabs" style="margin:10px 14px">
@@ -821,20 +837,19 @@ input:focus{border-color:var(--green)}
   <div class="hdr" id="healthHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
     <div><div class="hdr-title" id="healthCafeName">카페</div><div class="hdr-sub">보건증 관리해ZUO</div></div>
-    <button id="healthAddBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openHealthModal()">+ 추가</button>
+    <button onclick="openHealthModal()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">+ 추가</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="htab1" onclick="switchHealthTab('active')">재직중</button>
+    <button class="tab" id="htab2" onclick="switchHealthTab('resigned')">퇴사자</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div id="healthAlertBanner"></div>
-    <div id="healthMasterArea" style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
-      <button onclick="checkHealthMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
-    </div>
-    <!-- 테이블 헤더 -->
     <div style="display:grid;grid-template-columns:70px 1fr 1fr 60px;background:var(--green);border-radius:10px 10px 0 0;padding:8px 12px;gap:4px">
       <div style="font-size:11px;font-weight:700;color:#fff">이름</div>
       <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">발행일</div>
-      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">만료일</div>
-      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">D-day</div>
+      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center" id="healthColLabel">만료일</div>
+      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center" id="healthColLabel2">D-day</div>
     </div>
     <div id="healthList" style="border:1px solid var(--bd);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:#fff"></div>
   </div>
@@ -845,14 +860,11 @@ input:focus{border-color:var(--green)}
   <div class="hdr" id="supplyHdr">
     <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
     <div><div class="hdr-title" id="supplyCafeName">카페</div><div class="hdr-sub">소모품 관리해ZUO</div></div>
-    <button id="supplyAddBtn" style="display:none;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyAdd()">+ 추가</button>
+    <button id="supplyAddBtn" style="display:block;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyAdd()">+ 추가</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div id="supplyAlertBanner"></div>
-    <div id="supplyMasterArea" style="margin-bottom:10px;background:var(--gl);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:12px;color:var(--gd)">관리자이신가요?</span>
-      <button onclick="checkSupplyMaster()" style="background:var(--green);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer">관리자 인증</button>
-    </div>
+
     <!-- 테이블 헤더 -->
     <div style="display:grid;grid-template-columns:1fr 80px 80px 44px;background:var(--green);border-radius:10px 10px 0 0;padding:8px 12px;gap:4px">
       <div style="font-size:11px;font-weight:700;color:#fff">소모품</div>
@@ -2055,14 +2067,27 @@ function checkMasterPw(){
   if(isMaster(document.getElementById('masterPwInput').value)){
     closeMasterPw();
     if(masterMenuDest==='svc'){
-      // 서비스 선택에서 진입
       enterSvc(svcMasterDest);
-    } else if(masterMenuDest==='emp'){showScreen('scEmpManage');renderEmpManageList();}
-    else if(masterMenuDest==='pay'){showScreen('scPayManage');renderPayEmpList();}
-    else{showScreen('scPayTable');renderPayTable();}
+    } else if(masterMenuDest==='emp'){showScreen('scEmpManage');renderEmpManageList();setQuickNav('emp');}
+    else if(masterMenuDest==='pay'){showScreen('scPayManage');renderPayEmpList();setQuickNav('pay');}
+    else{showScreen('scPayTable');renderPayTable();setQuickNav('table');}
   } else {
     document.getElementById('masterPwError').style.display='block';
   }
+}
+function setQuickNav(active){
+  ['emp','pay','table'].forEach(k=>{
+    const el=document.getElementById('qnav_'+k);
+    if(!el)return;
+    el.style.color=k===active?'var(--green)':'var(--t3)';
+    el.style.borderBottom=k===active?'2px solid var(--green)':'2px solid transparent';
+  });
+}
+function quickNav(dest){
+  if(dest==='emp'){showScreen('scEmpManage');renderEmpManageList();}
+  else if(dest==='pay'){showScreen('scPayManage');renderPayEmpList();}
+  else{showScreen('scPayTable');renderPayTable();}
+  setQuickNav(dest);
 }
 
 let currentEmpTab='active';
@@ -2243,6 +2268,7 @@ async function openPayslip(empId){
   document.getElementById('psRate').textContent='₩'+(emp.rate||0).toLocaleString();
   document.getElementById('psBase').textContent='₩'+base.toLocaleString();
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
+  document.getElementById('psHoliRateInput').value=psHoliRateVal;
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
   document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
   document.getElementById('psBonus').value=savedBonus;
@@ -2346,6 +2372,8 @@ async function savePayslip(){
 }
 
 function prepareCapture(){
+  // 캡처용 주휴단가 텍스트 업데이트
+  document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
   const bonus=parseInt(document.getElementById('psBonus').value)||0;
   const bonusMemo=document.getElementById('psBonusMemo').value.trim();
   document.getElementById('psBonusDisp').textContent='₩'+bonus.toLocaleString();
@@ -2557,19 +2585,56 @@ async function exportTrendExcel(){
 async function renderPayTable(){
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const tbl=document.getElementById('payTable');
-  tbl.innerHTML=`<tr><th>이름</th><th>근무시간</th><th>시급합계</th><th>주휴수당</th><th>상여</th><th>기타</th><th>최종합계</th></tr>`;
-  let sumH=0,sumB=0,sumHoli=0,sumBonus=0,sumEtc=0,sumTotal=0;
-  for(const emp of employees){
-    const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-    let h=0;snap.forEach(d=>h+=d.data().hours||0);
+  tbl.innerHTML=`<tr><th>이름</th><th>근무시간</th><th>시급합계</th><th>주휴수당</th><th>상여</th><th>기타</th><th>공제</th><th>실수령액</th></tr>`;
+  let sumH=0,sumB=0,sumHoli=0,sumBonus=0,sumEtc=0,sumDeduct=0,sumNet=0;
+  const activeEmps=employees.filter(e=>!e.resigned);
+  for(const emp of activeEmps){
+    // 근무시간
+    const wSnap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
+    let h=0;wSnap.forEach(d=>h+=d.data().hours||0);
     const base=Math.round(h*(emp.rate||0));
-    const holi=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
-    const total=base+holi;
-    sumH+=h;sumB+=base;sumHoli+=holi;sumTotal+=total;
-    tbl.innerHTML+=`<tr><td class="nm">${emp.name}</td><td>${h.toFixed(1)}h</td><td>${base.toLocaleString()}</td><td>${holi.toLocaleString()}</td><td>0</td><td>0</td><td class="tot">${total.toLocaleString()}</td></tr>`;
+    // 저장된 명세서 데이터 불러오기
+    const psSnap=await db.collection('payslips').where('empId','==',emp.id).where('period','==',period).get();
+    let holiRate,weekCnt,bonus=0,etc=0;
+    if(!psSnap.empty){
+      const saved=psSnap.docs[0].data();
+      holiRate=saved.holiRateVal!==undefined?saved.holiRateVal:((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0);
+      weekCnt=saved.weekCntVal!==undefined?saved.weekCntVal:4;
+      bonus=saved.bonus||0;
+      etc=saved.etc||0;
+    } else {
+      holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
+      // 해당 월 일요일 개수
+      weekCnt=(()=>{let s=0;const dim=new Date(payY,payM+1,0).getDate();for(let d=1;d<=dim;d++){if(new Date(payY,payM,d).getDay()===0)s++;}return s;})();
+    }
+    const holi=Math.round(holiRate*weekCnt);
+    const gross=base+holi+bonus+etc;
+    // 세금 계산
+    const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
+    const net=gross-totalDeduct;
+    sumH+=h;sumB+=base;sumHoli+=holi;sumBonus+=bonus;sumEtc+=etc;sumDeduct+=totalDeduct;sumNet+=net;
+    tbl.innerHTML+=`<tr>
+      <td class="nm">${emp.name}</td>
+      <td>${h.toFixed(1)}h</td>
+      <td>${base.toLocaleString()}</td>
+      <td>${holi.toLocaleString()}</td>
+      <td>${bonus.toLocaleString()}</td>
+      <td>${etc.toLocaleString()}</td>
+      <td style="color:var(--red)">${totalDeduct.toLocaleString()}</td>
+      <td class="tot">${net.toLocaleString()}</td>
+    </tr>`;
   }
-  tbl.innerHTML+=`<tr><td class="nm">합계</td><td>${sumH.toFixed(1)}h</td><td>${sumB.toLocaleString()}</td><td>${sumHoli.toLocaleString()}</td><td>${sumBonus.toLocaleString()}</td><td>${sumEtc.toLocaleString()}</td><td class="tot">${sumTotal.toLocaleString()}</td></tr>`;
-  document.getElementById('payTableTotal').textContent='₩'+sumTotal.toLocaleString();
+  tbl.innerHTML+=`<tr>
+    <td class="nm">합계</td>
+    <td>${sumH.toFixed(1)}h</td>
+    <td>${sumB.toLocaleString()}</td>
+    <td>${sumHoli.toLocaleString()}</td>
+    <td>${sumBonus.toLocaleString()}</td>
+    <td>${sumEtc.toLocaleString()}</td>
+    <td style="color:var(--red)">${sumDeduct.toLocaleString()}</td>
+    <td class="tot">${sumNet.toLocaleString()}</td>
+  </tr>`;
+  document.getElementById('payTableTotal').textContent='₩'+sumNet.toLocaleString();
 }
 
 async function exportExcel(){
@@ -2911,11 +2976,19 @@ async function saveNotice(){
 
 // ===== 보건증 관리 =====
 let healthList=[],editingHealthId=null,isHealthMaster=false;
+let healthTabMode='active';
+function switchHealthTab(tab){
+  healthTabMode=tab;
+  document.getElementById('htab1').classList.toggle('on',tab==='active');
+  document.getElementById('htab2').classList.toggle('on',tab==='resigned');
+  const colLabel=document.getElementById('healthColLabel');
+  const colLabel2=document.getElementById('healthColLabel2');
+  if(colLabel)colLabel.textContent=tab==='active'?'만료일':'퇴사일';
+  if(colLabel2)colLabel2.textContent=tab==='active'?'D-day':'';
+  renderHealth();
+}
 function loadHealth(){
-  isHealthMaster=false;
-  document.getElementById('healthAddBtn').style.display='none';
-  document.getElementById('healthMasterArea').style.display='flex';
-  // 직원 목록이 없으면 먼저 로드
+  isHealthMaster=true; // 서비스 진입 시 이미 인증됨
   const loadCerts=()=>{
     db.collection('healthCerts').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{
       healthList=[];snap.forEach(d=>healthList.push({id:d.id,...d.data()}));
@@ -2934,16 +3007,45 @@ function loadHealth(){
 function renderHealth(){
   const today=new Date();today.setHours(0,0,0,0);
   const w=document.getElementById('healthList');
-  const activeEmps=employees.filter(e=>!e.resigned);
   const certByEmpId={};
   const manualCerts=[];
   healthList.forEach(h=>{
     if(h.empId)certByEmpId[h.empId]=h;
     else manualCerts.push(h);
   });
-  if(!activeEmps.length&&!manualCerts.length){
-    w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 직원이 없어요</div>`;
+  if(healthTabMode==='resigned'){
+    // 퇴사자 탭
+    const resignedEmps=employees.filter(e=>e.resigned);
+    if(!resignedEmps.length&&!manualCerts.filter(h=>h.resigned).length){
+      w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">퇴사자가 없어요</div>`;return;
+    }
+    w.innerHTML=resignedEmps.map((emp,i)=>{
+      const h=certByEmpId[emp.id];
+      const bg=i%2===0?'#fff':'#fafafa';
+      if(h){
+        return `<div style="display:grid;grid-template-columns:70px 1fr 1fr 60px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${bg};align-items:center">
+          <div style="font-size:13px;font-weight:600;color:var(--t3)">${emp.name}</div>
+          <div style="font-size:11px;color:var(--t3);text-align:center">${h.issueDate||'-'}</div>
+          <div style="font-size:11px;color:var(--t3);text-align:center">${emp.resignDate||'-'}</div>
+          <div style="text-align:center">
+            <button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--t2);cursor:pointer">수정</button>
+          </div>
+        </div>`;
+      } else {
+        return `<div style="display:grid;grid-template-columns:70px 1fr 1fr 60px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${bg};align-items:center">
+          <div style="font-size:13px;font-weight:600;color:var(--t3)">${emp.name}</div>
+          <div style="font-size:11px;color:var(--t3);text-align:center">-</div>
+          <div style="font-size:11px;color:var(--t3);text-align:center">${emp.resignDate||'-'}</div>
+          <div style="text-align:center"><button onclick="openHealthModalForEmp('${emp.id}','${emp.name}')" style="background:var(--green);border:none;border-radius:5px;padding:3px 8px;font-size:10px;color:#fff;cursor:pointer">입력</button></div>
+        </div>`;
+      }
+    }).join('');
     return;
+  }
+  // 재직중 탭
+  const activeEmps=employees.filter(e=>!e.resigned);
+  if(!activeEmps.length&&!manualCerts.length){
+    w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 직원이 없어요</div>`;return;
   }
   const rows=[...activeEmps.map((emp,i)=>{
     const h=certByEmpId[emp.id];
@@ -2954,47 +3056,50 @@ function renderHealth(){
       const alert=isAlert||isExp;
       const dLabel=isExp?'만료':diff===0?'D-day':`D-${diff}`;
       const alertStyle=alert?'color:var(--red);font-weight:700;font-size:13px':'color:var(--gd);font-weight:500;font-size:12px';
-      const editBtn=isHealthMaster?`<div style="display:flex;gap:4px;justify-content:flex-end"><button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--t2);cursor:pointer">수정</button><button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:2px 7px;font-size:10px;color:var(--red);cursor:pointer">삭제</button></div>`:'';
       return `<div style="display:grid;grid-template-columns:70px 1fr 1fr 60px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${alert?'#FFF5F5':bg};align-items:center">
         <div style="font-size:13px;font-weight:600;color:${alert?'var(--red)':'var(--t1)'}">${emp.name}</div>
         <div style="font-size:11px;color:var(--t2);text-align:center">${h.issueDate||'-'}</div>
         <div style="font-size:11px;color:${alert?'var(--red)':'var(--t2)'};text-align:center;${alert?'font-weight:600':''}">${h.expireDate||'-'}</div>
         <div style="text-align:center">
           <div style="${alertStyle}">${dLabel}</div>
-          ${editBtn}
+          <div style="display:flex;gap:2px;justify-content:center;margin-top:2px">
+            <button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 5px;font-size:9px;color:var(--t2);cursor:pointer">수정</button>
+            <button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:2px 5px;font-size:9px;color:var(--red);cursor:pointer">삭제</button>
+          </div>
         </div>
       </div>`;
     } else {
-      const inputBtn=isHealthMaster?`<button onclick="openHealthModalForEmp('${emp.id}','${emp.name}')" style="background:var(--green);border:none;border-radius:5px;padding:3px 8px;font-size:10px;color:#fff;cursor:pointer">입력</button>`:`<span style="font-size:10px;color:var(--t3)">미등록</span>`;
       return `<div style="display:grid;grid-template-columns:70px 1fr 1fr 60px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${bg};align-items:center">
         <div style="font-size:13px;font-weight:600;color:var(--t3)">${emp.name}</div>
         <div style="font-size:11px;color:var(--t3);text-align:center">-</div>
         <div style="font-size:11px;color:var(--t3);text-align:center">미등록</div>
-        <div style="text-align:center">${inputBtn}</div>
+        <div style="text-align:center"><button onclick="openHealthModalForEmp('${emp.id}','${emp.name}')" style="background:var(--green);border:none;border-radius:5px;padding:3px 8px;font-size:10px;color:#fff;cursor:pointer">입력</button></div>
       </div>`;
     }
   }),...manualCerts.map((h,i)=>{
     const exp=new Date(h.expireDate);const diff=Math.ceil((exp-today)/(1000*60*60*24));
-    const isAlert=diff<=30&&diff>=0;const isExp=diff<0;
-    const alert=isAlert||isExp;
+    const isAlert=diff<=30&&diff>=0;const isExp=diff<0;const alert=isAlert||isExp;
     const dLabel=isExp?'만료':diff===0?'D-day':`D-${diff}`;
     const alertStyle=alert?'color:var(--red);font-weight:700;font-size:13px':'color:var(--gd);font-weight:500;font-size:12px';
-    const editBtn=isHealthMaster?`<div style="display:flex;gap:4px;justify-content:flex-end"><button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--t2);cursor:pointer">수정</button><button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:2px 7px;font-size:10px;color:var(--red);cursor:pointer">삭제</button></div>`:'';
     const bg=(activeEmps.length+i)%2===0?'#fff':'#fafafa';
     return `<div style="display:grid;grid-template-columns:70px 1fr 1fr 60px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${alert?'#FFF5F5':bg};align-items:center">
       <div style="font-size:13px;font-weight:600;color:${alert?'var(--red)':'var(--t1)'}">
-        ${h.empName}<span style="font-size:9px;color:var(--t3);margin-left:2px">(수기)</span>
+        ${h.empName}<span style="font-size:9px;color:var(--t3)">(수기)</span>
       </div>
       <div style="font-size:11px;color:var(--t2);text-align:center">${h.issueDate||'-'}</div>
-      <div style="font-size:11px;color:${alert?'var(--red)':'var(--t2)'};text-align:center;${alert?'font-weight:600':''}">${h.expireDate||'-'}</div>
+      <div style="font-size:11px;color:${alert?'var(--red)':'var(--t2)'};text-align:center">${h.expireDate||'-'}</div>
       <div style="text-align:center">
         <div style="${alertStyle}">${dLabel}</div>
-        ${editBtn}
+        <div style="display:flex;gap:2px;justify-content:center;margin-top:2px">
+          <button onclick="openHealthModal('${h.id}')" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 5px;font-size:9px;color:var(--t2);cursor:pointer">수정</button>
+          <button onclick="deleteHealth('${h.id}')" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:2px 5px;font-size:9px;color:var(--red);cursor:pointer">삭제</button>
+        </div>
       </div>
     </div>`;
   })];
   w.innerHTML=rows.join('')||`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">데이터가 없어요</div>`;
 }
+
 function openHealthModalForEmp(empId,empName){
   editingHealthId=null;
   document.getElementById('healthModalTitle').textContent='보건증 입력';
@@ -3086,6 +3191,7 @@ async function deleteHealth(id){
 // ===== 소모품 관리 =====
 let supplyList=[],editingSupplyId=null;
 function loadSupply(){
+  isSupplyMaster=true; // 서비스 진입 시 이미 인증됨
   db.collection('supplies').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{
     supplyList=[];snap.forEach(d=>supplyList.push({id:d.id,...d.data()}));
     supplyList.sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
@@ -3221,12 +3327,46 @@ function renderSupplyHistory(s){
     list.innerHTML=`<div style="text-align:center;padding:16px;font-size:12px;color:var(--t3)">교체 이력이 없어요</div>`;
     return;
   }
-  list.innerHTML=history.map((h,i)=>`
-    <div style="display:grid;grid-template-columns:80px 70px 1fr;padding:8px 12px;border-bottom:1px solid #f5f5f5;background:${i%2===0?'#fff':'#fafafa'};align-items:center;gap:4px">
+  list.innerHTML=history.map((h,i)=>{
+    const realIdx=(s.history.length-1)-i;
+    return `<div style="display:grid;grid-template-columns:80px 70px 1fr 56px;padding:8px 12px;border-bottom:1px solid #f5f5f5;background:${i%2===0?'#fff':'#fafafa'};align-items:center;gap:4px">
       <div style="font-size:12px;color:var(--t1)">${h.date}</div>
       <div style="font-size:12px;color:var(--t2)">${h.cost?'₩'+parseInt(h.cost).toLocaleString():'-'}</div>
       <div style="font-size:11px;color:var(--t3)">${[h.vendor,h.tel,h.memo].filter(Boolean).join(' · ')||'-'}</div>
-    </div>`).join('');
+      <div style="display:flex;gap:2px;justify-content:flex-end">
+        <button onclick="editSupplyHistory(${realIdx})" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 5px;font-size:9px;color:var(--t2);cursor:pointer">수정</button>
+        <button onclick="deleteSupplyHistory(${realIdx})" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:2px 5px;font-size:9px;color:var(--red);cursor:pointer">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function editSupplyHistory(idx){
+  const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
+  const h=s.history[idx];if(!h)return;
+  document.getElementById('newHistoryDate').value=h.date||'';
+  document.getElementById('newHistoryCost').value=h.cost||'';
+  document.getElementById('newHistoryVendor').value=h.vendor||'';
+  document.getElementById('newHistoryTel').value=h.tel||'';
+  document.getElementById('newHistoryMemo').value=h.memo||'';
+  // 수정 모드 - 기존 이력 삭제 후 새로 추가
+  if(confirm('이 이력을 수정할까요? 수정 후 저장 버튼을 눌러주세요')){
+    deleteSupplyHistory(idx,true);
+  }
+}
+async function deleteSupplyHistory(idx,silent=false){
+  const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
+  if(!silent&&!confirm('이 이력을 삭제할까요?'))return;
+  const history=[...s.history];
+  history.splice(idx,1);
+  // 최근 교체일 업데이트
+  const sorted=[...history].sort((a,b)=>b.date.localeCompare(a.date));
+  const lastDate=sorted.length?sorted[0].date:s.lastDate;
+  const d=new Date(lastDate);d.setDate(d.getDate()+(s.cycle||0));
+  const nextDate=sorted.length?d.toISOString().split('T')[0]:s.nextDate;
+  await db.collection('supplies').doc(currentSupplyId).update({history,lastDate,nextDate});
+  s.history=history;s.lastDate=lastDate;s.nextDate=nextDate;
+  renderSupplyHistory(s);
+  if(!silent)showToast('삭제됐어요');
 }
 async function addSupplyHistory(){
   const date=document.getElementById('newHistoryDate').value;
