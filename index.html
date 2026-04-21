@@ -2582,47 +2582,55 @@ async function exportTrendExcel(){
   XLSX.writeFile(wb,`인건비추이_${new Date().getFullYear()}.xlsx`);
 }
 
+// 공통 급여 계산 함수 - 명세서/월현황/인건비불러오기 모두 동일 로직
+async function calcEmpPay(emp,period){
+  const wSnap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
+  let h=0;wSnap.forEach(d=>h+=d.data().hours||0);
+  const base=Math.round(h*(emp.rate||0));
+  const psSnap=await db.collection('payslips').where('empId','==',emp.id).where('period','==',period).get();
+  let holiRate,weekCnt,bonus=0,etc=0;
+  if(!psSnap.empty){
+    const saved=psSnap.docs[0].data();
+    holiRate=saved.holiRateVal!==undefined?saved.holiRateVal:((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0);
+    weekCnt=saved.weekCntVal!==undefined?saved.weekCntVal:4;
+    bonus=saved.bonus||0;
+    etc=saved.etc||0;
+  } else {
+    holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
+    weekCnt=(()=>{let s=0;const dim=new Date(parseInt(period.split('-')[0]),parseInt(period.split('-')[1]),0).getDate();for(let d=1;d<=dim;d++){if(new Date(parseInt(period.split('-')[0]),parseInt(period.split('-')[1])-1,d).getDay()===0)s++;}return s;})();
+  }
+  const holi=Math.round(holiRate*weekCnt);
+  const gross=base+holi+bonus+etc;
+  const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
+  const net=gross-totalDeduct;
+  return {h,base,holi,bonus,etc,gross,totalDeduct,net,hasData:h>0||!psSnap.empty};
+}
+
 async function renderPayTable(){
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const tbl=document.getElementById('payTable');
   tbl.innerHTML=`<tr><th>이름</th><th>근무시간</th><th>시급합계</th><th>주휴수당</th><th>상여</th><th>기타</th><th>공제</th><th>실수령액</th></tr>`;
   let sumH=0,sumB=0,sumHoli=0,sumBonus=0,sumEtc=0,sumDeduct=0,sumNet=0;
-  // 퇴사자 포함 전체 직원 - 해당 월 근무 기록 있으면 표시
-  for(const emp of employees){
+  // Firebase에서 전체 직원 직접 조회 (employees 배열 의존 안 함)
+  const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const allEmps=[];empSnap.forEach(d=>allEmps.push({id:d.id,...d.data()}));
+  allEmps.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  for(const emp of allEmps){
     // 근무시간
-    const wSnap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-    let h=0;wSnap.forEach(d=>h+=d.data().hours||0);
-    const base=Math.round(h*(emp.rate||0));
-    // 저장된 명세서 데이터 불러오기
-    const psSnap=await db.collection('payslips').where('empId','==',emp.id).where('period','==',period).get();
-    let holiRate,weekCnt,bonus=0,etc=0;
-    if(!psSnap.empty){
-      const saved=psSnap.docs[0].data();
-      holiRate=saved.holiRateVal!==undefined?saved.holiRateVal:((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0);
-      weekCnt=saved.weekCntVal!==undefined?saved.weekCntVal:4;
-      bonus=saved.bonus||0;
-      etc=saved.etc||0;
-    } else {
-      holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
-      weekCnt=(()=>{let s=0;const dim=new Date(payY,payM+1,0).getDate();for(let d=1;d<=dim;d++){if(new Date(payY,payM,d).getDay()===0)s++;}return s;})();
-    }
-    // 퇴사자는 해당 월 근무기록 또는 명세서가 있을 때만 표시
-    if(emp.resigned&&h===0&&psSnap.empty)continue;
-    const holi=Math.round(holiRate*weekCnt);
-    const gross=base+holi+bonus+etc;
-    const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
-    const net=gross-totalDeduct;
-    sumH+=h;sumB+=base;sumHoli+=holi;sumBonus+=bonus;sumEtc+=etc;sumDeduct+=totalDeduct;sumNet+=net;
+    const pay=await calcEmpPay(emp,period);
+    // 퇴사자는 해당 월 데이터 있을 때만 표시
+    if(emp.resigned&&!pay.hasData)continue;
+    sumH+=pay.h;sumB+=pay.base;sumHoli+=pay.holi;sumBonus+=pay.bonus;sumEtc+=pay.etc;sumDeduct+=pay.totalDeduct;sumNet+=pay.net;
     const resignBadge=emp.resigned?`<span style="font-size:9px;background:#f5f5f5;color:var(--t3);padding:1px 4px;border-radius:4px;margin-left:3px">퇴사</span>`:'';
     tbl.innerHTML+=`<tr>
       <td class="nm">${emp.name}${resignBadge}</td>
-      <td>${h.toFixed(1)}h</td>
-      <td>${base.toLocaleString()}</td>
-      <td>${holi.toLocaleString()}</td>
-      <td>${bonus.toLocaleString()}</td>
-      <td>${etc.toLocaleString()}</td>
-      <td style="color:var(--red)">${totalDeduct.toLocaleString()}</td>
-      <td class="tot">${net.toLocaleString()}</td>
+      <td>${pay.h.toFixed(1)}h</td>
+      <td>${pay.base.toLocaleString()}</td>
+      <td>${pay.holi.toLocaleString()}</td>
+      <td>${pay.bonus.toLocaleString()}</td>
+      <td>${pay.etc.toLocaleString()}</td>
+      <td style="color:var(--red)">${pay.totalDeduct.toLocaleString()}</td>
+      <td class="tot">${pay.net.toLocaleString()}</td>
     </tr>`;
   }
   tbl.innerHTML+=`<tr>
@@ -3584,16 +3592,17 @@ function calcProfitTotals(){
 async function loadSalaryFromLabor(){
   const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
   let total=0;
-  for(const emp of employees){
-    const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-    let hrs=0;snap.forEach(d=>hrs+=d.data().hours||0);
-    const base=Math.round(hrs*(emp.rate||0));
-    const holi=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
-    total+=base+holi;
+  // Firebase에서 전체 직원 직접 조회
+  const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const allEmps=[];empSnap.forEach(d=>allEmps.push({id:d.id,...d.data()}));
+  for(const emp of allEmps){
+    const pay=await calcEmpPay(emp,period);
+    if(emp.resigned&&!pay.hasData)continue;
+    total+=pay.net; // 실수령액 기준
   }
   document.getElementById('pi_salary').value=total;
   calcProfitTotals();
-  showToast(`✅ 인건비 ₩${total.toLocaleString()} 불러왔어요!`);
+  showToast(`✅ 인건비(실수령액) ₩${total.toLocaleString()} 불러왔어요!`);
 }
 let profitChartInst=null;
 async function loadProfitChart(){
