@@ -378,7 +378,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면4: 대타 앱 -->
 <div class="screen" id="scApp">
   <div class="hdr" id="appHdr">
-    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <button class="back-btn" onclick="goSvcBack()">← 뒤로</button>
     <div>
       <div class="hdr-title" id="appCafeName">카페</div>
       <div class="hdr-sub">대타해ZUO</div>
@@ -443,7 +443,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면5: 근로관리 -->
 <div class="screen" id="scLabor">
   <div class="hdr" id="laborHdr">
-    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <button class="back-btn" onclick="goSvcBack()">← 뒤로</button>
     <div><div class="hdr-title" id="laborCafeName">카페</div><div class="hdr-sub">근로 관리해ZUO</div></div>
     <div style="width:40px"></div>
   </div>
@@ -841,7 +841,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면13: 공지사항 -->
 <div class="screen" id="scNotice">
   <div class="hdr" id="noticeHdr">
-    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <button class="back-btn" onclick="goSvcBack()">← 뒤로</button>
     <div><div class="hdr-title" id="noticeCafeName">카페</div><div class="hdr-sub">공지사항 읽어ZUO</div></div>
     <button onclick="openNoticeWrite()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">✏️ 작성</button>
   </div>
@@ -880,7 +880,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면14: 보건증 관리 -->
 <div class="screen" id="scHealth">
   <div class="hdr" id="healthHdr">
-    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <button class="back-btn" onclick="goSvcBack()">← 뒤로</button>
     <div><div class="hdr-title" id="healthCafeName">카페</div><div class="hdr-sub">보건증 관리해ZUO</div></div>
     <button onclick="openHealthModal()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">+ 추가</button>
   </div>
@@ -903,7 +903,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면15: 소모품 관리 (테이블) -->
 <div class="screen" id="scSupply">
   <div class="hdr" id="supplyHdr">
-    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <button class="back-btn" onclick="goSvcBack()">← 뒤로</button>
     <div><div class="hdr-title" id="supplyCafeName">카페</div><div class="hdr-sub">소모품 관리해ZUO</div></div>
     <button id="supplyAddBtn" style="display:block;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyAdd()">+ 추가</button>
   </div>
@@ -996,7 +996,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면16: 수익 관리 -->
 <div class="screen" id="scProfit">
   <div class="hdr" id="profitHdr">
-    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <button class="back-btn" onclick="goSvcBack()">← 뒤로</button>
     <div><div class="hdr-title" id="profitCafeName">카페</div><div class="hdr-sub">수익 관리해ZUO</div></div>
     <div style="width:40px"></div>
   </div>
@@ -1597,6 +1597,10 @@ function checkCafePw(){
   }
 }
 
+function goSvcBack(){
+  if(isAdminMode){showScreen('scSvc');}
+  else{showScreen('scSvcWorker');}
+}
 function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
 
 function enterSvc(type){
