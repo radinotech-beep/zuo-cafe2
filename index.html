@@ -834,7 +834,7 @@ input:focus{border-color:var(--green)}
       <div style="font-size:22px;font-weight:700;color:var(--gd)" id="payTableTotal">₩0</div>
     </div>
     <button class="btn-primary" onclick="exportExcel()">📊 엑셀로 내보내기</button>
-    <button onclick="exportDailyExcel()" style="width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:13px;font-weight:600;cursor:pointer">📑 일용직 양식 Excel</button>
+    <button onclick="exportDailyExcel()" style="width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:13px;font-weight:600;cursor:pointer">📑 세무사 제출 자료 내보내기</button>
   </div>
 
   <!-- 월별 추이 탭 -->
@@ -3908,10 +3908,10 @@ async function exportDailyExcel(){
   const headers=['성    명','주민등록번호','주소','지급액','근무일수','연락처','은행','계좌'];
   headers.forEach((h,i)=>sc(ws,2,i,cell(h,{bold:true,fill:C_HEADER,color:'0F6E56',b:bdrMed,sz:10})));
 
-  // 직원 데이터
+  // 직원 데이터 - 재직중 전체 직원
   let row=3;
   let grandTotal=0;
-  const dailyEmps=allEmps.filter(e=>e.empType==='일용직'&&!e.resigned);
+  const dailyEmps=allEmps.filter(e=>!e.resigned);
 
   for(let ei=0;ei<dailyEmps.length;ei++){
     const emp=dailyEmps[ei];
@@ -3944,8 +3944,8 @@ async function exportDailyExcel(){
   ws['!rows']=[{hpt:28},{hpt:16},{hpt:22},...Array(dailyEmps.length).fill({hpt:20}),{hpt:22}];
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.utils.book_append_sheet(wb,ws,`${payY}년 ${payM+1}월`);
-  XLSX.writeFile(wb,`일용직급여명세서_${payY}년${payM+1}월.xlsx`);
-  showToast('✅ 일용직 양식 엑셀 내보내기 완료!');
+  XLSX.writeFile(wb,`세무사제출자료_${payY}년${payM+1}월.xlsx`);
+  showToast('✅ 세무사 제출 자료 내보내기 완료!');
 }
 
 
