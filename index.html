@@ -275,7 +275,7 @@ input:focus{border-color:var(--green)}
   <button class="admin-btn" onclick="goAdmin()">⚙️ 관리자 설정</button>
 </div>
 
-<!-- 화면2: 사용자 선택 -->
+<!-- 화면2: 카페 비밀번호 -->
 <div class="screen" id="scPw">
   <div class="hdr" id="pwHdr">
     <button class="back-btn" onclick="goHome()">← 뒤로</button>
@@ -283,7 +283,24 @@ input:focus{border-color:var(--green)}
     <div style="width:40px"></div>
   </div>
   <div class="pw-wrap">
-    <div class="pw-title" id="pwTitle">어떻게 이용하실건가요?</div>
+    <div class="pw-title" id="pwTitle">입장</div>
+    <div class="pw-sub">카페 비밀번호를 입력해주세요</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="비밀번호" maxlength="10"
+      onkeydown="if(event.key==='Enter')checkCafePw()">
+    <button class="pw-btn" id="pwBtn" onclick="checkCafePw()">입장하기</button>
+    <div class="pw-error" id="pwError">비밀번호가 틀렸어요 ❌</div>
+  </div>
+</div>
+
+<!-- 화면2.5: 사용자 선택 -->
+<div class="screen" id="scUserSelect">
+  <div class="hdr" id="userSelectHdr">
+    <button class="back-btn" onclick="showScreen('scPw')">← 뒤로</button>
+    <div class="hdr-title" id="userSelectCafeName">카페</div>
+    <div style="width:40px"></div>
+  </div>
+  <div class="pw-wrap">
+    <div class="pw-title">어떻게 이용하실건가요?</div>
     <div class="pw-sub">이용 방식을 선택해주세요</div>
     <!-- 직원용 -->
     <div onclick="enterAsWorker()" style="background:#fff;border:2px solid var(--green);border-radius:16px;padding:20px;margin-bottom:14px;cursor:pointer;text-align:center">
@@ -299,10 +316,10 @@ input:focus{border-color:var(--green)}
     </div>
     <!-- 관리자 비번 입력 (숨김) -->
     <div id="adminPwArea" style="display:none;margin-top:16px">
-      <input type="password" class="pw-input" id="pwInput" placeholder="관리자 비밀번호" maxlength="10"
-        onkeydown="if(event.key==='Enter')checkCafePw()">
-      <button class="pw-btn" id="pwBtn" onclick="checkCafePw()">확인</button>
-      <div class="pw-error" id="pwError">비밀번호가 틀렸어요 ❌</div>
+      <input type="password" class="pw-input" id="adminPwInput2" placeholder="관리자 비밀번호" maxlength="10"
+        onkeydown="if(event.key==='Enter')checkAdminModePw()">
+      <button class="pw-btn" onclick="checkAdminModePw()">확인</button>
+      <div class="pw-error" id="adminPwError2">비밀번호가 틀렸어요 ❌</div>
     </div>
   </div>
 </div>
@@ -310,7 +327,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면3: 서비스 선택 (직원용) -->
 <div class="screen" id="scSvcWorker">
   <div class="hdr" id="svcWorkerHdr">
-    <button class="back-btn" onclick="showScreen('scPw')">← 뒤로</button>
+    <button class="back-btn" onclick="showScreen('scUserSelect')">← 뒤로</button>
     <div class="hdr-title" id="svcWorkerCafeName">카페</div>
     <div style="font-size:11px;color:rgba(255,255,255,0.8)">직원</div>
   </div>
@@ -337,7 +354,7 @@ input:focus{border-color:var(--green)}
 </div>
 <div class="screen" id="scSvc">
   <div class="hdr" id="svcHdr">
-    <button class="back-btn" onclick="showScreen('scPw')">← 뒤로</button>
+    <button class="back-btn" onclick="showScreen('scUserSelect')">← 뒤로</button>
     <div class="hdr-title" id="svcCafeName">카페</div>
     <div style="font-size:11px;color:rgba(255,255,255,0.8)">관리자</div>
   </div>
@@ -1547,40 +1564,38 @@ function selectCafe(id){
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
   document.getElementById('pwHdr').style.background=cm.main;
   document.getElementById('pwCafeName').textContent=currentCafe.name;
-  document.getElementById('pwError').style.display='none';
-  document.getElementById('adminPwArea').style.display='none';
+  document.getElementById('pwTitle').textContent=`${currentCafe.name} 입장`;
+  document.getElementById('pwBtn').style.background=cm.main;
   document.getElementById('pwInput').value='';
+  document.getElementById('pwError').style.display='none';
   applyTheme(currentCafe.color||'green');
   loadCafeMasterPw();
   showScreen('scPw');
 }
-function showAdminPwInput(){
-  const area=document.getElementById('adminPwArea');
-  area.style.display='block';
-  document.getElementById('pwInput').value='';
-  document.getElementById('pwError').style.display='none';
-  document.getElementById('pwInput').focus();
-}
-function enterAsWorker(){
-  isAdminMode=false;
-  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  document.getElementById('svcWorkerHdr').style.background=cm.main;
-  document.getElementById('svcWorkerCafeName').textContent=currentCafe.name;
-  document.getElementById('svcIcon2').style.background=cm.light;
-  showScreen('scSvcWorker');
-}
-function enterWorkerTimeInput(){
-  // 직원 선택 모달 표시
-  if(!employees.length){
-    loadEmployees();
-    setTimeout(enterWorkerMenu,800);
-  } else {
-    enterWorkerMenu();
-  }
-}
 function checkCafePw(){
   const pw=document.getElementById('pwInput').value;
-  // 관리자 입장은 중간관리자 비번(MASTER_PW) 또는 최종관리자(SUPER_MASTER)만 가능
+  if(pw===currentCafe.password){
+    // 카페 비번 통과 → 사용자 선택 화면으로
+    const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+    document.getElementById('userSelectHdr').style.background=cm.main;
+    document.getElementById('userSelectCafeName').textContent=currentCafe.name;
+    document.getElementById('adminPwArea').style.display='none';
+    document.getElementById('adminPwInput2').value='';
+    document.getElementById('adminPwError2').style.display='none';
+    showScreen('scUserSelect');
+  } else {
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').value='';
+  }
+}
+function showAdminPwInput(){
+  document.getElementById('adminPwArea').style.display='block';
+  document.getElementById('adminPwInput2').value='';
+  document.getElementById('adminPwError2').style.display='none';
+  document.getElementById('adminPwInput2').focus();
+}
+function checkAdminModePw(){
+  const pw=document.getElementById('adminPwInput2').value;
   if(isMaster(pw)){
     isAdminMode=true;
     document.getElementById('adminPwArea').style.display='none';
@@ -1592,8 +1607,26 @@ function checkCafePw(){
     showScreen('scSvc');
     setTimeout(()=>{subscribePush();checkAndNotify();},1500);
   } else {
-    document.getElementById('pwError').style.display='block';
-    document.getElementById('pwInput').value='';
+    document.getElementById('adminPwError2').style.display='block';
+    document.getElementById('adminPwInput2').value='';
+  }
+}
+function enterAsWorker(){
+  isAdminMode=false;
+  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+  document.getElementById('svcWorkerHdr').style.background=cm.main;
+  document.getElementById('svcWorkerCafeName').textContent=currentCafe.name;
+  document.getElementById('svcIcon2').style.background=cm.light;
+  loadEmployees();
+  showScreen('scSvcWorker');
+}
+function enterWorkerTimeInput(){
+  // 직원 선택 모달 표시
+  if(!employees.length){
+    loadEmployees();
+    setTimeout(enterWorkerMenu,800);
+  } else {
+    enterWorkerMenu();
   }
 }
 
@@ -3909,6 +3942,7 @@ async function testPushNotification(){
   if(el)el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 });
 document.getElementById('pwInput').addEventListener('keyup',e=>{if(e.key==='Enter')checkCafePw();});
+document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminModePw();});
 document.getElementById('adminPwInput').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminPw();});
 
 loadCafes();
