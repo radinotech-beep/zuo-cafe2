@@ -1587,6 +1587,8 @@ function checkCafePw(){
     document.getElementById('svcIcon1').style.background=cm.light;
     loadEmployees();
     showScreen('scSvc');
+    // 관리자 입장 시 푸시 구독 + 알림 체크
+    setTimeout(()=>{subscribePush();checkAndNotify();},1500);
   } else {
     document.getElementById('pwError').style.display='block';
     document.getElementById('pwInput').value='';
@@ -3803,6 +3805,6 @@ document.getElementById('adminPwInput').addEventListener('keyup',e=>{if(e.key===
 
 loadCafes();
 </script>
-<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+
 </body>
 </html>
