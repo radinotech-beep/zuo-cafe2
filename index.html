@@ -275,7 +275,7 @@ input:focus{border-color:var(--green)}
   <button class="admin-btn" onclick="goAdmin()">⚙️ 관리자 설정</button>
 </div>
 
-<!-- 화면2: 카페 비밀번호 -->
+<!-- 화면2: 사용자 선택 -->
 <div class="screen" id="scPw">
   <div class="hdr" id="pwHdr">
     <button class="back-btn" onclick="goHome()">← 뒤로</button>
@@ -283,20 +283,63 @@ input:focus{border-color:var(--green)}
     <div style="width:40px"></div>
   </div>
   <div class="pw-wrap">
-    <div class="pw-title" id="pwTitle">입장</div>
-    <div class="pw-sub">입장 비밀번호를 입력해주세요</div>
-    <input type="password" class="pw-input" id="pwInput" placeholder="비밀번호" maxlength="10">
-    <button class="pw-btn" id="pwBtn" onclick="checkCafePw()">입장하기</button>
-    <div class="pw-error" id="pwError">비밀번호가 틀렸어요 ❌</div>
+    <div class="pw-title" id="pwTitle">어떻게 이용하실건가요?</div>
+    <div class="pw-sub">이용 방식을 선택해주세요</div>
+    <!-- 직원용 -->
+    <div onclick="enterAsWorker()" style="background:#fff;border:2px solid var(--green);border-radius:16px;padding:20px;margin-bottom:14px;cursor:pointer;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">👤</div>
+      <div style="font-size:17px;font-weight:700;color:var(--green);margin-bottom:4px">직원으로 입장</div>
+      <div style="font-size:12px;color:var(--t3)">공지사항 · 근무시간 입력 · 대타 · 보건증 열람</div>
+    </div>
+    <!-- 관리자용 -->
+    <div onclick="showAdminPwInput()" style="background:#fff;border:2px solid #534AB7;border-radius:16px;padding:20px;cursor:pointer;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">🔐</div>
+      <div style="font-size:17px;font-weight:700;color:#534AB7;margin-bottom:4px">관리자로 입장</div>
+      <div style="font-size:12px;color:var(--t3)">모든 서비스 이용 · 급여 · 수익 · 소모품 관리</div>
+    </div>
+    <!-- 관리자 비번 입력 (숨김) -->
+    <div id="adminPwArea" style="display:none;margin-top:16px">
+      <input type="password" class="pw-input" id="pwInput" placeholder="관리자 비밀번호" maxlength="10"
+        onkeydown="if(event.key==='Enter')checkCafePw()">
+      <button class="pw-btn" id="pwBtn" onclick="checkCafePw()">확인</button>
+      <div class="pw-error" id="pwError">비밀번호가 틀렸어요 ❌</div>
+    </div>
   </div>
 </div>
 
-<!-- 화면3: 서비스 선택 -->
+<!-- 화면3: 서비스 선택 (직원용) -->
+<div class="screen" id="scSvcWorker">
+  <div class="hdr" id="svcWorkerHdr">
+    <button class="back-btn" onclick="showScreen('scPw')">← 뒤로</button>
+    <div class="hdr-title" id="svcWorkerCafeName">카페</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.8)">직원</div>
+  </div>
+  <div class="svc-wrap">
+    <div class="svc-title">서비스를 선택해주세요</div>
+    <div class="svc-sub">직원 이용 서비스</div>
+    <div class="svc-card" onclick="enterSvc('notice')">
+      <div class="svc-icon" style="background:#FFF2CC">📢</div>
+      <div><div class="svc-name">공지사항 읽어ZUO</div><div class="svc-desc">매장 공지 확인</div></div>
+    </div>
+    <div class="svc-card" onclick="enterWorkerTimeInput()">
+      <div class="svc-icon" style="background:#E6F1FB">📋</div>
+      <div><div class="svc-name">근무시간 입력</div><div class="svc-desc">본인 근무시간 입력</div></div>
+    </div>
+    <div class="svc-card" onclick="enterSvc('sub')">
+      <div class="svc-icon" id="svcIcon2" style="background:var(--gl)">🔄</div>
+      <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">대타 요청 · 신청</div></div>
+    </div>
+    <div class="svc-card" onclick="enterSvc('health')">
+      <div class="svc-icon" style="background:#FCEBEB">🏥</div>
+      <div><div class="svc-name">보건증 관리해ZUO</div><div class="svc-desc">보건증 현황 열람</div></div>
+    </div>
+  </div>
+</div>
 <div class="screen" id="scSvc">
   <div class="hdr" id="svcHdr">
-    <button class="back-btn" onclick="goHome()">← 나가기</button>
+    <button class="back-btn" onclick="showScreen('scPw')">← 뒤로</button>
     <div class="hdr-title" id="svcCafeName">카페</div>
-    <div style="width:40px"></div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.8)">관리자</div>
   </div>
   <div class="svc-wrap">
     <div class="svc-title">서비스를 선택해주세요</div>
@@ -651,9 +694,9 @@ input:focus{border-color:var(--green)}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <div style="font-size:10px;color:var(--t3)">단가 (직접 수정 가능)</div>
             <div class="no-capture">
-              <input type="number" id="psHoliRateInput" min="0" step="100"
-                oninput="psHoliRateVal=parseInt(this.value)||0;document.getElementById('psHoliRate').textContent='₩'+(psHoliRateVal).toLocaleString();calcPayTotal()"
-                style="width:110px;text-align:right;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:600;color:var(--t1);outline:none">
+              <input type="text" id="psHoliRateInput" inputmode="numeric"
+                oninput="formatCurrencyInput(this);psHoliRateVal=getCurrencyValue('psHoliRateInput');document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();calcPayTotal()"
+                placeholder="0" style="width:110px;text-align:right;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:600;color:var(--t1);outline:none">
               <span id="psHoliRate" style="display:none">₩0</span>
             </div>
           </div>
@@ -912,7 +955,7 @@ input:focus{border-color:var(--green)}
       </div>
       <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:8px">
         <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">비용</span>
-        <input type="number" id="newHistoryCost" placeholder="0" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none;text-align:right">
+        <input type="text" id="newHistoryCost" inputmode="numeric" placeholder="0" oninput="formatCurrencyInput(this)" style="flex:1;border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;outline:none;text-align:right">
       </div>
       <div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #f5f5f5;gap:8px">
         <span style="font-size:12px;color:var(--t3);width:60px;flex-shrink:0">업체명</span>
@@ -968,7 +1011,7 @@ input:focus{border-color:var(--green)}
       <div style="padding:8px 14px">
         <div style="display:flex;align-items:center;gap:6px;padding:6px 0">
           <span style="font-size:13px;color:var(--t1);font-weight:500;flex:1">매출액</span>
-          <input type="number" id="pi_revenue" placeholder="0" oninput="calcProfitTotals()" style="width:110px;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;text-align:right;outline:none">
+          <input type="text" inputmode="numeric" id="pi_revenue" placeholder="0" oninput="formatCurrencyInput(this);calcProfitTotals()" style="width:110px;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;text-align:right;outline:none">
         </div>
       </div>
       <div style="padding:8px 14px;background:var(--gl);display:flex;justify-content:space-between;align-items:center">
@@ -1052,7 +1095,7 @@ input:focus{border-color:var(--green)}
     <div style="background:#f5f5f5;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--t3)">📝 선택 항목 (메모)</div>
     <div class="fr">
       <label class="fl">교체 비용 <span style="color:var(--t3);font-size:10px">(선택)</span></label>
-      <input type="number" id="supplyCost" placeholder="예: 50000" style="width:100%">
+      <input type="text" id="supplyCost" inputmode="numeric" placeholder="예: 50,000" oninput="formatCurrencyInput(this)" style="width:100%">
     </div>
     <div class="fr">
       <label class="fl">교체 업체명 <span style="color:var(--t3);font-size:10px">(선택)</span></label>
@@ -1079,7 +1122,7 @@ input:focus{border-color:var(--green)}
     <div class="mh"></div>
     <div class="mt">✅ 교체 완료 등록</div>
     <div style="background:var(--gl);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--gd)">교체 이력에 누적 저장돼요</div>
-    <div class="fr"><label class="fl">교체 비용 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="number" id="completeCost" placeholder="예: 50000" style="width:100%"></div>
+    <div class="fr"><label class="fl">교체 비용 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="text" id="completeCost" inputmode="numeric" placeholder="예: 50,000" oninput="formatCurrencyInput(this)" style="width:100%"></div>
     <div class="fr"><label class="fl">교체 업체명 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="text" id="completeVendor" placeholder="예: OO서비스" style="width:100%"></div>
     <div class="fr"><label class="fl">연락처 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="tel" id="completeTel" placeholder="010-0000-0000" style="width:100%"></div>
     <div class="fr"><label class="fl">기타 메모 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="text" id="completeMemo" placeholder="메모 입력" style="width:100%"></div>
@@ -1463,7 +1506,7 @@ function applyTheme(color){
 function goHome(){
   if(unsubscribe){unsubscribe();unsubscribe=null;}
   if(empUnsubscribe){empUnsubscribe();empUnsubscribe=null;}
-  currentCafe=null;selDate=null;
+  currentCafe=null;selDate=null;isAdminMode=false;
   showScreen('scHome');loadCafes();
 }
 
@@ -1496,27 +1539,53 @@ function renderCafeList(){
   }).join('');
 }
 
+let isAdminMode=false;
 function selectCafe(id){
   currentCafe=cafes.find(c=>c.id===id);
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
   document.getElementById('pwHdr').style.background=cm.main;
   document.getElementById('pwCafeName').textContent=currentCafe.name;
-  document.getElementById('pwTitle').textContent=`${currentCafe.name} 입장`;
-  document.getElementById('pwBtn').style.background=cm.main;
-  document.getElementById('pwInput').value='';
   document.getElementById('pwError').style.display='none';
+  document.getElementById('adminPwArea').style.display='none';
+  document.getElementById('pwInput').value='';
+  applyTheme(currentCafe.color||'green');
+  loadCafeMasterPw();
   showScreen('scPw');
 }
-
+function showAdminPwInput(){
+  const area=document.getElementById('adminPwArea');
+  area.style.display='block';
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwError').style.display='none';
+  document.getElementById('pwInput').focus();
+}
+function enterAsWorker(){
+  isAdminMode=false;
+  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+  document.getElementById('svcWorkerHdr').style.background=cm.main;
+  document.getElementById('svcWorkerCafeName').textContent=currentCafe.name;
+  document.getElementById('svcIcon2').style.background=cm.light;
+  showScreen('scSvcWorker');
+}
+function enterWorkerTimeInput(){
+  // 직원 선택 모달 표시
+  if(!employees.length){
+    loadEmployees();
+    setTimeout(enterWorkerMenu,800);
+  } else {
+    enterWorkerMenu();
+  }
+}
 function checkCafePw(){
   const pw=document.getElementById('pwInput').value;
-  if(pw===currentCafe.password){
-    loadCafeMasterPw();
-    applyTheme(currentCafe.color||'green');
+  if(isMaster(pw)||pw===currentCafe.password){
+    isAdminMode=true;
+    document.getElementById('adminPwArea').style.display='none';
     const cm=colorMap[currentCafe.color||'green']||colorMap.green;
     document.getElementById('svcHdr').style.background=cm.main;
     document.getElementById('svcCafeName').textContent=currentCafe.name;
     document.getElementById('svcIcon1').style.background=cm.light;
+    loadEmployees();
     showScreen('scSvc');
   } else {
     document.getElementById('pwError').style.display='block';
@@ -1532,7 +1601,16 @@ function enterSvc(type){
   const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName'};
   if(hdrIds[type]){document.getElementById(hdrIds[type]).style.background=cm.main;}
   if(nameIds[type])document.getElementById(nameIds[type]).textContent=currentCafe.name;
-
+  // 뒤로 버튼 - 직원 모드면 직원 서비스 화면으로
+  const backScreen=isAdminMode?'scSvc':'scSvcWorker';
+  const backBtns={notice:'noticeHdr',health:'healthHdr',sub:'appHdr'};
+  if(backBtns[type]){
+    const hdr=document.getElementById(backBtns[type]);
+    if(hdr){
+      const backBtn=hdr.querySelector('.back-btn');
+      if(backBtn)backBtn.setAttribute('onclick',`showScreen('${backScreen}')`);
+    }
+  }
   if(type==='sub'){showScreen('scApp');initApp();}
   else if(type==='labor'){showScreen('scLabor');loadEmployees();}
   else if(type==='notice'){showScreen('scNotice');loadNotices();}
@@ -1634,6 +1712,24 @@ function renderSubList(){
       :`<button class="b-take" onclick="openTake('${s.fid}')">대타 할게요</button><button class="b-edit" onclick="openEdit('${s.fid}')">수정</button><button class="b-crq" onclick="openDel('${s.fid}')">요청 취소</button>`;
     return `<div class="si"><div class="sr"><div class="snum">${i+1}</div><div class="sb"><div class="sn">${names}</div><div class="stm">${s.timeStart} – ${s.timeEnd}</div>${s.note?`<div class="snt">${s.note}</div>`:''}<div class="sbtns">${btns}</div></div>${bdg}</div></div>`;
   }).join('');
+}
+// 통화 서식 입력 헬퍼
+function formatCurrencyInput(el){
+  const raw=el.value.replace(/[^0-9]/g,'');
+  const num=parseInt(raw)||0;
+  el.dataset.rawValue=num;
+  el.value=num===0?'':num.toLocaleString();
+}
+function getCurrencyValue(id){
+  const el=document.getElementById(id);
+  if(!el)return 0;
+  return parseInt((el.dataset.rawValue||el.value.replace(/[^0-9]/g,'')))||0;
+}
+function setCurrencyValue(id,num){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.dataset.rawValue=num;
+  el.value=num===0?'':num.toLocaleString();
 }
 function copyText(txt){
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -2268,7 +2364,7 @@ async function openPayslip(empId){
   document.getElementById('psRate').textContent='₩'+(emp.rate||0).toLocaleString();
   document.getElementById('psBase').textContent='₩'+base.toLocaleString();
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
-  document.getElementById('psHoliRateInput').value=psHoliRateVal;
+  setCurrencyValue('psHoliRateInput',psHoliRateVal);
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
   document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
   document.getElementById('psBonus').value=savedBonus;
@@ -3405,7 +3501,7 @@ async function addSupplyHistory(){
   const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
   const entry={
     date,
-    cost:document.getElementById('newHistoryCost').value.trim(),
+    cost:getCurrencyValue('newHistoryCost').toString(),
     vendor:document.getElementById('newHistoryVendor').value.trim(),
     tel:document.getElementById('newHistoryTel').value.trim(),
     memo:document.getElementById('newHistoryMemo').value.trim()
@@ -3567,13 +3663,12 @@ function renderProfitRows(){
       ${isSalary?`<button onclick="loadSalaryFromLabor()" style="flex-shrink:0;font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--green);background:#fff;color:var(--green);cursor:pointer;white-space:nowrap">📂 불러오기</button>`:''}
       <span style="font-size:10px;color:var(--t3);flex-shrink:0;min-width:32px;text-align:right" id="pct_${key}">0%</span>
       <button onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${isFixed?'var(--amb)':'var(--bd)'};background:${isFixed?'var(--amb)':'#fff'};color:${isFixed?'#fff':'var(--t3)'};cursor:pointer;white-space:nowrap">📌 ${isFixed?'고정항목':''}</button>
-      <input type="number" id="pi_${key}" value="${val}" placeholder="0" oninput="calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
+      <input type="text" inputmode="numeric" id="pi_${key}" placeholder="0" oninput="formatCurrencyInput(this);calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
     </div>`;
   }).join('');
   const hasSavedRev=profitData['revenue']!==undefined;
   const rev=hasSavedRev?profitData['revenue']:(profitFixed['revenue_fixed']?profitFixed['revenue_val']||'':'');
-  const revInput=document.getElementById('pi_revenue');
-  if(revInput)revInput.value=rev;
+  if(document.getElementById('pi_revenue'))setCurrencyValue('pi_revenue',rev||0);
   calcProfitTotals();
 }
 function toggleFixed(key,btn){
@@ -3593,8 +3688,20 @@ async function saveProfitFixed(){
   if(!fixedSnap.empty){await db.collection('profitFixed').doc(fixedSnap.docs[0].id).update(data);}
   else{await db.collection('profitFixed').add(data);}
 }
-function getVal(key){return parseInt(document.getElementById('pi_'+key)?.value)||0;}
+function getVal(key){
+  const el=document.getElementById('pi_'+key);
+  if(!el)return 0;
+  return parseInt((el.dataset.rawValue||el.value.replace(/[^0-9]/g,'')))||0;
+}
 function calcProfitTotals(){
+  // 지출 항목 값 세팅 (처음 로드 시)
+  PROFIT_EXPENSE_ITEMS.forEach(item=>{
+    const el=document.getElementById('pi_'+item.key);
+    if(el&&!el.dataset.rawValue&&el.value&&!el.value.includes(',')){
+      const n=parseInt(el.value)||0;
+      if(n>0){el.dataset.rawValue=n;el.value=n.toLocaleString();}
+    }
+  });
   const income=getVal('revenue');
   const expense=PROFIT_EXPENSE_ITEMS.reduce((a,i)=>a+getVal(i.key),0);
   const net=income-expense;
@@ -3622,7 +3729,7 @@ async function loadSalaryFromLabor(){
     if(emp.resigned&&!pay.hasData)continue;
     total+=pay.net; // 실수령액 기준
   }
-  document.getElementById('pi_salary').value=total;
+  setCurrencyValue('pi_salary',total);
   calcProfitTotals();
   showToast(`✅ 인건비(실수령액) ₩${total.toLocaleString()} 불러왔어요!`);
 }
