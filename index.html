@@ -1580,7 +1580,8 @@ function enterWorkerTimeInput(){
 }
 function checkCafePw(){
   const pw=document.getElementById('pwInput').value;
-  if(isMaster(pw)||pw===currentCafe.password){
+  // 관리자 입장은 중간관리자 비번(MASTER_PW) 또는 최종관리자(SUPER_MASTER)만 가능
+  if(isMaster(pw)){
     isAdminMode=true;
     document.getElementById('adminPwArea').style.display='none';
     const cm=colorMap[currentCafe.color||'green']||colorMap.green;
@@ -1589,7 +1590,6 @@ function checkCafePw(){
     document.getElementById('svcIcon1').style.background=cm.light;
     loadEmployees();
     showScreen('scSvc');
-    // 관리자 입장 시 푸시 구독 + 알림 체크
     setTimeout(()=>{subscribePush();checkAndNotify();},1500);
   } else {
     document.getElementById('pwError').style.display='block';
@@ -2134,6 +2134,11 @@ async function toggleConfirmMonth(){
 // 직원 관리 (마스터)
 let svcMasterDest='';
 function enterSvcWithMaster(type){
+  // 이미 관리자로 입장한 경우 비번 없이 바로 진입
+  if(isAdminMode){
+    enterSvc(type);
+    return;
+  }
   svcMasterDest=type;
   masterMenuDest='svc';
   document.getElementById('masterPwInput').value='';
@@ -2157,6 +2162,13 @@ function enterWorkerMenu(){
   document.getElementById('workerSelectModal').classList.add('open');
 }
 function openMasterMenu(dest){
+  // 이미 관리자로 입장한 경우 비번 없이 바로 진입
+  if(isAdminMode){
+    if(dest==='emp'){showScreen('scEmpManage');renderEmpManageList();setQuickNav('emp');}
+    else if(dest==='pay'){showScreen('scPayManage');renderPayEmpList();setQuickNav('pay');}
+    else{showScreen('scPayTable');renderPayTable();setQuickNav('table');}
+    return;
+  }
   masterMenuDest=dest;
   document.getElementById('masterPwInput').value='';
   document.getElementById('masterPwError').style.display='none';
@@ -3848,20 +3860,42 @@ async function testPushNotification(){
   const notifOK='Notification' in window;
   const pushOK='PushManager' in window;
   const perm=notifOK?Notification.permission:'미지원';
-  let msg=`📋 알림 상태\n알림 API: ${notifOK?'✅':'❌'}\n푸시 API: ${pushOK?'✅':'❌'}\nSW 등록: ${swReg?'✅':'❌'}\n현재 권한: ${perm}\n\n`;
-  if(!notifOK){alert(msg+'❌ 이 브라우저는 알림을 지원하지 않아요.\n크롬 브라우저를 사용해주세요.');return;}
-  if(perm==='denied'){alert(msg+'❌ 알림이 차단됐어요!\n\n크롬 주소창 왼쪽 🔒 탭\n→ 알림 → 허용\n→ 새로고침');return;}
+
+  showToast(`권한:${perm} | SW:${swReg?'✅':'❌'} | 알림:${notifOK?'✅':'❌'}`);
+
+  if(!notifOK){alert('❌ 이 브라우저는 알림을 지원하지 않아요.\n크롬 브라우저를 사용해주세요.');return;}
+  if(perm==='denied'){alert('❌ 알림이 차단됐어요!\n\n크롬 주소창 왼쪽 🔒 탭\n→ 사이트 설정 → 알림 → 허용\n→ 새로고침');return;}
   if(perm==='default'){
-    alert(msg+'확인을 누르면 알림 허용 팝업이 떠요!');
     const r=await Notification.requestPermission();
     if(r!=='granted'){alert('❌ 알림이 거부됐어요.');return;}
+    showToast('✅ 알림 허용됐어요!');
   }
-  if(swReg){
+
+  // swReg 없으면 재등록 시도
+  if(!swReg){
+    try{
+      swReg=await navigator.serviceWorker.register('sw.js');
+      await navigator.serviceWorker.ready;
+      showToast('SW 재등록 완료! 다시 탭해주세요.');
+    }catch(e){alert('❌ 서비스워커 등록 실패\n'+e.message);}
+    return;
+  }
+
+  try{
     await subscribePush();
-    swReg.showNotification('🔔 ZUO 알림 테스트',{body:'알림이 정상 작동해요! 😊',icon:'/icons/icon-192.png',vibrate:[200,100,200]});
-    showToast('✅ 테스트 알림을 보냈어요!');
-  } else {
-    alert('❌ 서비스워커 미등록\n페이지를 새로고침 해주세요.');
+    // LocalStorage 오늘 기록 초기화
+    const today=new Date().toISOString().split('T')[0];
+    if(currentCafe)localStorage.removeItem(`zuo_notified_${currentCafe.id}_${today}`);
+    // 테스트 알림 발송
+    swReg.showNotification('🔔 ZUO 알림 테스트',{
+      body:'알림이 정상 작동해요! 😊',
+      icon:'/icons/icon-192.png',
+      badge:'/icons/icon-192.png',
+      vibrate:[200,100,200]
+    });
+    showToast('✅ 테스트 알림 발송!');
+  }catch(e){
+    alert('알림 발송 오류:\n'+e.message);
   }
 }
 
