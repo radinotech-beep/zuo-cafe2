@@ -496,11 +496,19 @@ input:focus{border-color:var(--green)}
         </div>
         <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
       </div>
-      <div onclick="openMasterMenu('table')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer">
+      <div onclick="openMasterMenu('table')" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;border-bottom:1px solid #f5f5f5">
         <div style="width:40px;height:40px;border-radius:10px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:20px">📊</div>
         <div>
           <div style="font-size:14px;font-weight:600;color:var(--t1)">월 급여 현황 테이블</div>
           <div style="font-size:11px;color:var(--t3);margin-top:2px">전체 직원 급여 현황 및 엑셀 export</div>
+        </div>
+        <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
+      </div>
+      <div onclick="exportDailyExcel()" style="display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:10px;background:#E2EFDA;display:flex;align-items:center;justify-content:center;font-size:20px">📑</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--t1)">일용직 양식 Excel</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">일용직 급여지급 명세서 엑셀 내보내기</div>
         </div>
         <div style="margin-left:auto;color:var(--t3);font-size:18px">›</div>
       </div>
@@ -617,6 +625,7 @@ input:focus{border-color:var(--green)}
       </select>
     </div>
     <div class="fr"><label class="fl">연락처</label><input type="tel" id="empPhone" placeholder="010-0000-0000"></div>
+    <div class="fr"><label class="fl">주민등록번호</label><input type="text" id="empRrn" placeholder="000000-0000000" maxlength="14" oninput="formatRrn(this)"></div>
     <div class="fr"><label class="fl">주소</label><input type="text" id="empAddr" placeholder="주소 입력"></div>
     <div class="fr">
       <label class="fl">계좌 정보</label>
@@ -1630,6 +1639,11 @@ function enterWorkerTimeInput(){
   }
 }
 
+function formatRrn(el){
+  let v=el.value.replace(/[^0-9]/g,'');
+  if(v.length>6)v=v.substring(0,6)+'-'+v.substring(6,13);
+  el.value=v;
+}
 function goSvcBack(){
   if(isAdminMode){showScreen('scSvc');}
   else{showScreen('scSvcWorker');}
@@ -2322,7 +2336,7 @@ let editingEmpId=null;
 function setupEmpAdd(){
   editingEmpId=null;
   document.getElementById('empAddTitle').textContent='직원 등록';
-  ['empName','empPhone','empAddr','empBank','empAcct','empPw'].forEach(id=>document.getElementById(id).value='');
+  ['empName','empPhone','empAddr','empBank','empAcct','empPw','empRrn'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('empRate').value='10320';
   document.getElementById('empHoliRate').value='';
   document.getElementById('empType').value='정규직';
@@ -2333,6 +2347,7 @@ function setupEmpEdit(id){
   document.getElementById('empAddTitle').textContent='직원 수정';
   document.getElementById('empName').value=emp.name||'';
   document.getElementById('empPhone').value=emp.phone||'';
+  document.getElementById('empRrn').value=emp.rrn||'';
   document.getElementById('empAddr').value=emp.addr||'';
   document.getElementById('empBank').value=emp.bank||'';
   document.getElementById('empAcct').value=emp.acct||'';
@@ -2347,7 +2362,7 @@ async function saveEmp(){
   if(!name){alert('이름을 입력해주세요');return;}
   const holiRateRaw=document.getElementById('empHoliRate').value;
   const holiRate=holiRateRaw===''?null:parseInt(holiRateRaw);
-  const data={cafeId:currentCafe.id,name,empType:document.getElementById('empType').value,phone:document.getElementById('empPhone').value.trim(),addr:document.getElementById('empAddr').value.trim(),bank:document.getElementById('empBank').value.trim(),acct:document.getElementById('empAcct').value.trim(),rate:parseInt(document.getElementById('empRate').value)||10320,holidayRate:holiRate};
+  const data={cafeId:currentCafe.id,name,empType:document.getElementById('empType').value,phone:document.getElementById('empPhone').value.trim(),rrn:document.getElementById('empRrn').value.trim(),addr:document.getElementById('empAddr').value.trim(),bank:document.getElementById('empBank').value.trim(),acct:document.getElementById('empAcct').value.trim(),rate:parseInt(document.getElementById('empRate').value)||10320,holidayRate:holiRate};
   const pw=document.getElementById('empPw').value.trim();
   if(pw)data.password=pw;
   if(editingEmpId){await db.collection('employees').doc(editingEmpId).update(data);}
@@ -3838,6 +3853,7 @@ async function exportProfitExcel(){
   XLSX.utils.book_append_sheet(wb,ws,`${profitY}년 ${profitM+1}월`);
   XLSX.writeFile(wb,`수익현황_${profitY}년${profitM+1}월.xlsx`);
 }
+
 async function saveProfit(){
   const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
   const data={cafeId:currentCafe.id,period,revenue:getVal('revenue')};
@@ -3847,6 +3863,96 @@ async function saveProfit(){
   if(profitData.docId){await db.collection('profits').doc(profitData.docId).update(data);}
   else{const ref=await db.collection('profits').add(data);profitData.docId=ref.id;}
   showToast('✅ 저장됐어요!');
+}
+
+async function exportDailyExcel(){
+  const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
+  const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const allEmps=[];empSnap.forEach(d=>allEmps.push({id:d.id,...d.data()}));
+  allEmps.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+
+  const wb=XLSX.utils.book_new();
+  const ws={};
+  const range={s:{r:0,c:0},e:{r:0,c:0}};
+  const solid={style:'thin',color:{rgb:'000000'}};
+  const solidMed={style:'medium',color:{rgb:'000000'}};
+  const bdr={top:solid,bottom:solid,left:solid,right:solid};
+  const bdrMed={top:solidMed,bottom:solidMed,left:solidMed,right:solidMed};
+  const C_GREEN={fgColor:{rgb:'1D9E75'}};
+  const C_HEADER={fgColor:{rgb:'E2EFDA'}};
+  const C_ALT={fgColor:{rgb:'F5F5F5'}};
+  const C_TOTAL={fgColor:{rgb:'FFF2CC'}};
+  const FMT_WON='"₩"#,##0';
+
+  function cell(v,o={}){
+    const{bold=false,color=null,fill=null,align='center',fmt=null,b=bdr,sz=10,wrap=false}=o;
+    const c={v,t:typeof v==='number'?'n':'s'};
+    const font={name:'맑은 고딕',sz};
+    if(bold)font.bold=true;
+    if(color)font.color={rgb:color};
+    c.s={font,alignment:{horizontal:align,vertical:'center',wrapText:wrap},border:b};
+    if(fill)c.s.fill={patternType:'solid',...fill};
+    if(fmt)c.z=fmt;
+    return c;
+  }
+  function sc(ws,r,c,cellObj){
+    const addr=XLSX.utils.encode_cell({r,c});
+    ws[addr]=cellObj;
+    if(r>range.e.r)range.e.r=r;
+    if(c>range.e.c)range.e.c=c;
+  }
+
+  // 제목행
+  sc(ws,0,0,{v:`일용직 급여지급 명세서`,t:'s',s:{font:{name:'맑은 고딕',sz:14,bold:true},alignment:{horizontal:'center',vertical:'center'},border:bdrMed}});
+  for(let c=1;c<8;c++)sc(ws,0,c,{v:'',t:'s',s:{font:{name:'맑은 고딕',sz:14},border:{top:solidMed,bottom:solidMed,left:solid,right:c===7?solidMed:solid}}});
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:7}}];
+
+  // 지급일 행
+  sc(ws,1,0,{v:`지급일 : (${payY}년 ${payM+1}월분)`,t:'s',s:{font:{name:'맑은 고딕',sz:10},alignment:{horizontal:'left',vertical:'center'},border:{}}});
+  sc(ws,1,4,{v:`연락가능한 e-mail : radinotech@gmail.com`,t:'s',s:{font:{name:'맑은 고딕',sz:10},alignment:{horizontal:'left',vertical:'center'},border:{}}});
+
+  // 헤더
+  const headers=['성    명','주민등록번호','주소','지급액','근무일수','연락처','은행','계좌'];
+  headers.forEach((h,i)=>sc(ws,2,i,cell(h,{bold:true,fill:C_HEADER,color:'0F6E56',b:bdrMed,sz:10})));
+
+  // 직원 데이터
+  let row=3;
+  let grandTotal=0;
+  const dailyEmps=allEmps.filter(e=>e.empType==='일용직'&&!e.resigned);
+
+  for(let ei=0;ei<dailyEmps.length;ei++){
+    const emp=dailyEmps[ei];
+    const pay=await calcEmpPay(emp,period);
+    const rowFill=ei%2===0?{fgColor:{rgb:'FFFFFF'}}:C_ALT;
+    grandTotal+=pay.net;
+
+    sc(ws,row,0,cell(emp.name,{bold:true,fill:rowFill,align:'center',b:bdr,sz:10}));
+    sc(ws,row,1,cell(emp.rrn||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
+    sc(ws,row,2,cell(emp.addr||'',{fill:rowFill,align:'left',b:bdr,sz:9,wrap:true}));
+    sc(ws,row,3,cell(pay.net,{bold:true,fill:rowFill,align:'center',b:bdr,sz:10,fmt:FMT_WON}));
+    sc(ws,row,4,cell('',{fill:rowFill,align:'center',b:bdr,sz:10}));
+    sc(ws,row,5,cell(emp.phone||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
+    sc(ws,row,6,cell(emp.bank||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
+    sc(ws,row,7,cell(emp.acct||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
+    row++;
+  }
+
+  // 총계행
+  sc(ws,row,0,cell('총    계',{bold:true,fill:C_TOTAL,b:bdrMed,sz:11}));
+  sc(ws,row,1,cell('',{fill:C_TOTAL,b:bdrMed}));
+  sc(ws,row,2,cell('',{fill:C_TOTAL,b:bdrMed}));
+  sc(ws,row,3,cell(grandTotal,{bold:true,fill:C_TOTAL,b:bdrMed,sz:11,fmt:FMT_WON}));
+  sc(ws,row,4,cell('',{fill:C_TOTAL,b:bdrMed}));
+  sc(ws,row,5,cell('',{fill:C_TOTAL,b:bdrMed}));
+  sc(ws,row,6,cell('',{fill:C_TOTAL,b:bdrMed}));
+  sc(ws,row,7,cell('',{fill:C_TOTAL,b:bdrMed}));
+
+  ws['!cols']=[{wch:10},{wch:16},{wch:32},{wch:14},{wch:8},{wch:14},{wch:10},{wch:18}];
+  ws['!rows']=[{hpt:28},{hpt:16},{hpt:22},...Array(dailyEmps.length).fill({hpt:20}),{hpt:22}];
+  ws['!ref']=XLSX.utils.encode_range(range);
+  XLSX.utils.book_append_sheet(wb,ws,`${payY}년 ${payM+1}월`);
+  XLSX.writeFile(wb,`일용직급여명세서_${payY}년${payM+1}월.xlsx`);
+  showToast('✅ 일용직 양식 엑셀 내보내기 완료!');
 }
 
 
