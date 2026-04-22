@@ -511,7 +511,7 @@ input:focus{border-color:var(--green)}
 <!-- 화면6: 직원 근무시간 입력 -->
 <div class="screen" id="scWorkerInput">
   <div class="hdr" id="workerInputHdr">
-    <button class="back-btn" onclick="showScreen('scLabor')">← 나가기</button>
+    <button class="back-btn" onclick="goWorkerBack()">← 나가기</button>
     <div>
       <div class="hdr-title" id="workerInputName">이름</div>
       <div class="hdr-sub">근무시간 입력</div>
@@ -1632,6 +1632,11 @@ function enterWorkerTimeInput(){
 
 function goSvcBack(){
   if(isAdminMode){showScreen('scSvc');}
+  else{showScreen('scSvcWorker');}
+}
+function goWorkerBack(){
+  // 직원 모드면 직원 서비스화면, 관리자 모드면 근로관리 화면
+  if(isAdminMode){showScreen('scLabor');}
   else{showScreen('scSvcWorker');}
 }
 function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
@@ -2867,7 +2872,7 @@ async function exportExcel(){
     const isSun=dow===0,isSat=dow===6;
     sc(ws,1,col++,cell(d,{bold:true,fill:isSun?C_SUN:isSat?C_SAT:C_DAY,color:isSun||isSat?'C00000':'375623',b:bdrHdr}));
   }
-  ['일근무\n시간','시급','시급\n합계','주휴\n단가','주휴\n횟수','주휴\n합계','기타','합계'].forEach(h=>sc(ws,1,col++,cell(h,{bold:true,fill:C_PAY,color:'854F0B',b:bdrHdr,wrap:true})));
+  ['일근무\n시간','시급','시급\n합계','주휴\n합계','상여','기타','공제','실수령액'].forEach(h=>sc(ws,1,col++,cell(h,{bold:true,fill:C_PAY,color:'854F0B',b:bdrHdr,wrap:true})));
   // 행2: 요일
   col=0;
   for(let i=0;i<fixedCols;i++) sc(ws,2,col++,cell('',{fill:C_GREEN,b:bdrHdr}));
@@ -2943,9 +2948,8 @@ async function exportExcel(){
   sc(ws,row,col++,cell(dayTotals.reduce((a,b)=>a+b,0),{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_HRS}));
   sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
   sc(ws,row,col++,cell(grandBase,{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
-  sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
-  sc(ws,row,col++,cell('',{fill:C_GREEN,b:SB}));
   sc(ws,row,col++,cell(grandHoli,{bold:true,fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
+  sc(ws,row,col++,cell(grandBonus,{fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
   sc(ws,row,col++,cell(grandEtc,{fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
   sc(ws,row,col++,cell(grandDeduct,{fill:C_GREEN,color:'FFFFFF',b:SB,fmt:FMT_WON}));
   sc(ws,row,col++,cell(grandNet,{bold:true,fill:C_GREEN,color:'FFFFFF',b:{top:solidMed,bottom:solidMed,left:solid,right:solidMed},fmt:FMT_WON}));
