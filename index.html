@@ -370,6 +370,8 @@ input:focus{border-color:var(--green)}
     </div>
     <!-- 중간관리자 번호 변경 -->
     <button onclick="openChangeMasterPw()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔑 중간관리자 번호 변경</button>
+    <!-- 알림 테스트 -->
+    <button onclick="testPushNotification()" style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔔 알림 테스트</button>
   </div>
 </div>
 
@@ -3794,6 +3796,74 @@ async function saveProfit(){
   showToast('✅ 저장됐어요!');
 }
 
+
+// ===== Web Push 알림 =====
+const VAPID_PUBLIC_KEY='BGyQr5X0IXSzyQhRLzcRmvK8ePDZ-WvTx9LyiJuXUQLY5q8_0bJZoVwAIDGz-F6527x-Son09X3itnPRhWcJwZ4';
+function urlBase64ToUint8Array(b){
+  const p='='.repeat((4-b.length%4)%4);
+  const s=(b+p).replace(/-/g,'+').replace(/_/g,'/');
+  const r=window.atob(s);const o=new Uint8Array(r.length);
+  for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o;
+}
+let swReg=null;
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(reg=>{swReg=reg;}).catch(e=>console.log('SW:',e));
+}
+async function subscribePush(){
+  if(!('Notification' in window)||!('PushManager' in window)||!swReg)return;
+  try{
+    if(Notification.permission!=='granted')return;
+    await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+  }catch(e){console.log('subscribePush:',e);}
+}
+async function checkAndNotify(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(!db||!currentCafe||!swReg)return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const key=`zuo_notified_${currentCafe.id}_${today.toISOString().split('T')[0]}`;
+  if(localStorage.getItem(key))return;
+  try{
+    const alerts=[];
+    const hSnap=await db.collection('healthCerts').where('cafeId','==',currentCafe.id).get();
+    hSnap.forEach(d=>{
+      const h=d.data();
+      const diff=Math.ceil((new Date(h.expireDate)-today)/(1000*60*60*24));
+      if([30,20,10,5,0].includes(diff))
+        alerts.push({title:'🏥 보건증 만료 임박',body:`${h.empName}님 보건증 ${diff===0?'오늘 만료!':'D-'+diff}`});
+    });
+    const sSnap=await db.collection('supplies').where('cafeId','==',currentCafe.id).get();
+    sSnap.forEach(d=>{
+      const s=d.data();
+      const diff=Math.ceil((new Date(s.nextDate)-today)/(1000*60*60*24));
+      if(diff<=1&&diff>=0)
+        alerts.push({title:'🔧 소모품 교체 임박',body:`${s.name} ${diff===0?'오늘 교체일!':'내일 교체일!'}`});
+    });
+    for(const a of alerts){
+      swReg.showNotification(a.title,{body:a.body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'zuo-'+Date.now(),vibrate:[200,100,200]});
+    }
+    localStorage.setItem(key,'1');
+  }catch(e){console.log('checkAndNotify:',e);}
+}
+async function testPushNotification(){
+  const notifOK='Notification' in window;
+  const pushOK='PushManager' in window;
+  const perm=notifOK?Notification.permission:'미지원';
+  let msg=`📋 알림 상태\n알림 API: ${notifOK?'✅':'❌'}\n푸시 API: ${pushOK?'✅':'❌'}\nSW 등록: ${swReg?'✅':'❌'}\n현재 권한: ${perm}\n\n`;
+  if(!notifOK){alert(msg+'❌ 이 브라우저는 알림을 지원하지 않아요.\n크롬 브라우저를 사용해주세요.');return;}
+  if(perm==='denied'){alert(msg+'❌ 알림이 차단됐어요!\n\n크롬 주소창 왼쪽 🔒 탭\n→ 알림 → 허용\n→ 새로고침');return;}
+  if(perm==='default'){
+    alert(msg+'확인을 누르면 알림 허용 팝업이 떠요!');
+    const r=await Notification.requestPermission();
+    if(r!=='granted'){alert('❌ 알림이 거부됐어요.');return;}
+  }
+  if(swReg){
+    await subscribePush();
+    swReg.showNotification('🔔 ZUO 알림 테스트',{body:'알림이 정상 작동해요! 😊',icon:'/icons/icon-192.png',vibrate:[200,100,200]});
+    showToast('✅ 테스트 알림을 보냈어요!');
+  } else {
+    alert('❌ 서비스워커 미등록\n페이지를 새로고침 해주세요.');
+  }
+}
 
 // 모달 닫기
 ['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','supplyCompleteModal','healthModal','changePwModal','changeMasterPwModal','noticeWriteModal','workerSelectModal','resignModal'].forEach(id=>{
