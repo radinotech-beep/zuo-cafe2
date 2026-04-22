@@ -3860,6 +3860,8 @@ async function saveProfit(){
 
 async function exportDailyExcel(){
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
+
+  // renderPayTable과 동일하게 Firebase에서 직접 전체 직원 조회
   const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
   const allEmps=[];empSnap.forEach(d=>allEmps.push({id:d.id,...d.data()}));
   allEmps.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
@@ -3871,7 +3873,6 @@ async function exportDailyExcel(){
   const solidMed={style:'medium',color:{rgb:'000000'}};
   const bdr={top:solid,bottom:solid,left:solid,right:solid};
   const bdrMed={top:solidMed,bottom:solidMed,left:solidMed,right:solidMed};
-  const C_GREEN={fgColor:{rgb:'1D9E75'}};
   const C_HEADER={fgColor:{rgb:'E2EFDA'}};
   const C_ALT={fgColor:{rgb:'F5F5F5'}};
   const C_TOTAL={fgColor:{rgb:'FFF2CC'}};
@@ -3908,26 +3909,32 @@ async function exportDailyExcel(){
   const headers=['성    명','주민등록번호','주소','지급액','근무일수','연락처','은행','계좌'];
   headers.forEach((h,i)=>sc(ws,2,i,cell(h,{bold:true,fill:C_HEADER,color:'0F6E56',b:bdrMed,sz:10})));
 
-  // 직원 데이터 - 재직중 전체 직원
+  // 직원 데이터 - renderPayTable과 동일 로직
   let row=3;
   let grandTotal=0;
-  const dailyEmps=allEmps.filter(e=>!e.resigned);
+  let empRowCount=0;
+  const includedEmps=[];
 
-  for(let ei=0;ei<dailyEmps.length;ei++){
-    const emp=dailyEmps[ei];
+  for(const emp of allEmps){
     const pay=await calcEmpPay(emp,period);
-    const rowFill=ei%2===0?{fgColor:{rgb:'FFFFFF'}}:C_ALT;
+    // renderPayTable과 동일: 퇴사자는 데이터 있을 때만 포함
+    if(emp.resigned&&!pay.hasData)continue;
+    // 데이터 없는 재직자도 제외 (0원짜리 행 방지)
+    if(!pay.hasData)continue;
+
+    const rowFill=empRowCount%2===0?{fgColor:{rgb:'FFFFFF'}}:C_ALT;
     grandTotal+=pay.net;
 
     sc(ws,row,0,cell(emp.name,{bold:true,fill:rowFill,align:'center',b:bdr,sz:10}));
     sc(ws,row,1,cell(emp.rrn||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
     sc(ws,row,2,cell(emp.addr||'',{fill:rowFill,align:'left',b:bdr,sz:9,wrap:true}));
     sc(ws,row,3,cell(pay.net,{bold:true,fill:rowFill,align:'center',b:bdr,sz:10,fmt:FMT_WON}));
-    sc(ws,row,4,cell('',{fill:rowFill,align:'center',b:bdr,sz:10}));
+    sc(ws,row,4,cell('',{fill:rowFill,align:'center',b:bdr,sz:10})); // 근무일수 공란
     sc(ws,row,5,cell(emp.phone||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
     sc(ws,row,6,cell(emp.bank||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
     sc(ws,row,7,cell(emp.acct||'',{fill:rowFill,align:'center',b:bdr,sz:10}));
     row++;
+    empRowCount++;
   }
 
   // 총계행
@@ -3941,7 +3948,7 @@ async function exportDailyExcel(){
   sc(ws,row,7,cell('',{fill:C_TOTAL,b:bdrMed}));
 
   ws['!cols']=[{wch:10},{wch:16},{wch:32},{wch:14},{wch:8},{wch:14},{wch:10},{wch:18}];
-  ws['!rows']=[{hpt:28},{hpt:16},{hpt:22},...Array(dailyEmps.length).fill({hpt:20}),{hpt:22}];
+  ws['!rows']=[{hpt:28},{hpt:16},{hpt:22},...Array(empRowCount).fill({hpt:20}),{hpt:22}];
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.utils.book_append_sheet(wb,ws,`${payY}년 ${payM+1}월`);
   XLSX.writeFile(wb,`세무사제출자료_${payY}년${payM+1}월.xlsx`);
