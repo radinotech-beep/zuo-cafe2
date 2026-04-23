@@ -3968,6 +3968,18 @@ let swReg=null;
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').then(reg=>{swReg=reg;}).catch(e=>console.log('SW:',e));
 }
+// SW에 메시지로 알림 요청 (보안 정책 우회)
+async function showSwNotification(title,body,tag){
+  try{
+    let sw=swReg;
+    if(!sw)sw=await navigator.serviceWorker.ready;
+    if(sw&&sw.active){
+      sw.active.postMessage({type:'SHOW_NOTIFICATION',title,body,tag:tag||'zuo-'+Date.now()});
+      return true;
+    }
+  }catch(e){console.log('showSwNotification:',e);}
+  return false;
+}
 async function subscribePush(){
   if(!('Notification' in window)||!('PushManager' in window)||!swReg)return;
   try{
@@ -3975,14 +3987,23 @@ async function subscribePush(){
     await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
   }catch(e){console.log('subscribePush:',e);}
 }
+// SW active worker에 메시지로 알림 발송 (no-active 오류 해결)
+async function sendNotificationViaSW(title,body){
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    if(reg.active){
+      reg.active.postMessage({type:'SHOW_NOTIFICATION',title,body,tag:'zuo-'+Date.now()});
+      return true;
+    }
+  }catch(e){console.log('sendNotificationViaSW:',e);}
+  return false;
+}
 async function checkAndNotify(){
   if(!('Notification' in window)||Notification.permission!=='granted')return;
   if(!db||!currentCafe)return;
   const today=new Date();today.setHours(0,0,0,0);
   const key=`zuo_notified_${currentCafe.id}_${today.toISOString().split('T')[0]}`;
   if(localStorage.getItem(key))return;
-  let sw=swReg;
-  if(!sw){try{sw=await navigator.serviceWorker.ready;}catch(e){return;}}
   try{
     const alerts=[];
     const hSnap=await db.collection('healthCerts').where('cafeId','==',currentCafe.id).get();
@@ -3999,54 +4020,30 @@ async function checkAndNotify(){
       if(diff<=1&&diff>=0)
         alerts.push({title:'🔧 소모품 교체 임박',body:`${s.name} ${diff===0?'오늘 교체일!':'내일 교체일!'}`});
     });
-    for(const a of alerts){
-      try{await sw.showNotification(a.title,{body:a.body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'zuo-'+Date.now(),vibrate:[200,100,200]});}
-      catch(e){try{new Notification(a.title,{body:a.body});}catch(e2){}}
-    }
+    for(const a of alerts) await sendNotificationViaSW(a.title,a.body);
     if(alerts.length>0)showToast(`🔔 알림 ${alerts.length}건 발송됐어요!`);
     localStorage.setItem(key,'1');
   }catch(e){console.log('checkAndNotify:',e);}
 }
 async function testPushNotification(){
   const perm='Notification' in window?Notification.permission:'미지원';
-  showToast(`권한:${perm} | SW:${swReg?'✅':'❌'}`);
   if(!('Notification' in window)){alert('❌ 크롬 브라우저를 사용해주세요.');return;}
   if(perm==='denied'){alert('❌ 알림이 차단됐어요!\n\n크롬 주소창 🔒 탭\n→ 사이트 설정 → 알림 → 허용\n→ 새로고침');return;}
   if(perm==='default'){
     const r=await Notification.requestPermission();
     if(r!=='granted'){alert('❌ 알림이 거부됐어요.');return;}
   }
-  let sw=swReg;
-  if(!sw){
-    try{
-      await navigator.serviceWorker.register('sw.js');
-      sw=await navigator.serviceWorker.ready;
-      swReg=sw;
-    }catch(e){alert('❌ 서비스워커 등록 실패\n'+e.message);return;}
-  }
   if(currentCafe){
     const today=new Date().toISOString().split('T')[0];
     localStorage.removeItem(`zuo_notified_${currentCafe.id}_${today}`);
   }
-  try{
-    await sw.showNotification('🔔 ZUO 알림 테스트',{
-      body:'알림이 정상 작동해요! 😊',
-      icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',
-      vibrate:[200,100,200],requireInteraction:false
-    });
+  const ok=await sendNotificationViaSW('🔔 ZUO 알림 테스트','알림이 정상 작동해요! 😊');
+  if(ok){
     showToast('✅ 알림 발송! 상단 확인해주세요');
-  }catch(e){
-    try{new Notification('🔔 ZUO 알림 테스트',{body:'알림이 정상 작동해요! 😊'});showToast('✅ 알림 발송!');}
-    catch(e2){alert('알림 오류:\n'+e.message);}
+  } else {
+    alert('서비스워커가 준비중이에요.\n페이지를 새로고침 후 다시 시도해주세요!');
   }
 }
-
-// 모달 닫기
-['takeModal','editModal','delModal','adminPwModal','cafeEditModal','adminRecoverModal','masterPwModal','workerPwModal','timePickModal','holiCalcModal','supplyModal','supplyCompleteModal','healthModal','changePwModal','changeMasterPwModal','noticeWriteModal','workerSelectModal','resignModal'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el)el.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
-});
-document.getElementById('pwInput').addEventListener('keyup',e=>{if(e.key==='Enter')checkCafePw();});
 document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminModePw();});
 document.getElementById('adminPwInput').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminPw();});
 

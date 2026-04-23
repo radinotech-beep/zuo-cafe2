@@ -1,4 +1,4 @@
-const CACHE='zuo-v11';
+const CACHE='zuo-v13';
 const FILES=['/','/index.html','/manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -19,17 +19,33 @@ self.addEventListener('fetch',e=>{
   e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
 });
 
-// 푸시 알림 수신
+// 앱에서 메시지 받아서 알림 표시 (핵심!)
+self.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='SHOW_NOTIFICATION'){
+    const{title,body,tag}=e.data;
+    e.waitUntil(
+      self.registration.showNotification(title||'ZUO 알림',{
+        body:body||'',
+        icon:'/zuo-cafe2/icons/icon-192.png',
+        badge:'/zuo-cafe2/icons/icon-192.png',
+        tag:tag||'zuo-'+Date.now(),
+        requireInteraction:false,
+        vibrate:[200,100,200]
+      })
+    );
+  }
+});
+
+// 서버 푸시 수신
 self.addEventListener('push',e=>{
   if(!e.data)return;
   const data=e.data.json();
   e.waitUntil(
     self.registration.showNotification(data.title||'ZUO 알림',{
       body:data.body||'',
-      icon:'/icons/icon-192.png',
-      badge:'/icons/icon-192.png',
+      icon:'/zuo-cafe2/icons/icon-192.png',
+      badge:'/zuo-cafe2/icons/icon-192.png',
       tag:data.tag||'zuo-push',
-      data:data.url||'/',
       requireInteraction:false,
       vibrate:[200,100,200]
     })
@@ -42,7 +58,7 @@ self.addEventListener('notificationclick',e=>{
   e.waitUntil(
     clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>{
       if(cs.length>0){cs[0].focus();return;}
-      return clients.openWindow(e.notification.data||'/');
+      return clients.openWindow('/zuo-cafe2/');
     })
   );
 });
