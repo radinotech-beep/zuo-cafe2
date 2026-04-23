@@ -3977,10 +3977,12 @@ async function subscribePush(){
 }
 async function checkAndNotify(){
   if(!('Notification' in window)||Notification.permission!=='granted')return;
-  if(!db||!currentCafe||!swReg)return;
+  if(!db||!currentCafe)return;
   const today=new Date();today.setHours(0,0,0,0);
   const key=`zuo_notified_${currentCafe.id}_${today.toISOString().split('T')[0]}`;
   if(localStorage.getItem(key))return;
+  let sw=swReg;
+  if(!sw){try{sw=await navigator.serviceWorker.ready;}catch(e){return;}}
   try{
     const alerts=[];
     const hSnap=await db.collection('healthCerts').where('cafeId','==',currentCafe.id).get();
@@ -3992,57 +3994,50 @@ async function checkAndNotify(){
     });
     const sSnap=await db.collection('supplies').where('cafeId','==',currentCafe.id).get();
     sSnap.forEach(d=>{
-      const s=d.data();
+      const s=d.data();if(!s.nextDate)return;
       const diff=Math.ceil((new Date(s.nextDate)-today)/(1000*60*60*24));
       if(diff<=1&&diff>=0)
         alerts.push({title:'🔧 소모품 교체 임박',body:`${s.name} ${diff===0?'오늘 교체일!':'내일 교체일!'}`});
     });
     for(const a of alerts){
-      swReg.showNotification(a.title,{body:a.body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'zuo-'+Date.now(),vibrate:[200,100,200]});
+      try{await sw.showNotification(a.title,{body:a.body,icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',tag:'zuo-'+Date.now(),vibrate:[200,100,200]});}
+      catch(e){try{new Notification(a.title,{body:a.body});}catch(e2){}}
     }
+    if(alerts.length>0)showToast(`🔔 알림 ${alerts.length}건 발송됐어요!`);
     localStorage.setItem(key,'1');
   }catch(e){console.log('checkAndNotify:',e);}
 }
 async function testPushNotification(){
-  const notifOK='Notification' in window;
-  const pushOK='PushManager' in window;
-  const perm=notifOK?Notification.permission:'미지원';
-
-  showToast(`권한:${perm} | SW:${swReg?'✅':'❌'} | 알림:${notifOK?'✅':'❌'}`);
-
-  if(!notifOK){alert('❌ 이 브라우저는 알림을 지원하지 않아요.\n크롬 브라우저를 사용해주세요.');return;}
-  if(perm==='denied'){alert('❌ 알림이 차단됐어요!\n\n크롬 주소창 왼쪽 🔒 탭\n→ 사이트 설정 → 알림 → 허용\n→ 새로고침');return;}
+  const perm='Notification' in window?Notification.permission:'미지원';
+  showToast(`권한:${perm} | SW:${swReg?'✅':'❌'}`);
+  if(!('Notification' in window)){alert('❌ 크롬 브라우저를 사용해주세요.');return;}
+  if(perm==='denied'){alert('❌ 알림이 차단됐어요!\n\n크롬 주소창 🔒 탭\n→ 사이트 설정 → 알림 → 허용\n→ 새로고침');return;}
   if(perm==='default'){
     const r=await Notification.requestPermission();
     if(r!=='granted'){alert('❌ 알림이 거부됐어요.');return;}
-    showToast('✅ 알림 허용됐어요!');
   }
-
-  // swReg 없으면 재등록 시도
-  if(!swReg){
+  let sw=swReg;
+  if(!sw){
     try{
-      swReg=await navigator.serviceWorker.register('sw.js');
-      await navigator.serviceWorker.ready;
-      showToast('SW 재등록 완료! 다시 탭해주세요.');
-    }catch(e){alert('❌ 서비스워커 등록 실패\n'+e.message);}
-    return;
+      await navigator.serviceWorker.register('sw.js');
+      sw=await navigator.serviceWorker.ready;
+      swReg=sw;
+    }catch(e){alert('❌ 서비스워커 등록 실패\n'+e.message);return;}
   }
-
-  try{
-    await subscribePush();
-    // LocalStorage 오늘 기록 초기화
+  if(currentCafe){
     const today=new Date().toISOString().split('T')[0];
-    if(currentCafe)localStorage.removeItem(`zuo_notified_${currentCafe.id}_${today}`);
-    // 테스트 알림 발송
-    swReg.showNotification('🔔 ZUO 알림 테스트',{
+    localStorage.removeItem(`zuo_notified_${currentCafe.id}_${today}`);
+  }
+  try{
+    await sw.showNotification('🔔 ZUO 알림 테스트',{
       body:'알림이 정상 작동해요! 😊',
-      icon:'/icons/icon-192.png',
-      badge:'/icons/icon-192.png',
-      vibrate:[200,100,200]
+      icon:'/icons/icon-192.png',badge:'/icons/icon-192.png',
+      vibrate:[200,100,200],requireInteraction:false
     });
-    showToast('✅ 테스트 알림 발송!');
+    showToast('✅ 알림 발송! 상단 확인해주세요');
   }catch(e){
-    alert('알림 발송 오류:\n'+e.message);
+    try{new Notification('🔔 ZUO 알림 테스트',{body:'알림이 정상 작동해요! 😊'});showToast('✅ 알림 발송!');}
+    catch(e2){alert('알림 오류:\n'+e.message);}
   }
 }
 
