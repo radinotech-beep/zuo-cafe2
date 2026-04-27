@@ -886,6 +886,15 @@ input:focus{border-color:var(--green)}
     <div class="fr"><label class="fl">제목</label><input type="text" id="noticeTitleInput" placeholder="공지 제목 입력" style="width:100%"></div>
     <div class="fr"><label class="fl">내용</label><textarea id="noticeContentInput" placeholder="공지 내용을 입력하세요" style="width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:14px;min-height:120px;outline:none;resize:vertical"></textarea></div>
     <div class="fr">
+  <label class="fl">이미지 첨부 <span style="color:var(--t3);font-size:10px">(선택 · 최대 3장)</span></label>
+  <label style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px dashed var(--bd);border-radius:10px;cursor:pointer;background:#fafafa">
+    <span style="font-size:20px">📎</span>
+    <span style="font-size:13px;color:var(--t2)">사진 선택하기</span>
+    <input type="file" id="noticeImageInput" accept="image/*" multiple style="display:none" onchange="handleNoticeImages(this)">
+  </label>
+  <div id="noticeImagePreview" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
+</div>
+    <div class="fr">
       <label class="fl">비밀번호 (수정/삭제용)</label>
       <input type="password" id="noticeAuthorPw" placeholder="본인만 아는 비밀번호" style="width:100%">
     </div>
@@ -3133,20 +3142,30 @@ function openNoticeWrite(){
 function closeNoticeWrite(){
   document.getElementById('noticeWriteModal').classList.remove('open');
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  const ni=document.getElementById('noticeImageInput');
-  if(ni)ni.addEventListener('change',function(){
-    const preview=document.getElementById('noticeImagePreview');
-    preview.innerHTML='';noticeImages=[];
-    [...this.files].forEach(file=>{
-      const reader=new FileReader();
-      reader.onload=e=>{
-        noticeImages.push(e.target.result);
-        preview.innerHTML+=`<img src="${e.target.result}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">`;
-      };reader.readAsDataURL(file);
-    });
+function handleNoticeImages(input){
+  const preview=document.getElementById('noticeImagePreview');
+  preview.innerHTML='';noticeImages=[];
+  const files=[...input.files].slice(0,3);
+  files.forEach(file=>{
+    if(file.size>2*1024*1024){showToast('이미지는 2MB 이하만 가능해요');return;}
+    const reader=new FileReader();
+    reader.onload=e=>{
+      noticeImages.push(e.target.result);
+      preview.innerHTML+=`<div style="position:relative;display:inline-block">
+        <img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">
+        <button onclick="removeNoticeImage(this)" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+      </div>`;
+    };
+    reader.readAsDataURL(file);
   });
-});
+}
+function removeNoticeImage(btn){
+  const wrap=btn.parentNode;
+  const allWraps=[...document.getElementById('noticeImagePreview').children];
+  const idx=allWraps.indexOf(wrap);
+  if(idx>-1)noticeImages.splice(idx,1);
+  wrap.remove();
+}
 async function saveNotice(){
   const title=document.getElementById('noticeTitleInput').value.trim();
   const body=document.getElementById('noticeContentInput').value.trim();
