@@ -3132,6 +3132,7 @@ async function editNotice(id){
 
 function openNoticeWrite(){
   editingNoticeId=null;noticeImages=[];
+  document.getElementById('noticeImagePreview').innerHTML='';
   document.getElementById('noticeTitleInput').value='';
   document.getElementById('noticeContentInput').value='';
   document.getElementById('noticeAuthorInput').value='';
@@ -4064,30 +4065,6 @@ async function testPushNotification(){
   }
 }
 document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminModePw();});
-function handleNoticeImages(input){
-  const preview=document.getElementById('noticeImagePreview');
-  preview.innerHTML='';noticeImages=[];
-  const files=[...input.files].slice(0,6);
-  files.forEach(file=>{
-    if(file.size>2*1024*1024){showToast('이미지는 2MB 이하만 가능해요');return;}
-    const reader=new FileReader();
-    reader.onload=e=>{
-      noticeImages.push(e.target.result);
-      preview.innerHTML+=`<div style="position:relative;display:inline-block">
-        <img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">
-        <button onclick="removeNoticeImage(this)" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
-      </div>`;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-function removeNoticeImage(btn){
-  const wrap=btn.parentNode;
-  const allWraps=[...document.getElementById('noticeImagePreview').children];
-  const idx=allWraps.indexOf(wrap);
-  if(idx>-1)noticeImages.splice(idx,1);
-  wrap.remove();
-}
   document.getElementById('adminPwInput').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminPw();});
 
 loadCafes();
