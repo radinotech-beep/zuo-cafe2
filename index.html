@@ -2002,7 +2002,7 @@ function renderEmpListForWorker(){
   if(!employees.length){w.innerHTML=`<div style="text-align:center;padding:28px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
   const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
   const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
-  w.innerHTML=employees.map((e,i)=>`
+  w.innerHTML=employees.filter(e=>!e.resigned).map((e,i)=>`
     <div class="emp-list-item" onclick="openWorkerPw('${e.id}')">
       <div class="emp-avatar" style="background:${colors[i%5]};color:${tcolors[i%5]}">${e.name.substring(0,2)}</div>
       <div style="flex:1"><div class="emp-nm">${e.name}</div><div class="emp-info">탭하여 근무시간 입력</div></div>
