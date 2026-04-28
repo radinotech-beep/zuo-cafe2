@@ -3178,7 +3178,7 @@ async function saveNotice(){
   if(!body){alert('내용을 입력해주세요');return;}
   if(!pw){alert('비밀번호를 입력해주세요');return;}
   if(editingNoticeId){
-    await db.collection('notices').doc(editingNoticeId).update({title,content:body,category,author,password:pw});
+    await db.collection('notices').doc(editingNoticeId).update({title,content:body,category,author,password:pw,images:noticeImages});
     editingNoticeId=null;
     closeNoticeWrite();showToast('✅ 공지가 수정됐어요!');
   } else {
