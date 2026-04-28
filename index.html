@@ -3126,6 +3126,7 @@ async function editNotice(id){
   document.getElementById('noticeTitleInput').value=n.title;
   document.getElementById('noticeContentInput').value=n.content;
   document.getElementById('noticeAuthorPw').value=n.password||'';
+  noticeImages=n.images||[];
   document.getElementById('noticeWriteModal').classList.add('open');
 }
 
