@@ -1408,14 +1408,15 @@ input:focus{border-color:var(--green)}
       <label class="fl">카페 색상 테마</label>
       <div class="color-picker" id="colorPicker">
         <div class="color-dot selected" data-color="green" style="background:#1D9E75" onclick="selectColor('green',this)"></div>
-        <div class="color-dot" data-color="blue" style="background:#185FA5" onclick="selectColor('blue',this)"></div>
-        <div class="color-dot" data-color="purple" style="background:#534AB7" onclick="selectColor('purple',this)"></div>
-        <div class="color-dot" data-color="pink" style="background:#993556" onclick="selectColor('pink',this)"></div>
         <div class="color-dot" data-color="orange" style="background:#BA7517" onclick="selectColor('orange',this)"></div>
         <div class="color-dot" data-color="red" style="background:#A32D2D" onclick="selectColor('red',this)"></div>
         <div class="color-dot" data-color="yellow" style="background:#8a7200" onclick="selectColor('yellow',this)"></div>
       </div>
     </div>
+    <div class="fr">
+  <label class="fl">노출 순서</label>
+  <input type="number" id="cafeOrderInput" placeholder="1" min="1" style="width:100%">
+</div>
     <div class="mbtns">
       <button class="mcnl" onclick="closeCafeEdit()">취소</button>
       <button class="mok" onclick="saveCafe()">저장</button>
@@ -1544,7 +1545,7 @@ function loadCafes(){
   db.collection('cafes').onSnapshot(snap=>{
     cafes=[];
     snap.forEach(d=>cafes.push({id:d.id,...d.data()}));
-    cafes.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    cafes.sort((a,b)=>(a.order||99)-(b.order||99));
     renderCafeList();renderAdminCafeList();
   });
 }
@@ -1974,9 +1975,11 @@ function renderAdminCafeList(){
 let selectedColor='green';
 function selectColor(color,el){selectedColor=color;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));el.classList.add('selected');}
 function openAddCafe(){editingCafeId=null;selectedColor='green';document.getElementById('cafeEditTitle').textContent='카페 추가';document.getElementById('cafeNameInput').value='';document.getElementById('cafePwInput').value='';document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));document.querySelector('.color-dot[data-color="green"]').classList.add('selected');document.getElementById('cafeEditModal').classList.add('open');}
-function openEditCafe(id){const cafe=cafes.find(c=>c.id===id);if(!cafe)return;editingCafeId=id;selectedColor=cafe.color||'green';document.getElementById('cafeEditTitle').textContent='카페 수정';document.getElementById('cafeNameInput').value=cafe.name;document.getElementById('cafePwInput').value=cafe.password;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));const dot=document.querySelector(`.color-dot[data-color="${selectedColor}"]`);if(dot)dot.classList.add('selected');document.getElementById('cafeEditModal').classList.add('open');}
+function openEditCafe(id){const cafe=cafes.find(c=>c.id===id);if(!cafe)return;editingCafeId=id;selectedColor=cafe.color||'green';document.getElementById('cafeEditTitle').textContent='카페 수정';document.getElementById('cafeNameInput').value=cafe.name;document.getElementById('cafePwInput').value=cafe.password;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));const dot=document.querySelector(`.color-dot[data-color="${selectedColor}"]`);if(dot)dot.classList.add('selected');document.getElementById('cafeOrderInput').value=cafe.order||'';document.getElementById('cafeEditModal').classList.add('open');}
 function closeCafeEdit(){document.getElementById('cafeEditModal').classList.remove('open');editingCafeId=null;}
-async function saveCafe(){const name=document.getElementById('cafeNameInput').value.trim();const pw=document.getElementById('cafePwInput').value.trim();if(!name){alert('카페 이름을 입력해 주세요');return;}if(!pw){alert('입장 비밀번호를 입력해 주세요');return;}if(editingCafeId){await db.collection('cafes').doc(editingCafeId).update({name,password:pw,color:selectedColor});}else{await db.collection('cafes').add({name,password:pw,color:selectedColor,createdAt:Date.now()});}closeCafeEdit();}
+async function saveCafe(){const name=document.getElementById('cafeNameInput').value.trim();const pw=document.getElementById('cafePwInput').value.trim();if(!name){alert('카페 이름을 입력해 주세요');return;}if(!pw){alert('입장 비밀번호를 입력해 주세요');return;}const order=parseInt(document.getElementById('cafeOrderInput').value)||99;
+if(editingCafeId){await db.collection('cafes').doc(editingCafeId).update({name,password:pw,color:selectedColor,order});}
+else{await db.collection('cafes').add({name,password:pw,color:selectedColor,order,createdAt:Date.now()});}closeCafeEdit();}
 async function deleteCafe(id){if(!confirm('카페를 삭제할까요?'))return;await db.collection('cafes').doc(id).delete();}
 
 // ===== 근로관리 =====
