@@ -389,6 +389,7 @@ input:focus{border-color:var(--green)}
     <button onclick="openChangeMasterPw()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔑 중간관리자 번호 변경</button>
     <!-- 알림 테스트 -->
     <button onclick="testPushNotification()" style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔔 알림 테스트</button>
+<button onclick="cleanupDuplicateWorkHours()" style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🧹 중복 근무데이터 정리</button>
   </div>
 </div>
 
@@ -2149,10 +2150,10 @@ async function saveWkHours(){
   }
   roundWkHours();
   const note=document.getElementById('wkNote').value.trim();
-  const wd=workData[wkSelDay];
   const data={empId:currentWorkerEmp.id,cafeId:currentCafe.id,period,day:wkSelDay,hours:wkHours,note};
-  if(wd&&wd.docId){await db.collection('workHours').doc(wd.docId).update(data);}
-  else{await db.collection('workHours').add(data);}
+const existing=await db.collection('workHours').where('empId','==',currentWorkerEmp.id).where('period','==',period).where('day','==',wkSelDay).get();
+if(!existing.empty){await db.collection('workHours').doc(existing.docs[0].id).update(data);}
+else{await db.collection('workHours').add(data);}
   lastSavedHours=wkHours;
   wkSelDay=null;
   document.getElementById('wkPanel').style.display='none';
@@ -4048,6 +4049,21 @@ async function checkAndNotify(){
     if(alerts.length>0)showToast(`🔔 알림 ${alerts.length}건 발송됐어요!`);
     localStorage.setItem(key,'1');
   }catch(e){console.log('checkAndNotify:',e);}
+}
+  async function cleanupDuplicateWorkHours(){
+  if(!currentCafe)return;
+  if(!confirm('모든 직원의 중복 근무데이터를 정리할까요?\n시간이 걸릴 수 있어요.'))return;
+  const snap=await db.collection('workHours').where('cafeId','==',currentCafe.id).get();
+  const map={};
+  const toDelete=[];
+  snap.forEach(d=>{
+    const dat=d.data();
+    const key=`${dat.empId}_${dat.period}_${dat.day}`;
+    if(map[key]){toDelete.push(d.id);}
+    else{map[key]=d.id;}
+  });
+  for(const id of toDelete){await db.collection('workHours').doc(id).delete();}
+  showToast(`✅ 중복 ${toDelete.length}건 정리됐어요!`);
 }
 async function testPushNotification(){
   const perm='Notification' in window?Notification.permission:'미지원';
