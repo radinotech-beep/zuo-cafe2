@@ -106,15 +106,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sched-emp-check{display:flex;align-items:center;gap:6px;border:1px solid var(--bd);border-radius:8px;padding:8px;background:#fff;font-size:12px;font-weight:700;color:var(--t2);min-width:0}
 .sched-emp-check input{width:15px;height:15px;accent-color:var(--green);flex-shrink:0}
 .sched-emp-check span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-colors{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:8px 0 10px}
+.sched-color{height:28px;border-radius:8px;border:2px solid transparent;cursor:pointer}
+.sched-color.on{border-color:var(--t1);box-shadow:0 0 0 2px #fff inset}
 .sched-list-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--bd);border-radius:8px;padding:9px;margin-bottom:6px;background:#fafafa}
 .sched-list-main{font-size:12px;font-weight:700;color:var(--t1);line-height:1.45}
 .sched-list-sub{font-size:10px;color:var(--t3);margin-top:2px}
 .sched-del{border:none;background:#FCEBEB;color:var(--red);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;cursor:pointer}
 .sched-table-wrap{overflow:hidden;border:1px solid var(--bd);border-radius:10px;background:#fff}
 .sched-grid{display:grid;grid-template-columns:42px repeat(7,minmax(0,1fr));grid-template-rows:18px repeat(29,17px);position:relative;background:#fff}
-.sched-head{background:var(--green);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.25)}
+.sched-head{background:var(--green);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border-right:2px solid rgba(255,255,255,.55)}
 .sched-time-cell{background:#f7f7f7;color:var(--t2);font-size:7px;font-weight:800;line-height:1.05;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #e5e5e5;border-bottom:1px solid #eee;z-index:1}
-.sched-day-bg{background:repeating-linear-gradient(to bottom,#fff 0,#fff 16px,#eee 16px,#eee 17px);border-right:1px solid #eee;grid-row:2 / -1}
+.sched-day-bg{background:repeating-linear-gradient(to bottom,#fff 0,#fff 16px,#eee 16px,#eee 17px);border-right:2px solid #cfcfcf;grid-row:2 / -1}
 .sched-block{border-radius:0;border:1px solid rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:800;line-height:1.25;overflow:hidden;z-index:2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
 .sched-block.sub{background:#FCEBEB!important;color:var(--red)!important;border-color:#fca5a5}
 .sched-note{font-size:11px;color:var(--t3);line-height:1.5;margin:8px 0}
@@ -483,6 +486,8 @@ input:focus{border-color:var(--green)}
           <select id="schedStart"></select>
           <select id="schedEnd"></select>
         </div>
+        <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px">표시 색상</div>
+        <div class="sched-colors" id="schedColorBtns"></div>
         <input type="text" id="schedMemo" placeholder="메모 (선택)" style="margin-bottom:10px">
         <button class="btn-primary" onclick="addRegularSchedule()">+ 시간표 추가</button>
         <div class="sched-note">시간은 30분 단위로 선택되고, 같은 시간대에는 최대 3명까지 등록할 수 있어요.</div>
@@ -2107,9 +2112,10 @@ async function doCopy(){
 }
 
 // 시간표 보여ZUO
-let regularSchedules=[],scheduleTab='input',schedSelectedDays=[];
+let regularSchedules=[],scheduleTab='input',schedSelectedDays=[],schedColor='#FFF200';
 const SCHED_DAYS=[1,2,3,4,5,6,0];
 const SCHED_OPEN=7*60+30,SCHED_CLOSE=22*60;
+const SCHED_COLORS=['#FFF200','#F8C9AA','#CBE6C0','#FF006E','#B9D4EA','#FFE59A','#D9D9D9','#1827F2'];
 function minToTime(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
 function timeToMin(t){
   if(!t)return 0;
@@ -2136,6 +2142,12 @@ function buildScheduleControls(){
     dayWrap.innerHTML=SCHED_DAYS.map(d=>`<button class="sched-day" id="schedDay_${d}" onclick="toggleSchedDay(${d})">${DAYS[d]}</button>`).join('');
     dayWrap.dataset.ready='1';
   }
+  const colorWrap=document.getElementById('schedColorBtns');
+  if(colorWrap&&!colorWrap.dataset.ready){
+    colorWrap.innerHTML=SCHED_COLORS.map(c=>`<button class="sched-color" id="schedColor_${c.replace('#','')}" style="background:${c}" onclick="selectSchedColor('${c}')"></button>`).join('');
+    colorWrap.dataset.ready='1';
+  }
+  renderSchedColors();
   const opts=[];
   for(let m=SCHED_OPEN;m<=SCHED_CLOSE;m+=30)opts.push(`<option value="${minToTime(m)}">${minToTime(m)}</option>`);
   document.getElementById('schedStart').innerHTML=opts.slice(0,-1).join('');
@@ -2144,6 +2156,8 @@ function buildScheduleControls(){
   document.getElementById('schedEnd').value='14:00';
   renderScheduleEmpOptions();
 }
+function selectSchedColor(c){schedColor=c;renderSchedColors();}
+function renderSchedColors(){SCHED_COLORS.forEach(c=>document.getElementById('schedColor_'+c.replace('#',''))?.classList.toggle('on',schedColor===c));}
 async function renderScheduleEmpOptions(){
   const active=await fetchActiveEmployees();
   const wrap=document.getElementById('schedEmpChecks');
@@ -2200,7 +2214,7 @@ async function addRegularSchedule(){
     if(countScheduleOverlap(day,startMin,endMin)+people.length>3){alert(`${DAYS[day]}요일 해당 시간대는 최대 3명까지만 등록할 수 있어요`);return;}
   }
   const memo=document.getElementById('schedMemo').value.trim();
-  await Promise.all(people.map(p=>db.collection('regularSchedules').add({cafeId:currentCafe.id,days:[...schedSelectedDays],empId:p.empId,name:p.name,timeStart,timeEnd,memo,createdAt:Date.now()})));
+  await Promise.all(people.map(p=>db.collection('regularSchedules').add({cafeId:currentCafe.id,days:[...schedSelectedDays],empId:p.empId,name:p.name,timeStart,timeEnd,memo,color:schedColor,createdAt:Date.now()})));
   schedSelectedDays=[];renderSchedDayBtns();
   document.querySelectorAll('.schedEmpPick:checked').forEach(el=>el.checked=false);
   document.getElementById('schedManualName').value='';
@@ -2237,7 +2251,14 @@ async function getScheduleSubsForTab(tab){
   });
   return byDate;
 }
-function getScheduleNameStyle(name){
+function getReadableTextColor(bg){
+  const hex=(bg||'').replace('#','');
+  if(hex.length!==6)return '#1a1a1a';
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  return ((r*299+g*587+b*114)/1000)>145?'#111':'#fff';
+}
+function getScheduleNameStyle(name,color=null){
+  if(color)return `background:${color};color:${getReadableTextColor(color)}`;
   let hash=0;
   for(let i=0;i<name.length;i++)hash=(hash*31+name.charCodeAt(i))%100000;
   const hue=(hash*137.508)%360;
@@ -2282,7 +2303,7 @@ async function renderScheduleTable(){
     let blocks=[];
     regularSchedules.forEach(s=>{
       if(!(s.days||[]).includes(day))return;
-      blocks.push({name:s.name,orig:s.name,start:timeToMin(s.timeStart),end:timeToMin(s.timeEnd),isSub:false});
+      blocks.push({name:s.name,orig:s.name,start:timeToMin(s.timeStart),end:timeToMin(s.timeEnd),isSub:false,color:s.color||null});
     });
     if(date&&(subsByDate[date]||[]).length){
       (subsByDate[date]||[]).forEach(sub=>{
@@ -2296,10 +2317,9 @@ async function renderScheduleTable(){
       const rowStart=((b.start-SCHED_OPEN)/30)+2;
       const rowEnd=((b.end-SCHED_OPEN)/30)+2;
       if(rowStart<2||rowEnd>slotCount+2||rowEnd<=rowStart)return;
-      const laneCount=Math.max(1,b.laneCount||1);
-      const width=100/laneCount;
+      const width=33.333;
       const left=(b.lane||0)*width;
-      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+2};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig)}">${b.name}</div>`;
+      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+2};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig,b.color)}">${b.name}</div>`;
     });
   });
   html+='</div>';
