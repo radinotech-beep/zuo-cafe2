@@ -2046,10 +2046,34 @@ function enterWorkerInput(){
 function loadWorkHours(){
   const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
   db.collection('workHours').where('empId','==',currentWorkerEmp.id).where('period','==',period).get().then(snap=>{
-    workData={};
-    snap.forEach(d=>{const dat=d.data();workData[dat.day]={hours:dat.hours,note:dat.note||'',docId:d.id};});
+    workData=getWorkDaysFromSnapshot(snap);
     renderWkGrid();
   });
+}
+
+function getWorkDaysFromSnapshot(snap){
+  const rows=[];
+  snap.forEach(doc=>{
+    const dat=doc.data();
+    const day=Number(dat.day);
+    if(!Number.isInteger(day)||day<1||day>31)return;
+    rows.push({
+      day,
+      hours:Number(dat.hours)||0,
+      note:dat.note||'',
+      docId:doc.id,
+      updatedAt:dat.updatedAt||dat.createdAt||0
+    });
+  });
+  rows.sort((a,b)=>(a.updatedAt-b.updatedAt)||a.docId.localeCompare(b.docId));
+  return rows.reduce((acc,row)=>{
+    acc[row.day]={hours:row.hours,note:row.note,docId:row.docId};
+    return acc;
+  },{});
+}
+
+function sumWorkDays(days){
+  return Object.values(days).reduce((sum,dat)=>sum+(Number(dat.hours)||0),0);
 }
 
 function changeWorkMonth(dir){
@@ -2150,9 +2174,9 @@ async function saveWkHours(){
   }
   roundWkHours();
   const note=document.getElementById('wkNote').value.trim();
-  const data={empId:currentWorkerEmp.id,cafeId:currentCafe.id,period,day:wkSelDay,hours:wkHours,note};
+  const data={empId:currentWorkerEmp.id,cafeId:currentCafe.id,period,day:wkSelDay,hours:wkHours,note,updatedAt:Date.now()};
 const existing=await db.collection('workHours').where('empId','==',currentWorkerEmp.id).where('period','==',period).where('day','==',wkSelDay).get();
-if(!existing.empty){await db.collection('workHours').doc(existing.docs[0].id).update(data);}
+if(!existing.empty){await Promise.all(existing.docs.map(doc=>db.collection('workHours').doc(doc.id).update(data)));}
 else{await db.collection('workHours').add(data);}
   lastSavedHours=wkHours;
   wkSelDay=null;
@@ -2401,7 +2425,8 @@ async function openPayslip(empId){
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   // 근무시간 로드
   const snap=await db.collection('workHours').where('empId','==',empId).where('period','==',period).get();
-  let total=0;snap.forEach(d=>total+=d.data().hours||0);
+  const workDays=getWorkDaysFromSnapshot(snap);
+  const total=sumWorkDays(workDays);
   const base=Math.round(total*(emp.rate||0));
   // 주수 = 해당 월의 일요일 개수
   const weeksInMonth=(()=>{
@@ -2746,7 +2771,7 @@ async function exportTrendExcel(){
   for(const period of months){
     for(const emp of employees){
       const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-      let hrs=0;snap.forEach(d=>hrs+=d.data().hours||0);
+      const hrs=sumWorkDays(getWorkDaysFromSnapshot(snap));
       const base=Math.round(hrs*(emp.rate||0));
       const holi=Math.round(((emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0)*4);
       data.push([period,emp.name,hrs,base,holi,base+holi]);
@@ -2762,7 +2787,7 @@ async function exportTrendExcel(){
 async function calcEmpPay(emp,period){
   // 근무시간 조회
   const wSnap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-  let h=0;wSnap.forEach(d=>h+=d.data().hours||0);
+  const h=sumWorkDays(getWorkDaysFromSnapshot(wSnap));
   // 명세서 저장 데이터 조회
   const psSnap=await db.collection('payslips').where('empId','==',emp.id).where('period','==',period).get();
   const hasWorkData=h>0;
@@ -2841,8 +2866,7 @@ async function exportExcel(){
   const empDataMap={};
   for(const emp of employees){
     const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
-    const days={};
-    snap.forEach(d=>{const dat=d.data();days[dat.day]={hours:dat.hours,note:dat.note||''};});
+    const days=getWorkDaysFromSnapshot(snap);
     empDataMap[emp.id]={emp,days};
   }
   const wb=XLSX.utils.book_new();
