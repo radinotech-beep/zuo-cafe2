@@ -110,16 +110,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sched-list-main{font-size:12px;font-weight:700;color:var(--t1);line-height:1.45}
 .sched-list-sub{font-size:10px;color:var(--t3);margin-top:2px}
 .sched-del{border:none;background:#FCEBEB;color:var(--red);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;cursor:pointer}
-.sched-table-wrap{overflow:auto;border:1px solid var(--bd);border-radius:10px;background:#fff;max-height:calc(100vh - 220px)}
-.sched-table{border-collapse:collapse;min-width:620px;width:100%;table-layout:fixed}
-.sched-table th{position:sticky;top:0;background:var(--green);color:#fff;font-size:11px;padding:8px 4px;z-index:2}
+.sched-table-wrap{overflow:hidden;border:1px solid var(--bd);border-radius:10px;background:#fff}
+.sched-table{border-collapse:collapse;width:100%;table-layout:fixed}
+.sched-table th{background:var(--green);color:#fff;font-size:9px;padding:4px 1px;z-index:2}
 .sched-table th:first-child{left:0;z-index:3}
-.sched-table td{border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;height:46px;vertical-align:top;padding:3px;background:#fff}
-.sched-time{position:sticky;left:0;background:#f7f7f7!important;color:var(--t2);font-size:10px;font-weight:700;text-align:center;line-height:1.25;width:62px;z-index:1}
-.sched-chip{display:block;border-radius:5px;padding:2px 3px;margin-bottom:2px;font-size:10px;font-weight:700;line-height:1.25;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sched-chip.c0{background:var(--gl);color:var(--gd)}
-.sched-chip.c1{background:#E6F1FB;color:#185FA5}
-.sched-chip.c2{background:#FFF2CC;color:#8a5a00}
+.sched-table td{border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;height:17px;vertical-align:top;padding:1px;background:#fff}
+.sched-time{background:#f7f7f7!important;color:var(--t2);font-size:7px;font-weight:700;text-align:center;line-height:1.05;width:42px;z-index:1}
+.sched-chip{display:block;border-radius:3px;padding:1px;margin-bottom:1px;font-size:7px;font-weight:800;line-height:1.05;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sched-chip.sub{background:#FCEBEB;color:var(--red)}
 .sched-note{font-size:11px;color:var(--t3);line-height:1.5;margin:8px 0}
 .sched-empty{padding:20px;text-align:center;color:var(--t3);font-size:13px}
@@ -2113,7 +2110,7 @@ async function doCopy(){
 // 시간표 보여ZUO
 let regularSchedules=[],scheduleTab='input',schedSelectedDays=[];
 const SCHED_DAYS=[1,2,3,4,5,6,0];
-const SCHED_OPEN=9*60,SCHED_CLOSE=22*60;
+const SCHED_OPEN=7*60+30,SCHED_CLOSE=22*60;
 function minToTime(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
 function timeToMin(t){
   if(!t)return 0;
@@ -2242,7 +2239,18 @@ async function getScheduleSubsForTab(tab){
   return byDate;
 }
 function scheduleChip(name,cls=''){
-  return `<span class="sched-chip ${cls}">${name}</span>`;
+  return `<span class="sched-chip ${cls}" style="${cls==='sub'?'':getScheduleNameStyle(name)}">${name}</span>`;
+}
+function getScheduleNameStyle(name){
+  let hash=0;
+  for(let i=0;i<name.length;i++)hash=(hash*31+name.charCodeAt(i))%100000;
+  const palettes=[
+    ['#E1F5EE','#0F6E56'],['#E6F1FB','#185FA5'],['#FFF2CC','#8a5a00'],
+    ['#FCEBEB','#A32D2D'],['#EEEDFE','#534AB7'],['#E2EFDA','#375623'],
+    ['#FBEAF0','#72243E'],['#FAEEDA','#854F0B']
+  ];
+  const p=palettes[hash%palettes.length];
+  return `background:${p[0]};color:${p[1]}`;
 }
 async function renderScheduleTable(){
   const pane=document.getElementById('schedTableWrap');
@@ -2251,8 +2259,9 @@ async function renderScheduleTable(){
   document.getElementById('schedTableTitle').textContent=tab==='regular'?'정규 시간표':tab==='this'?'이번주 시간표':'다음주 시간표';
   const weekStart=tab==='next'?getWeekStart(1):getWeekStart(0);
   const subsByDate=await getScheduleSubsForTab(tab);
-  const dayCols=tab==='regular'?SCHED_DAYS:SCHED_DAYS.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]} ${dt.getMonth()+1}/${dt.getDate()}`};});
-  let html=`<table class="sched-table"><tr><th style="width:62px">시간</th>${dayCols.map(c=>`<th>${typeof c==='number'?DAYS[c]:c.label}</th>`).join('')}</tr>`;
+  const visibleDays=SCHED_DAYS;
+  const dayCols=tab==='regular'?visibleDays:visibleDays.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]}`};});
+  let html=`<table class="sched-table"><tr><th style="width:42px">시간</th>${dayCols.map(c=>`<th>${typeof c==='number'?DAYS[c]:c.label}</th>`).join('')}</tr>`;
   for(let m=SCHED_OPEN;m<SCHED_CLOSE;m+=30){
     html+=`<tr><td class="sched-time">${minToTime(m)}<br>~${minToTime(m+30)}</td>`;
     for(const col of dayCols){
