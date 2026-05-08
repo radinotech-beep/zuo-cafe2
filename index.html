@@ -111,13 +111,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sched-list-sub{font-size:10px;color:var(--t3);margin-top:2px}
 .sched-del{border:none;background:#FCEBEB;color:var(--red);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;cursor:pointer}
 .sched-table-wrap{overflow:hidden;border:1px solid var(--bd);border-radius:10px;background:#fff}
-.sched-table{border-collapse:collapse;width:100%;table-layout:fixed}
-.sched-table th{background:var(--green);color:#fff;font-size:9px;padding:4px 1px;z-index:2}
-.sched-table th:first-child{left:0;z-index:3}
-.sched-table td{border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;height:17px;vertical-align:top;padding:1px;background:#fff}
-.sched-time{background:#f7f7f7!important;color:var(--t2);font-size:7px;font-weight:700;text-align:center;line-height:1.05;width:42px;z-index:1}
-.sched-chip{display:block;border-radius:3px;padding:1px;margin-bottom:1px;font-size:7px;font-weight:800;line-height:1.05;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sched-chip.sub{background:#FCEBEB;color:var(--red)}
+.sched-grid{display:grid;grid-template-columns:42px repeat(7,minmax(0,1fr));grid-template-rows:18px repeat(29,17px);position:relative;background:#fff}
+.sched-head{background:var(--green);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.25)}
+.sched-time-cell{background:#f7f7f7;color:var(--t2);font-size:7px;font-weight:800;line-height:1.05;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #e5e5e5;border-bottom:1px solid #eee;z-index:1}
+.sched-day-bg{background:repeating-linear-gradient(to bottom,#fff 0,#fff 16px,#eee 16px,#eee 17px);border-right:1px solid #eee;grid-row:2 / -1}
+.sched-block{border-radius:0;border:1px solid rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:800;line-height:1.25;overflow:hidden;z-index:2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.sched-block.sub{background:#FCEBEB!important;color:var(--red)!important;border-color:#fca5a5}
 .sched-note{font-size:11px;color:var(--t3);line-height:1.5;margin:8px 0}
 .sched-empty{padding:20px;text-align:center;color:var(--t3);font-size:13px}
 /* 대타 앱 */
@@ -2238,19 +2237,27 @@ async function getScheduleSubsForTab(tab){
   });
   return byDate;
 }
-function scheduleChip(name,cls=''){
-  return `<span class="sched-chip ${cls}" style="${cls==='sub'?'':getScheduleNameStyle(name)}">${name}</span>`;
-}
 function getScheduleNameStyle(name){
   let hash=0;
   for(let i=0;i<name.length;i++)hash=(hash*31+name.charCodeAt(i))%100000;
-  const palettes=[
-    ['#E1F5EE','#0F6E56'],['#E6F1FB','#185FA5'],['#FFF2CC','#8a5a00'],
-    ['#FCEBEB','#A32D2D'],['#EEEDFE','#534AB7'],['#E2EFDA','#375623'],
-    ['#FBEAF0','#72243E'],['#FAEEDA','#854F0B']
-  ];
-  const p=palettes[hash%palettes.length];
-  return `background:${p[0]};color:${p[1]}`;
+  const hue=(hash*137.508)%360;
+  return `background:hsl(${hue},82%,78%);color:hsl(${hue},70%,22%)`;
+}
+function layoutScheduleBlocks(blocks){
+  blocks.sort((a,b)=>(a.start-b.start)||(a.end-b.end)||a.name.localeCompare(b.name));
+  const lanes=[];
+  blocks.forEach(b=>{
+    let lane=lanes.findIndex(end=>end<=b.start);
+    if(lane<0){lane=lanes.length;lanes.push(0);}
+    if(lane>2)lane=2;
+    lanes[lane]=b.end;
+    b.lane=lane;
+  });
+  blocks.forEach(b=>{
+    const overlaps=blocks.filter(o=>o.start<b.end&&o.end>b.start);
+    b.laneCount=Math.min(3,Math.max(1,...overlaps.map(o=>o.lane+1)));
+  });
+  return blocks;
 }
 async function renderScheduleTable(){
   const pane=document.getElementById('schedTableWrap');
@@ -2261,32 +2268,41 @@ async function renderScheduleTable(){
   const subsByDate=await getScheduleSubsForTab(tab);
   const visibleDays=SCHED_DAYS;
   const dayCols=tab==='regular'?visibleDays:visibleDays.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]}`};});
-  let html=`<table class="sched-table"><tr><th style="width:42px">시간</th>${dayCols.map(c=>`<th>${typeof c==='number'?DAYS[c]:c.label}</th>`).join('')}</tr>`;
-  for(let m=SCHED_OPEN;m<SCHED_CLOSE;m+=30){
-    html+=`<tr><td class="sched-time">${minToTime(m)}<br>~${minToTime(m+30)}</td>`;
-    for(const col of dayCols){
-      const day=typeof col==='number'?col:col.day;
-      const date=typeof col==='number'?null:col.date;
-      let chips=[];
-      regularSchedules.forEach((s,idx)=>{
-        if(!(s.days||[]).includes(day))return;
-        if(timeToMin(s.timeStart)<=m&&timeToMin(s.timeEnd)>m)chips.push({name:s.name,cls:`c${idx%3}`,orig:s.name,start:s.timeStart,end:s.timeEnd});
-      });
-      if(date&&(subsByDate[date]||[]).length){
-        (subsByDate[date]||[]).forEach(sub=>{
-          const ss=timeToMin(sub.timeStart),ee=timeToMin(sub.timeEnd);
-          if(ss<=m&&ee>m){
-            const found=chips.find(c=>c.orig===sub.name);
-            if(found){found.name=`${sub.name}→${sub.takenBy}`;found.cls='sub';}
-            else if(chips.length<3){chips.push({name:`${sub.name}→${sub.takenBy}`,cls:'sub'});}
-          }
-        });
-      }
-      html+=`<td>${chips.slice(0,3).map(c=>scheduleChip(c.name,c.cls)).join('')}</td>`;
-    }
-    html+='</tr>';
+  const slotCount=(SCHED_CLOSE-SCHED_OPEN)/30;
+  let html=`<div class="sched-grid"><div class="sched-head" style="grid-column:1;grid-row:1">시간</div>`;
+  dayCols.forEach((c,i)=>{html+=`<div class="sched-head" style="grid-column:${i+2};grid-row:1">${typeof c==='number'?DAYS[c]:c.label}</div>`;});
+  for(let i=0;i<slotCount;i++){
+    const m=SCHED_OPEN+i*30;
+    html+=`<div class="sched-time-cell" style="grid-column:1;grid-row:${i+2}">${minToTime(m)}<br>~${minToTime(m+30)}</div>`;
   }
-  html+='</table>';
+  dayCols.forEach((c,i)=>{html+=`<div class="sched-day-bg" style="grid-column:${i+2}"></div>`;});
+  dayCols.forEach((col,colIdx)=>{
+    const day=typeof col==='number'?col:col.day;
+    const date=typeof col==='number'?null:col.date;
+    let blocks=[];
+    regularSchedules.forEach(s=>{
+      if(!(s.days||[]).includes(day))return;
+      blocks.push({name:s.name,orig:s.name,start:timeToMin(s.timeStart),end:timeToMin(s.timeEnd),isSub:false});
+    });
+    if(date&&(subsByDate[date]||[]).length){
+      (subsByDate[date]||[]).forEach(sub=>{
+        const ss=timeToMin(sub.timeStart),ee=timeToMin(sub.timeEnd);
+        const found=blocks.find(b=>b.orig===sub.name&&b.start===ss&&b.end===ee);
+        if(found){found.name=`${sub.name}→${sub.takenBy}`;found.isSub=true;}
+        else{blocks.push({name:`${sub.name}→${sub.takenBy}`,orig:sub.name,start:ss,end:ee,isSub:true});}
+      });
+    }
+    layoutScheduleBlocks(blocks).forEach(b=>{
+      const rowStart=((b.start-SCHED_OPEN)/30)+2;
+      const rowEnd=((b.end-SCHED_OPEN)/30)+2;
+      if(rowStart<2||rowEnd>slotCount+2||rowEnd<=rowStart)return;
+      const laneCount=Math.max(1,b.laneCount||1);
+      const width=100/laneCount;
+      const left=(b.lane||0)*width;
+      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+2};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig)}">${b.name}</div>`;
+    });
+  });
+  html+='</div>';
   pane.innerHTML=html;
 }
 
