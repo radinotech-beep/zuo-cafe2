@@ -2377,9 +2377,11 @@ async function saveEmp(){
 }
 
 // 급여 관리
-function changePayMonth(dir){payM+=dir;if(payM>11){payM=0;payY++;}if(payM<0){payM=11;payY++;}const lbl=`${payY}년 ${MONTHS[payM]}`;['payManagePeriod','payMonthTitle','payTablePeriod','payTableMonth'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});renderPayEmpList();if(document.getElementById('scPayTable').classList.contains('active'))renderPayTable();}
+function updatePayMonthLabels(){const lbl=`${payY}년 ${MONTHS[payM]}`;['payManagePeriod','payMonthTitle','payTablePeriod','payTableMonth'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});}
+function changePayMonth(dir){payM+=dir;if(payM>11){payM=0;payY++;}if(payM<0){payM=11;payY--;}updatePayMonthLabels();renderPayEmpList();if(document.getElementById('scPayTable').classList.contains('active'))renderPayTable();}
 
 function renderPayEmpList(){
+  updatePayMonthLabels();
   const w=document.getElementById('payEmpList');
   if(!employees.length){w.innerHTML=`<div style="text-align:center;padding:24px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
   const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
@@ -2792,6 +2794,7 @@ async function calcEmpPay(emp,period){
 }
 
 async function renderPayTable(){
+  updatePayMonthLabels();
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const tbl=document.getElementById('payTable');
   tbl.innerHTML=`<tr><th>이름</th><th>근무시간</th><th>시급합계</th><th>주휴수당</th><th>상여</th><th>기타</th><th>공제</th><th>실수령액</th></tr>`;
