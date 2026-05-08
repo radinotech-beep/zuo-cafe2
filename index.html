@@ -402,6 +402,10 @@ input:focus{border-color:var(--green)}
         <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
         <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">요청 · 신청 · 스케줄</div></div>
       </div>
+      <div class="svc-card" onclick="enterSvc('schedule')">
+        <div class="svc-icon" style="background:#E6F1FB">🗓️</div>
+        <div><div class="svc-name">시간표 보여ZUO</div><div class="svc-desc">정규 · 이번주 · 다음주</div></div>
+      </div>
       <div class="svc-card" onclick="enterSvc('labor')">
         <div class="svc-icon" style="background:#E6F1FB">📋</div>
         <div><div class="svc-name">근로 관리해ZUO</div><div class="svc-desc">근무시간 · 급여 · 명세서</div></div>
@@ -425,6 +429,28 @@ input:focus{border-color:var(--green)}
     </div>
     <!-- 중간관리자 번호 변경 -->
     <button onclick="openChangeMasterPw()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔑 중간관리자 번호 변경</button>
+  </div>
+</div>
+
+<!-- 시간표 보여ZUO -->
+<div class="screen" id="scSchedule">
+  <div class="hdr" id="scheduleHdr">
+    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <div><div class="hdr-title" id="scheduleCafeName">카페</div><div class="hdr-sub">시간표 보여ZUO</div></div>
+    <div class="hdr-sub">관리자</div>
+  </div>
+  <div class="tabs">
+    <button class="tab on">시간표입력</button>
+    <button class="tab">정규표</button>
+    <button class="tab">이번주</button>
+    <button class="tab">다음주</button>
+  </div>
+  <div style="padding:14px">
+    <div style="background:#fff;border:1px solid var(--bd);border-radius:10px;padding:18px;text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">🗓️</div>
+      <div style="font-size:15px;font-weight:800;color:var(--t1);margin-bottom:4px">시간표 기능 준비 중</div>
+      <div style="font-size:12px;color:var(--t3);line-height:1.6">30분 단위 정규 시간표와 이번주/다음주 대타 반영표를 이 화면에 넣을 예정이에요.</div>
+    </div>
   </div>
 </div>
 
@@ -1731,8 +1757,8 @@ function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
 
 function enterSvc(type){
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  const hdrIds={sub:'appHdr',labor:'laborHdr',notice:'noticeHdr',health:'healthHdr',supply:'supplyHdr',profit:'profitHdr',alerts:'alertsHdr'};
-  const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName',alerts:'alertsCafeName'};
+  const hdrIds={sub:'appHdr',labor:'laborHdr',notice:'noticeHdr',health:'healthHdr',supply:'supplyHdr',profit:'profitHdr',alerts:'alertsHdr',schedule:'scheduleHdr'};
+  const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName',alerts:'alertsCafeName',schedule:'scheduleCafeName'};
   if(hdrIds[type]){document.getElementById(hdrIds[type]).style.background=cm.main;}
   if(nameIds[type])document.getElementById(nameIds[type]).textContent=currentCafe.name;
   // 뒤로 버튼 - 직원 모드면 직원 서비스 화면으로
@@ -1747,6 +1773,7 @@ function enterSvc(type){
   }
   if(type==='sub'){showScreen('scApp');initApp();}
   else if(type==='alerts'){showScreen('scAlerts');loadAlertCenter();}
+  else if(type==='schedule'){showScreen('scSchedule');}
   else if(type==='labor'){showScreen('scLabor');loadEmployees();}
   else if(type==='notice'){showScreen('scNotice');loadNotices();}
   else if(type==='health'){showScreen('scHealth');loadHealth();}
