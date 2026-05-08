@@ -93,6 +93,36 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .alert-actions button{flex:1;border-radius:9px;padding:11px 8px;font-size:13px;font-weight:700;cursor:pointer}
 .alert-copy-selected{border:1px solid var(--bd);background:#fff;color:var(--t2)}
 .alert-copy-all{border:none;background:var(--green);color:#fff}
+/* 시간표 */
+.sched-wrap{padding:0 14px 16px}
+.sched-card{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px}
+.sched-card-title{font-size:14px;font-weight:800;color:var(--t1);margin-bottom:10px}
+.sched-days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:10px}
+.sched-day{border:1px solid var(--bd);background:#fff;border-radius:8px;padding:8px 0;font-size:12px;font-weight:700;color:var(--t2);cursor:pointer}
+.sched-day.on{background:var(--green);border-color:var(--green);color:#fff}
+.sched-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.sched-row select,.sched-row input,.sched-card input,.sched-card select{width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:13px;background:#fff;color:var(--t1);outline:none}
+.sched-emp-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.sched-emp-check{display:flex;align-items:center;gap:6px;border:1px solid var(--bd);border-radius:8px;padding:8px;background:#fff;font-size:12px;font-weight:700;color:var(--t2);min-width:0}
+.sched-emp-check input{width:15px;height:15px;accent-color:var(--green);flex-shrink:0}
+.sched-emp-check span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-list-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--bd);border-radius:8px;padding:9px;margin-bottom:6px;background:#fafafa}
+.sched-list-main{font-size:12px;font-weight:700;color:var(--t1);line-height:1.45}
+.sched-list-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.sched-del{border:none;background:#FCEBEB;color:var(--red);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;cursor:pointer}
+.sched-table-wrap{overflow:auto;border:1px solid var(--bd);border-radius:10px;background:#fff;max-height:calc(100vh - 220px)}
+.sched-table{border-collapse:collapse;min-width:620px;width:100%;table-layout:fixed}
+.sched-table th{position:sticky;top:0;background:var(--green);color:#fff;font-size:11px;padding:8px 4px;z-index:2}
+.sched-table th:first-child{left:0;z-index:3}
+.sched-table td{border-bottom:1px solid #eee;border-right:1px solid #f0f0f0;height:46px;vertical-align:top;padding:3px;background:#fff}
+.sched-time{position:sticky;left:0;background:#f7f7f7!important;color:var(--t2);font-size:10px;font-weight:700;text-align:center;line-height:1.25;width:62px;z-index:1}
+.sched-chip{display:block;border-radius:5px;padding:2px 3px;margin-bottom:2px;font-size:10px;font-weight:700;line-height:1.25;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sched-chip.c0{background:var(--gl);color:var(--gd)}
+.sched-chip.c1{background:#E6F1FB;color:#185FA5}
+.sched-chip.c2{background:#FFF2CC;color:#8a5a00}
+.sched-chip.sub{background:#FCEBEB;color:var(--red)}
+.sched-note{font-size:11px;color:var(--t3);line-height:1.5;margin:8px 0}
+.sched-empty{padding:20px;text-align:center;color:var(--t3);font-size:13px}
 /* 대타 앱 */
 .tabs{display:flex;margin:10px 14px;background:#e8e8e8;border-radius:10px;padding:3px;gap:2px}
 .tab{flex:1;padding:8px;font-size:13px;font-weight:500;border:none;border-radius:8px;cursor:pointer;background:none;color:var(--t2)}
@@ -440,16 +470,44 @@ input:focus{border-color:var(--green)}
     <div class="hdr-sub">관리자</div>
   </div>
   <div class="tabs">
-    <button class="tab on">시간표입력</button>
-    <button class="tab">정규표</button>
-    <button class="tab">이번주</button>
-    <button class="tab">다음주</button>
+    <button class="tab on" id="schedTab_input" onclick="switchScheduleTab('input')">시간표입력</button>
+    <button class="tab" id="schedTab_regular" onclick="switchScheduleTab('regular')">정규표</button>
+    <button class="tab" id="schedTab_this" onclick="switchScheduleTab('this')">이번주</button>
+    <button class="tab" id="schedTab_next" onclick="switchScheduleTab('next')">다음주</button>
   </div>
-  <div style="padding:14px">
-    <div style="background:#fff;border:1px solid var(--bd);border-radius:10px;padding:18px;text-align:center">
-      <div style="font-size:28px;margin-bottom:8px">🗓️</div>
-      <div style="font-size:15px;font-weight:800;color:var(--t1);margin-bottom:4px">시간표 기능 준비 중</div>
-      <div style="font-size:12px;color:var(--t3);line-height:1.6">30분 단위 정규 시간표와 이번주/다음주 대타 반영표를 이 화면에 넣을 예정이에요.</div>
+  <div class="sched-wrap">
+    <div id="schedInputPane">
+      <div class="sched-card">
+        <div class="sched-card-title">정규 근무 추가</div>
+        <div class="sched-days" id="schedDayBtns"></div>
+        <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px">등록 직원 선택</div>
+        <div class="sched-emp-checks" id="schedEmpChecks"></div>
+        <input type="text" id="schedManualName" placeholder="수기 이름 입력 (여러 명은 쉼표로 구분)" style="margin-bottom:8px">
+        <div class="sched-row">
+          <select id="schedStart"></select>
+          <select id="schedEnd"></select>
+        </div>
+        <input type="text" id="schedMemo" placeholder="메모 (선택)" style="margin-bottom:10px">
+        <button class="btn-primary" onclick="addRegularSchedule()">+ 시간표 추가</button>
+        <div class="sched-note">시간은 30분 단위로 선택되고, 같은 시간대에는 최대 3명까지 등록할 수 있어요.</div>
+      </div>
+      <div class="sched-card">
+        <div class="sched-card-title">등록된 정규 근무</div>
+        <div id="schedList"></div>
+      </div>
+    </div>
+    <div id="schedTablePane" style="display:none">
+      <div class="sched-card" style="padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--t1)" id="schedTableTitle">정규표</div>
+            <div class="sched-note" style="margin:2px 0 0">각 칸은 시작~종료 시간 기준</div>
+          </div>
+          <button class="alert-hide" onclick="switchScheduleTab('input')" style="margin:0">입력 탭으로</button>
+        </div>
+      </div>
+      <div class="sched-table-wrap" id="schedTableWrap"></div>
+      <div class="sched-note">이번주/다음주는 확정된 대타가 있으면 원직원 → 대타직원으로 표시돼요.</div>
     </div>
   </div>
 </div>
@@ -1773,7 +1831,7 @@ function enterSvc(type){
   }
   if(type==='sub'){showScreen('scApp');initApp();}
   else if(type==='alerts'){showScreen('scAlerts');loadAlertCenter();}
-  else if(type==='schedule'){showScreen('scSchedule');}
+  else if(type==='schedule'){showScreen('scSchedule');initSchedule();}
   else if(type==='labor'){showScreen('scLabor');loadEmployees();}
   else if(type==='notice'){showScreen('scNotice');loadNotices();}
   else if(type==='health'){showScreen('scHealth');loadHealth();}
@@ -2050,6 +2108,177 @@ async function doCopy(){
   try{await navigator.clipboard.writeText(txt);}
   catch(e){const el=document.createElement('textarea');el.value=txt;el.style.position='fixed';el.style.opacity='0';document.body.appendChild(el);el.focus();el.select();document.execCommand('copy');document.body.removeChild(el);}
   alert('복사됐어요! 카카오톡 단체방에서 길게 누르기 → 붙여넣기 해주세요 😊');closeShare();
+}
+
+// 시간표 보여ZUO
+let regularSchedules=[],scheduleTab='input',schedSelectedDays=[];
+const SCHED_DAYS=[1,2,3,4,5,6,0];
+const SCHED_OPEN=9*60,SCHED_CLOSE=22*60;
+function minToTime(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;}
+function timeToMin(t){
+  if(!t)return 0;
+  if(t.includes('오전')||t.includes('오후')){
+    const pm=t.includes('오후');
+    const mm=t.match(/(\d+):(\d+)/);if(!mm)return 0;
+    let h=parseInt(mm[1]),m=parseInt(mm[2]);
+    if(pm&&h<12)h+=12;if(!pm&&h===12)h=0;
+    return h*60+m;
+  }
+  const [h,m]=t.split(':').map(Number);return (h||0)*60+(m||0);
+}
+function timeRangeLabel(start){return `${minToTime(start)}~${minToTime(start+30)}`;}
+function scheduleDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function getWeekStart(offset=0){const d=new Date();d.setHours(0,0,0,0);const diff=(d.getDay()+6)%7;d.setDate(d.getDate()-diff+(offset*7));return d;}
+function initSchedule(){
+  buildScheduleControls();
+  switchScheduleTab(scheduleTab||'input');
+  loadScheduleData();
+}
+function buildScheduleControls(){
+  const dayWrap=document.getElementById('schedDayBtns');
+  if(!dayWrap.dataset.ready){
+    dayWrap.innerHTML=SCHED_DAYS.map(d=>`<button class="sched-day" id="schedDay_${d}" onclick="toggleSchedDay(${d})">${DAYS[d]}</button>`).join('');
+    dayWrap.dataset.ready='1';
+  }
+  const opts=[];
+  for(let m=SCHED_OPEN;m<=SCHED_CLOSE;m+=30)opts.push(`<option value="${minToTime(m)}">${minToTime(m)}</option>`);
+  document.getElementById('schedStart').innerHTML=opts.slice(0,-1).join('');
+  document.getElementById('schedEnd').innerHTML=opts.slice(1).join('');
+  document.getElementById('schedStart').value='09:00';
+  document.getElementById('schedEnd').value='14:00';
+  renderScheduleEmpOptions();
+}
+async function renderScheduleEmpOptions(){
+  const active=await fetchActiveEmployees();
+  const wrap=document.getElementById('schedEmpChecks');
+  if(!wrap)return;
+  wrap.innerHTML=active.length?active.map(e=>`<label class="sched-emp-check"><input type="checkbox" class="schedEmpPick" value="${e.id}" data-name="${e.name}"><span>${e.name}</span></label>`).join(''):`<div class="sched-empty" style="grid-column:1/-1;padding:12px">등록된 직원이 없어요</div>`;
+}
+function toggleSchedDay(d){
+  schedSelectedDays=schedSelectedDays.includes(d)?schedSelectedDays.filter(x=>x!==d):[...schedSelectedDays,d];
+  renderSchedDayBtns();
+}
+function renderSchedDayBtns(){
+  SCHED_DAYS.forEach(d=>{const el=document.getElementById('schedDay_'+d);if(el)el.classList.toggle('on',schedSelectedDays.includes(d));});
+}
+async function loadScheduleData(){
+  if(!currentCafe)return;
+  const snap=await db.collection('regularSchedules').where('cafeId','==',currentCafe.id).get();
+  regularSchedules=[];
+  snap.forEach(d=>regularSchedules.push({id:d.id,...d.data()}));
+  regularSchedules.sort((a,b)=>(Math.min(...(a.days||[9]))-Math.min(...(b.days||[9])))||(timeToMin(a.timeStart)-timeToMin(b.timeStart))||(a.name||'').localeCompare(b.name||''));
+  renderScheduleList();
+  renderScheduleTable();
+}
+function scheduleDaysLabel(days){return SCHED_DAYS.filter(d=>days.includes(d)).map(d=>DAYS[d]).join(' · ');}
+function renderScheduleList(){
+  const w=document.getElementById('schedList');if(!w)return;
+  if(!regularSchedules.length){w.innerHTML=`<div class="sched-empty">등록된 정규 근무가 없어요</div>`;return;}
+  w.innerHTML=regularSchedules.map(s=>`<div class="sched-list-row">
+    <div>
+      <div class="sched-list-main">${scheduleDaysLabel(s.days||[])} ${s.timeStart}~${s.timeEnd} ${s.name}</div>
+      <div class="sched-list-sub">${s.memo||'메모 없음'}</div>
+    </div>
+    <button class="sched-del" onclick="deleteRegularSchedule('${s.id}')">삭제</button>
+  </div>`).join('');
+}
+function countScheduleOverlap(day,startMin,endMin){
+  let max=0;
+  for(let m=startMin;m<endMin;m+=30){
+    const c=regularSchedules.filter(s=>(s.days||[]).includes(day)&&timeToMin(s.timeStart)<=m&&timeToMin(s.timeEnd)>m).length;
+    if(c>max)max=c;
+  }
+  return max;
+}
+async function addRegularSchedule(){
+  if(!schedSelectedDays.length){alert('요일을 선택해주세요');return;}
+  const picked=[...document.querySelectorAll('.schedEmpPick:checked')].map(el=>({empId:el.value,name:el.dataset.name}));
+  const manual=document.getElementById('schedManualName').value.trim().split(',').map(n=>n.trim()).filter(Boolean).map(name=>({empId:null,name}));
+  const people=[...picked,...manual];
+  if(!people.length){alert('직원을 선택하거나 수기 이름을 입력해주세요');return;}
+  const timeStart=document.getElementById('schedStart').value;
+  const timeEnd=document.getElementById('schedEnd').value;
+  const startMin=timeToMin(timeStart),endMin=timeToMin(timeEnd);
+  if(endMin<=startMin){alert('종료시간은 시작시간보다 늦어야 해요');return;}
+  for(const day of schedSelectedDays){
+    if(countScheduleOverlap(day,startMin,endMin)+people.length>3){alert(`${DAYS[day]}요일 해당 시간대는 최대 3명까지만 등록할 수 있어요`);return;}
+  }
+  const memo=document.getElementById('schedMemo').value.trim();
+  await Promise.all(people.map(p=>db.collection('regularSchedules').add({cafeId:currentCafe.id,days:[...schedSelectedDays],empId:p.empId,name:p.name,timeStart,timeEnd,memo,createdAt:Date.now()})));
+  schedSelectedDays=[];renderSchedDayBtns();
+  document.querySelectorAll('.schedEmpPick:checked').forEach(el=>el.checked=false);
+  document.getElementById('schedManualName').value='';
+  document.getElementById('schedMemo').value='';
+  await loadScheduleData();
+  showToast('✅ 시간표가 추가됐어요');
+}
+async function deleteRegularSchedule(id){
+  if(!confirm('이 정규 근무를 삭제할까요?'))return;
+  await db.collection('regularSchedules').doc(id).delete();
+  await loadScheduleData();
+  showToast('삭제됐어요');
+}
+function switchScheduleTab(tab){
+  scheduleTab=tab;
+  ['input','regular','this','next'].forEach(k=>document.getElementById('schedTab_'+k)?.classList.toggle('on',k===tab));
+  document.getElementById('schedInputPane').style.display=tab==='input'?'block':'none';
+  document.getElementById('schedTablePane').style.display=tab==='input'?'none':'block';
+  renderScheduleTable();
+}
+async function getScheduleSubsForTab(tab){
+  if(tab==='regular')return {};
+  const start=getWeekStart(tab==='next'?1:0);
+  const keys=[];
+  for(let i=0;i<7;i++)keys.push(scheduleDateKey(addDays(start,i)));
+  const snap=await db.collection('subs').where('cafeId','==',currentCafe.id).get();
+  const byDate={};
+  snap.forEach(d=>{
+    const s={fid:d.id,...d.data()};
+    if(s.takenBy&&keys.includes(s.date)){
+      if(!byDate[s.date])byDate[s.date]=[];
+      byDate[s.date].push(s);
+    }
+  });
+  return byDate;
+}
+function scheduleChip(name,cls=''){
+  return `<span class="sched-chip ${cls}">${name}</span>`;
+}
+async function renderScheduleTable(){
+  const pane=document.getElementById('schedTableWrap');
+  if(!pane||scheduleTab==='input')return;
+  const tab=scheduleTab;
+  document.getElementById('schedTableTitle').textContent=tab==='regular'?'정규 시간표':tab==='this'?'이번주 시간표':'다음주 시간표';
+  const weekStart=tab==='next'?getWeekStart(1):getWeekStart(0);
+  const subsByDate=await getScheduleSubsForTab(tab);
+  const dayCols=tab==='regular'?SCHED_DAYS:SCHED_DAYS.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]} ${dt.getMonth()+1}/${dt.getDate()}`};});
+  let html=`<table class="sched-table"><tr><th style="width:62px">시간</th>${dayCols.map(c=>`<th>${typeof c==='number'?DAYS[c]:c.label}</th>`).join('')}</tr>`;
+  for(let m=SCHED_OPEN;m<SCHED_CLOSE;m+=30){
+    html+=`<tr><td class="sched-time">${minToTime(m)}<br>~${minToTime(m+30)}</td>`;
+    for(const col of dayCols){
+      const day=typeof col==='number'?col:col.day;
+      const date=typeof col==='number'?null:col.date;
+      let chips=[];
+      regularSchedules.forEach((s,idx)=>{
+        if(!(s.days||[]).includes(day))return;
+        if(timeToMin(s.timeStart)<=m&&timeToMin(s.timeEnd)>m)chips.push({name:s.name,cls:`c${idx%3}`,orig:s.name,start:s.timeStart,end:s.timeEnd});
+      });
+      if(date&&(subsByDate[date]||[]).length){
+        (subsByDate[date]||[]).forEach(sub=>{
+          const ss=timeToMin(sub.timeStart),ee=timeToMin(sub.timeEnd);
+          if(ss<=m&&ee>m){
+            const found=chips.find(c=>c.orig===sub.name);
+            if(found){found.name=`${sub.name}→${sub.takenBy}`;found.cls='sub';}
+            else if(chips.length<3){chips.push({name:`${sub.name}→${sub.takenBy}`,cls:'sub'});}
+          }
+        });
+      }
+      html+=`<td>${chips.slice(0,3).map(c=>scheduleChip(c.name,c.cls)).join('')}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  pane.innerHTML=html;
 }
 
 // 알림센터
