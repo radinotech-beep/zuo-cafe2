@@ -61,6 +61,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .svc-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
 .svc-name{font-size:16px;font-weight:700;color:var(--t1)}
 .svc-desc{font-size:12px;color:var(--t3);margin-top:3px}
+.svc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.svc-grid .svc-card{margin-bottom:0;padding:14px 10px;min-height:126px;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:9px}
+.svc-grid .svc-icon{width:52px;height:52px;border-radius:14px}
+.svc-grid .svc-name{font-size:14px;line-height:1.25;word-break:keep-all}
+.svc-grid .svc-desc{font-size:10px;line-height:1.35;word-break:keep-all}
 /* 알림센터 */
 .alert-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 14px}
 .alert-stat{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center}
@@ -388,33 +393,35 @@ input:focus{border-color:var(--green)}
   <div class="svc-wrap">
     <div class="svc-title">서비스를 선택해주세요</div>
     <div class="svc-sub">이용할 서비스를 탭하세요</div>
-    <div class="svc-card" onclick="enterSvc('notice')">
-      <div class="svc-icon" style="background:#FFF2CC">📢</div>
-      <div><div class="svc-name">공지사항 읽어ZUO</div><div class="svc-desc">매장 공지 · 공지 누적 관리</div></div>
-    </div>
-    <div class="svc-card" onclick="enterSvc('labor')">
-      <div class="svc-icon" style="background:#E6F1FB">📋</div>
-      <div><div class="svc-name">근로 관리해ZUO</div><div class="svc-desc">근무시간 · 급여 계산 · 명세서</div></div>
-    </div>
-    <div class="svc-card" onclick="enterSvc('sub')">
-      <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
-      <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">대타 요청 · 신청 · 스케줄 관리</div></div>
-    </div>
-    <div class="svc-card" onclick="enterSvc('alerts')">
-      <div class="svc-icon" style="background:#EAF6F2">🔔</div>
-      <div><div class="svc-name">알림센터</div><div class="svc-desc">대타 · 급여 · 운영 알림 모아보기</div></div>
-    </div>
-    <div class="svc-card" onclick="enterSvcWithMaster('profit')">
-      <div class="svc-icon" style="background:#E2EFDA">💰</div>
-      <div><div class="svc-name">수익 관리해ZUO</div><div class="svc-desc">수입 · 지출 · 월별 추이 관리</div></div>
-    </div>
-    <div class="svc-card" onclick="enterSvcWithMaster('health')">
-      <div class="svc-icon" style="background:#FCEBEB">🏥</div>
-      <div><div class="svc-name">보건증 관리해ZUO</div><div class="svc-desc">발행일 · 만료일 · 만료 알림</div></div>
-    </div>
-    <div class="svc-card" onclick="enterSvcWithMaster('supply')">
-      <div class="svc-icon" style="background:#EEEDFE">🔧</div>
-      <div><div class="svc-name">소모품 관리해ZUO</div><div class="svc-desc">교체주기 · 차기교체일 · 알림</div></div>
+    <div class="svc-grid">
+      <div class="svc-card" onclick="enterSvc('alerts')">
+        <div class="svc-icon" style="background:#EAF6F2">🔔</div>
+        <div><div class="svc-name">알림센터</div><div class="svc-desc">대타 · 급여 · 운영 알림</div></div>
+      </div>
+      <div class="svc-card" onclick="enterSvc('sub')">
+        <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
+        <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">요청 · 신청 · 스케줄</div></div>
+      </div>
+      <div class="svc-card" onclick="enterSvc('labor')">
+        <div class="svc-icon" style="background:#E6F1FB">📋</div>
+        <div><div class="svc-name">근로 관리해ZUO</div><div class="svc-desc">근무시간 · 급여 · 명세서</div></div>
+      </div>
+      <div class="svc-card" onclick="enterSvc('notice')">
+        <div class="svc-icon" style="background:#FFF2CC">📢</div>
+        <div><div class="svc-name">공지사항 읽어ZUO</div><div class="svc-desc">매장 공지 관리</div></div>
+      </div>
+      <div class="svc-card" onclick="enterSvcWithMaster('profit')">
+        <div class="svc-icon" style="background:#E2EFDA">💰</div>
+        <div><div class="svc-name">수익 관리해ZUO</div><div class="svc-desc">수입 · 지출 · 추이</div></div>
+      </div>
+      <div class="svc-card" onclick="enterSvcWithMaster('health')">
+        <div class="svc-icon" style="background:#FCEBEB">🏥</div>
+        <div><div class="svc-name">보건증 관리해ZUO</div><div class="svc-desc">발행일 · 만료 알림</div></div>
+      </div>
+      <div class="svc-card" onclick="enterSvcWithMaster('supply')">
+        <div class="svc-icon" style="background:#EEEDFE">🔧</div>
+        <div><div class="svc-name">소모품 관리해ZUO</div><div class="svc-desc">교체주기 · 알림</div></div>
+      </div>
     </div>
     <!-- 중간관리자 번호 변경 -->
     <button onclick="openChangeMasterPw()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔑 중간관리자 번호 변경</button>
