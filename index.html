@@ -112,14 +112,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sched-list-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--bd);border-radius:8px;padding:9px;margin-bottom:6px;background:#fafafa}
 .sched-list-main{font-size:12px;font-weight:700;color:var(--t1);line-height:1.45}
 .sched-list-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.sched-list-actions{display:flex;flex-direction:column;gap:5px}
+.sched-edit{border:1px solid var(--bd);background:#fff;color:var(--t2);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;cursor:pointer}
 .sched-del{border:none;background:#FCEBEB;color:var(--red);border-radius:7px;padding:7px 9px;font-size:11px;font-weight:700;cursor:pointer}
 .sched-list-colors{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
 .sched-mini-color{width:20px;height:20px;border-radius:6px;border:2px solid transparent;cursor:pointer}
 .sched-mini-color.on{border-color:var(--t1)}
 .sched-table-wrap{overflow:hidden;border:1px solid var(--bd);border-radius:10px;background:#fff}
-.sched-grid{display:grid;grid-template-columns:42px repeat(7,minmax(0,1fr));grid-template-rows:18px repeat(29,17px);position:relative;background:#fff}
+.sched-grid{display:grid;grid-template-columns:22px 26px repeat(7,minmax(0,1fr));grid-template-rows:18px repeat(29,17px);position:relative;background:#fff}
 .sched-head{background:var(--green);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border-right:1px solid #111}
-.sched-time-cell{background:#f7f7f7;color:var(--t2);font-size:7px;font-weight:700;line-height:1.05;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #111;border-bottom:1px solid #eee;z-index:1}
+.sched-time-hour{background:#fff;color:var(--t1);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #111;border-bottom:1px solid #111;z-index:1}
+.sched-time-half{background:#fff;color:var(--t1);font-size:8px;font-weight:500;line-height:1;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #111;border-bottom:1px solid #eee;z-index:1}
 .sched-day-bg{background:repeating-linear-gradient(to bottom,#fff 0,#fff 16px,#eee 16px,#eee 17px);border-right:1px solid #111;grid-row:2 / -1}
 .sched-block{border-radius:0;border:1px solid rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:700;line-height:1.15;overflow:hidden;z-index:2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 .sched-name-vertical{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:0;max-height:100%;white-space:nowrap}
@@ -493,7 +496,8 @@ input:focus{border-color:var(--green)}
         <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px">표시 색상</div>
         <div class="sched-colors" id="schedColorBtns"></div>
         <input type="text" id="schedMemo" placeholder="메모 (선택)" style="margin-bottom:10px">
-        <button class="btn-primary" onclick="addRegularSchedule()">+ 시간표 추가</button>
+        <button class="btn-primary" id="schedSaveBtn" onclick="addRegularSchedule()">+ 시간표 추가</button>
+        <button class="btn-outline-s" id="schedCancelEditBtn" onclick="cancelEditRegularSchedule()" style="display:none;width:100%;margin-bottom:8px">수정 취소</button>
         <div class="sched-note">시간은 30분 단위로 선택되고, 같은 시간대에는 최대 3명까지 등록할 수 있어요.</div>
       </div>
       <div class="sched-card">
@@ -2116,7 +2120,7 @@ async function doCopy(){
 }
 
 // 시간표 보여ZUO
-let regularSchedules=[],scheduleTab='input',schedSelectedDays=[],schedColor='#FFF200';
+let regularSchedules=[],scheduleTab='input',schedSelectedDays=[],schedColor='#FFF200',editingScheduleId=null;
 const SCHED_DAYS=[1,2,3,4,5,6,0];
 const SCHED_OPEN=7*60+30,SCHED_CLOSE=22*60;
 const SCHED_COLORS=['#FFF200','#F8C9AA','#CBE6C0','#FF006E','#B9D4EA','#FFE59A','#D9D9D9','#1827F2'];
@@ -2194,7 +2198,10 @@ function renderScheduleList(){
       <div class="sched-list-sub">${s.memo||'메모 없음'}</div>
       <div class="sched-list-colors">${SCHED_COLORS.map(c=>`<button class="sched-mini-color ${s.color===c?'on':''}" style="background:${c}" onclick="updateScheduleColor('${s.id}','${c}')"></button>`).join('')}</div>
     </div>
-    <button class="sched-del" onclick="deleteRegularSchedule('${s.id}')">삭제</button>
+    <div class="sched-list-actions">
+      <button class="sched-edit" onclick="startEditRegularSchedule('${s.id}')">수정</button>
+      <button class="sched-del" onclick="deleteRegularSchedule('${s.id}')">삭제</button>
+    </div>
   </div>`).join('');
 }
 async function updateScheduleColor(id,color){
@@ -2205,10 +2212,10 @@ async function updateScheduleColor(id,color){
   renderScheduleTable();
   showToast('색상이 변경됐어요');
 }
-function countScheduleOverlap(day,startMin,endMin){
+function countScheduleOverlap(day,startMin,endMin,excludeId=null){
   let max=0;
   for(let m=startMin;m<endMin;m+=30){
-    const c=regularSchedules.filter(s=>(s.days||[]).includes(day)&&timeToMin(s.timeStart)<=m&&timeToMin(s.timeEnd)>m).length;
+    const c=regularSchedules.filter(s=>s.id!==excludeId&&(s.days||[]).includes(day)&&timeToMin(s.timeStart)<=m&&timeToMin(s.timeEnd)>m).length;
     if(c>max)max=c;
   }
   return max;
@@ -2219,25 +2226,61 @@ async function addRegularSchedule(){
   const manual=document.getElementById('schedManualName').value.trim().split(',').map(n=>n.trim()).filter(Boolean).map(name=>({empId:null,name}));
   const people=[...picked,...manual];
   if(!people.length){alert('직원을 선택하거나 수기 이름을 입력해주세요');return;}
+  if(editingScheduleId&&people.length!==1){alert('수정할 때는 직원 1명만 선택하거나 입력해주세요');return;}
   const timeStart=document.getElementById('schedStart').value;
   const timeEnd=document.getElementById('schedEnd').value;
   const startMin=timeToMin(timeStart),endMin=timeToMin(timeEnd);
   if(endMin<=startMin){alert('종료시간은 시작시간보다 늦어야 해요');return;}
   for(const day of schedSelectedDays){
-    if(countScheduleOverlap(day,startMin,endMin)+people.length>3){alert(`${DAYS[day]}요일 해당 시간대는 최대 3명까지만 등록할 수 있어요`);return;}
+    if(countScheduleOverlap(day,startMin,endMin,editingScheduleId)+people.length>3){alert(`${DAYS[day]}요일 해당 시간대는 최대 3명까지만 등록할 수 있어요`);return;}
   }
   const memo=document.getElementById('schedMemo').value.trim();
-  await Promise.all(people.map(p=>db.collection('regularSchedules').add({cafeId:currentCafe.id,days:[...schedSelectedDays],empId:p.empId,name:p.name,timeStart,timeEnd,memo,color:schedColor,createdAt:Date.now()})));
+  if(editingScheduleId){
+    const p=people[0];
+    await db.collection('regularSchedules').doc(editingScheduleId).update({days:[...schedSelectedDays],empId:p.empId,name:p.name,timeStart,timeEnd,memo,color:schedColor});
+    cancelEditRegularSchedule();
+    showToast('✅ 시간표가 수정됐어요');
+  }else{
+    await Promise.all(people.map(p=>db.collection('regularSchedules').add({cafeId:currentCafe.id,days:[...schedSelectedDays],empId:p.empId,name:p.name,timeStart,timeEnd,memo,color:schedColor,createdAt:Date.now()})));
+    clearScheduleForm();
+    showToast('✅ 시간표가 추가됐어요');
+  }
+  await loadScheduleData();
+}
+function clearScheduleForm(){
   schedSelectedDays=[];renderSchedDayBtns();
   document.querySelectorAll('.schedEmpPick:checked').forEach(el=>el.checked=false);
   document.getElementById('schedManualName').value='';
   document.getElementById('schedMemo').value='';
-  await loadScheduleData();
-  showToast('✅ 시간표가 추가됐어요');
+}
+function setScheduleEditMode(on){
+  document.getElementById('schedSaveBtn').textContent=on?'수정 저장':'+ 시간표 추가';
+  document.getElementById('schedCancelEditBtn').style.display=on?'block':'none';
+}
+function startEditRegularSchedule(id){
+  const s=regularSchedules.find(x=>x.id===id);if(!s)return;
+  editingScheduleId=id;
+  schedSelectedDays=[...(s.days||[])];renderSchedDayBtns();
+  document.querySelectorAll('.schedEmpPick:checked').forEach(el=>el.checked=false);
+  const picked=s.empId?document.querySelector(`.schedEmpPick[value="${s.empId}"]`):null;
+  if(picked){picked.checked=true;document.getElementById('schedManualName').value='';}
+  else{document.getElementById('schedManualName').value=s.name||'';}
+  document.getElementById('schedStart').value=s.timeStart;
+  document.getElementById('schedEnd').value=s.timeEnd;
+  document.getElementById('schedMemo').value=s.memo||'';
+  schedColor=s.color||schedColor;renderSchedColors();
+  setScheduleEditMode(true);
+  document.getElementById('schedInputPane')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function cancelEditRegularSchedule(clear=true){
+  editingScheduleId=null;
+  setScheduleEditMode(false);
+  if(clear)clearScheduleForm();
 }
 async function deleteRegularSchedule(id){
   if(!confirm('이 정규 근무를 삭제할까요?'))return;
   await db.collection('regularSchedules').doc(id).delete();
+  if(editingScheduleId===id)cancelEditRegularSchedule();
   await loadScheduleData();
   showToast('삭제됐어요');
 }
@@ -2318,13 +2361,15 @@ async function renderScheduleTable(){
   const visibleDays=SCHED_DAYS;
   const dayCols=tab==='regular'?visibleDays:visibleDays.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]}`};});
   const slotCount=(SCHED_CLOSE-SCHED_OPEN)/30;
-  let html=`<div class="sched-grid"><div class="sched-head" style="grid-column:1;grid-row:1">시간</div>`;
-  dayCols.forEach((c,i)=>{html+=`<div class="sched-head" style="grid-column:${i+2};grid-row:1">${typeof c==='number'?DAYS[c]:c.label}</div>`;});
+  let html=`<div class="sched-grid"><div class="sched-head" style="grid-column:1 / 3;grid-row:1">시간</div>`;
+  dayCols.forEach((c,i)=>{html+=`<div class="sched-head" style="grid-column:${i+3};grid-row:1">${typeof c==='number'?DAYS[c]:c.label}</div>`;});
   for(let i=0;i<slotCount;i++){
     const m=SCHED_OPEN+i*30;
-    html+=`<div class="sched-time-cell" style="grid-column:1;grid-row:${i+2}">${minToTime(m)}<br>~${minToTime(m+30)}</div>`;
+    const row=i+2;
+    if(m%60===0)html+=`<div class="sched-time-hour" style="grid-column:1;grid-row:${row} / ${row+2}">${Math.floor(m/60)}</div>`;
+    html+=`<div class="sched-time-half" style="grid-column:2;grid-row:${row}">${scheduleHalfLabel(m)}</div>`;
   }
-  dayCols.forEach((c,i)=>{html+=`<div class="sched-day-bg" style="grid-column:${i+2}"></div>`;});
+  dayCols.forEach((c,i)=>{html+=`<div class="sched-day-bg" style="grid-column:${i+3}"></div>`;});
   dayCols.forEach((col,colIdx)=>{
     const day=typeof col==='number'?col:col.day;
     const date=typeof col==='number'?null:col.date;
@@ -2348,7 +2393,7 @@ async function renderScheduleTable(){
       const dayLaneCount=Math.min(3,Math.max(1,...blocks.map(x=>(x.lane||0)+1)));
       const width=100/dayLaneCount;
       const left=(b.lane||0)*width;
-      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+2};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig,b.color)}"><span class="sched-name-vertical">${formatScheduleBlockName(b.name)}</span></div>`;
+      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+3};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig,b.color)}"><span class="sched-name-vertical">${formatScheduleBlockName(b.name)}</span></div>`;
     });
   });
   html+='</div>';
