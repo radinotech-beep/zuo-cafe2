@@ -61,6 +61,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .svc-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
 .svc-name{font-size:16px;font-weight:700;color:var(--t1)}
 .svc-desc{font-size:12px;color:var(--t3);margin-top:3px}
+/* 알림센터 */
+.alert-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 14px}
+.alert-stat{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center}
+.alert-stat-num{font-size:18px;font-weight:800;color:var(--green)}
+.alert-stat-lbl{font-size:11px;color:var(--t3);margin-top:2px}
+.alert-list{padding:0 14px 168px}
+.alert-card{background:#fff;border:1px solid var(--bd);border-radius:8px;margin-bottom:8px;display:grid;grid-template-columns:4px 30px 1fr auto;overflow:hidden;align-items:stretch}
+.alert-bar{background:var(--green)}
+.alert-check{display:flex;align-items:center;justify-content:center}
+.alert-check input{width:16px;height:16px;accent-color:var(--green)}
+.alert-body{padding:11px 8px 11px 0;min-width:0}
+.alert-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.alert-title{font-size:13px;font-weight:800;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-badge{font-size:9px;font-weight:700;border-radius:4px;padding:2px 5px;background:var(--gl);color:var(--gd);white-space:nowrap}
+.alert-text{font-size:12px;color:var(--t2);line-height:1.45;word-break:keep-all}
+.alert-meta{font-size:10px;color:var(--t3);margin-top:4px}
+.alert-hide{align-self:center;margin-right:8px;border:none;background:#f4f4f4;color:var(--t3);border-radius:6px;padding:7px 8px;font-size:11px;cursor:pointer;white-space:nowrap}
+.alert-empty{background:#fff;border:1px dashed var(--bd);border-radius:10px;padding:26px;text-align:center;color:var(--t3);font-size:13px}
+.alert-hidden-toggle{width:100%;border:1px dashed var(--bd);background:#fff;border-radius:8px;padding:10px;font-size:12px;color:var(--t2);margin:4px 0 10px;cursor:pointer}
+.alert-copybar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--bd);padding:10px 14px 14px;box-shadow:0 -4px 12px rgba(0,0,0,.08);z-index:20}
+.alert-preview{border:1px solid var(--bd);border-radius:8px;padding:9px;background:#fafafa;margin-bottom:8px;max-height:82px;overflow:hidden}
+.alert-preview-title{font-size:10px;font-weight:700;color:var(--t3);margin-bottom:4px}
+.alert-preview-text{font-size:11px;color:var(--t2);white-space:pre-line;line-height:1.45}
+.alert-actions{display:flex;gap:8px}
+.alert-actions button{flex:1;border-radius:9px;padding:11px 8px;font-size:13px;font-weight:700;cursor:pointer}
+.alert-copy-selected{border:1px solid var(--bd);background:#fff;color:var(--t2)}
+.alert-copy-all{border:none;background:var(--green);color:#fff}
 /* 대타 앱 */
 .tabs{display:flex;margin:10px 14px;background:#e8e8e8;border-radius:10px;padding:3px;gap:2px}
 .tab{flex:1;padding:8px;font-size:13px;font-weight:500;border:none;border-radius:8px;cursor:pointer;background:none;color:var(--t2)}
@@ -373,6 +400,10 @@ input:focus{border-color:var(--green)}
       <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
       <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">대타 요청 · 신청 · 스케줄 관리</div></div>
     </div>
+    <div class="svc-card" onclick="enterSvc('alerts')">
+      <div class="svc-icon" style="background:#EAF6F2">🔔</div>
+      <div><div class="svc-name">알림센터</div><div class="svc-desc">대타 · 급여 · 운영 알림 모아보기</div></div>
+    </div>
     <div class="svc-card" onclick="enterSvcWithMaster('profit')">
       <div class="svc-icon" style="background:#E2EFDA">💰</div>
       <div><div class="svc-name">수익 관리해ZUO</div><div class="svc-desc">수입 · 지출 · 월별 추이 관리</div></div>
@@ -390,6 +421,41 @@ input:focus{border-color:var(--green)}
     <!-- 알림 테스트 -->
     <button onclick="testPushNotification()" style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🔔 알림 테스트</button>
 <button onclick="cleanupDuplicateWorkHours()" style="width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px dashed var(--bd);background:none;font-size:13px;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">🧹 중복 근무데이터 정리</button>
+  </div>
+</div>
+
+<!-- 알림센터 -->
+<div class="screen" id="scAlerts">
+  <div class="hdr" id="alertsHdr">
+    <button class="back-btn" onclick="showScreen('scSvc')">← 뒤로</button>
+    <div><div class="hdr-title" id="alertsCafeName">카페</div><div class="hdr-sub">오늘 처리할 운영 알림</div></div>
+    <button onclick="loadAlertCenter()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer">새로고침</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="alertTab_all" onclick="switchAlertFilter('all')">전체</button>
+    <button class="tab" id="alertTab_sub" onclick="switchAlertFilter('sub')">대타</button>
+    <button class="tab" id="alertTab_pay" onclick="switchAlertFilter('pay')">급여</button>
+    <button class="tab" id="alertTab_manage" onclick="switchAlertFilter('manage')">관리</button>
+  </div>
+  <div class="alert-summary">
+    <div class="alert-stat"><div class="alert-stat-num" id="alertUrgentCnt">0</div><div class="alert-stat-lbl">긴급</div></div>
+    <div class="alert-stat"><div class="alert-stat-num" id="alertTodayCnt">0</div><div class="alert-stat-lbl">오늘</div></div>
+    <div class="alert-stat"><div class="alert-stat-num" id="alertTotalCnt">0</div><div class="alert-stat-lbl">전체</div></div>
+  </div>
+  <div class="alert-list">
+    <div id="alertList"></div>
+    <button class="alert-hidden-toggle" id="hiddenAlertToggle" style="display:none" onclick="toggleHiddenAlerts()">접어둔 알림 보기</button>
+    <div id="hiddenAlertList" style="display:none"></div>
+  </div>
+  <div class="alert-copybar">
+    <div class="alert-preview">
+      <div class="alert-preview-title">카톡 문구 미리보기</div>
+      <div class="alert-preview-text" id="alertCopyPreview">선택된 알림이 없어요</div>
+    </div>
+    <div class="alert-actions">
+      <button class="alert-copy-selected" onclick="copySelectedAlerts()">선택 복사</button>
+      <button class="alert-copy-all" onclick="copyAllAlerts()">전체 카톡문구 복사</button>
+    </div>
   </div>
 </div>
 
@@ -1661,8 +1727,8 @@ function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
 
 function enterSvc(type){
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  const hdrIds={sub:'appHdr',labor:'laborHdr',notice:'noticeHdr',health:'healthHdr',supply:'supplyHdr',profit:'profitHdr'};
-  const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName'};
+  const hdrIds={sub:'appHdr',labor:'laborHdr',notice:'noticeHdr',health:'healthHdr',supply:'supplyHdr',profit:'profitHdr',alerts:'alertsHdr'};
+  const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName',alerts:'alertsCafeName'};
   if(hdrIds[type]){document.getElementById(hdrIds[type]).style.background=cm.main;}
   if(nameIds[type])document.getElementById(nameIds[type]).textContent=currentCafe.name;
   // 뒤로 버튼 - 직원 모드면 직원 서비스 화면으로
@@ -1676,6 +1742,7 @@ function enterSvc(type){
     }
   }
   if(type==='sub'){showScreen('scApp');initApp();}
+  else if(type==='alerts'){showScreen('scAlerts');loadAlertCenter();}
   else if(type==='labor'){showScreen('scLabor');loadEmployees();}
   else if(type==='notice'){showScreen('scNotice');loadNotices();}
   else if(type==='health'){showScreen('scHealth');loadHealth();}
@@ -1953,6 +2020,179 @@ async function doCopy(){
   catch(e){const el=document.createElement('textarea');el.value=txt;el.style.position='fixed';el.style.opacity='0';document.body.appendChild(el);el.focus();el.select();document.execCommand('copy');document.body.removeChild(el);}
   alert('복사됐어요! 카카오톡 단체방에서 길게 누르기 → 붙여넣기 해주세요 😊');closeShare();
 }
+
+// 알림센터
+let alertItems=[],alertFilter='all',showHiddenAlerts=false;
+function localDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function parseLocalDate(s){const [y,m,d]=(s||'').split('-').map(Number);return new Date(y,(m||1)-1,d||1);}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function monthLabelFromDate(d){return `${d.getFullYear()}년 ${d.getMonth()+1}월`;}
+function getHiddenAlertKey(){return `zuo_hidden_alerts_${currentCafe.id}_${localDateKey(new Date())}`;}
+function getHiddenAlerts(){try{return JSON.parse(localStorage.getItem(getHiddenAlertKey())||'[]');}catch(e){return [];}}
+function setHiddenAlerts(ids){localStorage.setItem(getHiddenAlertKey(),JSON.stringify(ids));}
+function getAlertColor(a){return a.level==='urgent'?'#E24B4A':a.category==='sub'?'#1D9E75':a.category==='pay'?'#185FA5':a.type==='health'?'#E24B4A':'#EF9F27';}
+function getAlertBadge(a){if(a.level==='urgent')return '긴급';if(a.category==='sub')return '대타';if(a.category==='pay')return '급여';return '관리';}
+async function fetchActiveEmployees(){
+  if(employees&&employees.length)return employees.filter(e=>!e.resigned);
+  const snap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const list=[];snap.forEach(d=>list.push({id:d.id,...d.data()}));
+  employees=list;
+  return list.filter(e=>!e.resigned);
+}
+async function buildAlertItems(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const tomorrow=addDays(today,1);
+  const todayKey=localDateKey(today),tomorrowKey=localDateKey(tomorrow);
+  const items=[];
+  const subSnap=await db.collection('subs').where('cafeId','==',currentCafe.id).get();
+  subSnap.forEach(doc=>{
+    const s=doc.data();
+    if(!s.takenBy)return;
+    const isToday=s.date===todayKey,isTomorrow=s.date===tomorrowKey;
+    if(!isToday&&!isTomorrow)return;
+    const d=parseLocalDate(s.date);
+    items.push({
+      id:`sub_${doc.id}_${s.date}`,
+      category:'sub',
+      type:'sub',
+      level:isToday?'urgent':'normal',
+      title:isToday?'오늘 대타 근무':'내일 대타 확인',
+      body:`${s.timeStart}~${s.timeEnd} ${s.name} → ${s.takenBy}`,
+      meta:`${d.getMonth()+1}/${d.getDate()}(${DAYS[d.getDay()]}) · 대타해ZUO`,
+      copy:`${isToday?'오늘 대타 근무':'내일 대타 확인'}\n- ${d.getMonth()+1}/${d.getDate()} ${s.timeStart}~${s.timeEnd} ${s.name} → ${s.takenBy}`,
+      today:isToday
+    });
+  });
+  const activeEmps=await fetchActiveEmployees();
+  const prevMonth=new Date(today.getFullYear(),today.getMonth()-1,1);
+  if(today.getDate()===1){
+    const label=monthLabelFromDate(prevMonth);
+    const names=activeEmps.map(e=>e.name).join(', ');
+    items.push({
+      id:`work_request_${todayKey}`,
+      category:'pay',
+      type:'work',
+      level:'normal',
+      title:`${label} 근무시간 입력 요청`,
+      body:'월급여 계산 전까지 직원 근무시간 확인 필요',
+      meta:'매월 1일',
+      copy:`${label} 근무시간 입력/확인 요청\n- 대상: ${names||'재직 직원'}\n- 월급여 계산 전까지 근무시간을 확인해주세요.`,
+      today:true
+    });
+  }
+  if(today.getDate()===5){
+    const label=monthLabelFromDate(prevMonth);
+    items.push({
+      id:`payday_${todayKey}`,
+      category:'pay',
+      type:'payday',
+      level:'urgent',
+      title:`${label} 근무분 급여 지급일`,
+      body:'급여명세서와 실지급액 확인 후 지급',
+      meta:'매월 5일',
+      copy:`${label} 근무분 급여 지급일\n- 급여명세서와 실지급액을 확인한 뒤 지급을 진행해주세요.`,
+      today:true
+    });
+  }
+  const hSnap=await db.collection('healthCerts').where('cafeId','==',currentCafe.id).get();
+  hSnap.forEach(doc=>{
+    const h=doc.data();if(!h.expireDate)return;
+    const diff=Math.ceil((parseLocalDate(h.expireDate)-today)/(1000*60*60*24));
+    if(![30,20,10,5,0].includes(diff))return;
+    const label=diff===0?'오늘 만료':`D-${diff}`;
+    items.push({
+      id:`health_${doc.id}_${diff}`,
+      category:'manage',
+      type:'health',
+      level:diff<=5?'urgent':'normal',
+      title:`보건증 만료 ${label}`,
+      body:`${h.empName||h.name||'직원'} · ${diff===0?'오늘 만료':`${diff}일 남음`}`,
+      meta:'보건증 관리',
+      copy:`보건증 만료 ${label}\n- ${h.empName||h.name||'직원'} (${h.expireDate})`,
+      today:diff===0
+    });
+  });
+  const sSnap=await db.collection('supplies').where('cafeId','==',currentCafe.id).get();
+  sSnap.forEach(doc=>{
+    const s=doc.data();if(!s.nextDate)return;
+    const diff=Math.ceil((parseLocalDate(s.nextDate)-today)/(1000*60*60*24));
+    if(diff<0||diff>1)return;
+    items.push({
+      id:`supply_${doc.id}_${s.nextDate}`,
+      category:'manage',
+      type:'supply',
+      level:diff===0?'urgent':'normal',
+      title:'소모품 교체',
+      body:`${s.name} · ${diff===0?'오늘 교체일':'내일 교체일'}`,
+      meta:'소모품 관리',
+      copy:`소모품 교체\n- ${s.name}: ${diff===0?'오늘 교체일':'내일 교체일'} (${s.nextDate})`,
+      today:diff===0
+    });
+  });
+  const order={sub:0,pay:1,manage:2};
+  items.sort((a,b)=>(order[a.category]-order[b.category])||((b.level==='urgent')-(a.level==='urgent'))||a.title.localeCompare(b.title));
+  return items;
+}
+async function loadAlertCenter(){
+  const w=document.getElementById('alertList');
+  w.innerHTML=`<div class="alert-empty">알림을 불러오는 중이에요</div>`;
+  try{alertItems=await buildAlertItems();renderAlertCenter();}
+  catch(e){console.log('loadAlertCenter:',e);w.innerHTML=`<div class="alert-empty">알림을 불러오지 못했어요</div>`;}
+}
+function switchAlertFilter(f){
+  alertFilter=f;
+  ['all','sub','pay','manage'].forEach(k=>document.getElementById('alertTab_'+k).classList.toggle('on',k===f));
+  renderAlertCenter();
+}
+function renderAlertCenter(){
+  const hidden=getHiddenAlerts();
+  const visible=alertItems.filter(a=>!hidden.includes(a.id)&&(alertFilter==='all'||a.category===alertFilter));
+  const hiddenItems=alertItems.filter(a=>hidden.includes(a.id)&&(alertFilter==='all'||a.category===alertFilter));
+  document.getElementById('alertUrgentCnt').textContent=alertItems.filter(a=>a.level==='urgent'&&!hidden.includes(a.id)).length;
+  document.getElementById('alertTodayCnt').textContent=alertItems.filter(a=>a.today&&!hidden.includes(a.id)).length;
+  document.getElementById('alertTotalCnt').textContent=alertItems.filter(a=>!hidden.includes(a.id)).length;
+  document.getElementById('alertList').innerHTML=visible.length?visible.map(renderAlertCard).join(''):`<div class="alert-empty">표시할 알림이 없어요</div>`;
+  const btn=document.getElementById('hiddenAlertToggle');
+  btn.style.display=hiddenItems.length?'block':'none';
+  btn.textContent=showHiddenAlerts?`접어둔 알림 ${hiddenItems.length}개 숨기기`:`접어둔 알림 ${hiddenItems.length}개 보기`;
+  document.getElementById('hiddenAlertList').style.display=showHiddenAlerts?'block':'none';
+  document.getElementById('hiddenAlertList').innerHTML=hiddenItems.map(a=>renderAlertCard(a,true)).join('');
+  updateAlertPreview();
+}
+function renderAlertCard(a,isHidden=false){
+  return `<div class="alert-card" data-alert-id="${a.id}">
+    <div class="alert-bar" style="background:${getAlertColor(a)}"></div>
+    <label class="alert-check">${isHidden?'':`<input type="checkbox" class="alertPick" value="${a.id}" checked onchange="updateAlertPreview()">`}</label>
+    <div class="alert-body">
+      <div class="alert-top"><div class="alert-title">${a.title}</div><span class="alert-badge">${getAlertBadge(a)}</span></div>
+      <div class="alert-text">${a.body}</div>
+      <div class="alert-meta">${a.meta}</div>
+    </div>
+    <button class="alert-hide" onclick="${isHidden?`restoreAlert('${a.id}')`:`hideAlert('${a.id}')`}">${isHidden?'다시 표시':'숨김'}</button>
+  </div>`;
+}
+function toggleHiddenAlerts(){showHiddenAlerts=!showHiddenAlerts;renderAlertCenter();}
+function hideAlert(id){const ids=getHiddenAlerts();if(!ids.includes(id))ids.push(id);setHiddenAlerts(ids);renderAlertCenter();}
+function restoreAlert(id){setHiddenAlerts(getHiddenAlerts().filter(x=>x!==id));renderAlertCenter();}
+function getPickedAlertItems(){
+  const picked=[...document.querySelectorAll('.alertPick:checked')].map(el=>el.value);
+  return alertItems.filter(a=>picked.includes(a.id));
+}
+function buildAlertCopyText(list){
+  if(!list.length)return '';
+  return `[${currentCafe.name}] ZUO 알림\n\n${list.map(a=>a.copy).join('\n\n')}\n\n확인 부탁드립니다.`;
+}
+function updateAlertPreview(){
+  const txt=buildAlertCopyText(getPickedAlertItems());
+  document.getElementById('alertCopyPreview').textContent=txt||'선택된 알림이 없어요';
+}
+function copyAlerts(list){
+  const txt=buildAlertCopyText(list);
+  if(!txt){alert('복사할 알림을 선택해주세요');return;}
+  copyText(txt);showToast('📋 카톡 문구가 복사됐어요!');
+}
+function copySelectedAlerts(){copyAlerts(getPickedAlertItems());}
+function copyAllAlerts(){copyAlerts(alertItems.filter(a=>!getHiddenAlerts().includes(a.id)&&(alertFilter==='all'||a.category===alertFilter)));}
 
 // 관리자
 function goAdmin(){document.getElementById('adminPwInput').value='';document.getElementById('adminPwError').style.display='none';document.getElementById('adminPwModal').classList.add('open');}

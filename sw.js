@@ -1,5 +1,6 @@
-const CACHE='zuo-v13';
-const FILES=['/','/index.html','/manifest.json'];
+const CACHE='zuo-v14';
+const BASE='/zuo-cafe2/';
+const FILES=[BASE,BASE+'index.html',BASE+'manifest.json'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
@@ -58,7 +59,7 @@ self.addEventListener('notificationclick',e=>{
   e.waitUntil(
     clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>{
       if(cs.length>0){cs[0].focus();return;}
-      return clients.openWindow('/zuo-cafe2/');
+      return clients.openWindow(BASE);
     })
   );
 });
