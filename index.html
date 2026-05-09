@@ -198,8 +198,17 @@ input:focus{border-color:var(--green)}
 .bd-ong{background:var(--al);color:var(--ad)}
 .hint{text-align:center;padding:24px 16px;font-size:12px;color:var(--t3);line-height:1.7}
 .awrap{padding:6px 14px 14px}
+.amonth{background:#fff;border:1px solid var(--bd);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.amonth-head{width:100%;border:none;background:#fafafa;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.amonth-title{font-size:13px;font-weight:800;color:var(--t1)}
+.amonth-meta{font-size:11px;color:var(--t3);margin-left:6px}
+.amonth-arrow{font-size:13px;color:var(--t3)}
+.amonth-body{padding:0 12px 6px}
 .ai{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
 .ai:last-child{border-bottom:none}
+.ai.past{opacity:.72}
+.ai.past .adm,.ai.past .anames{color:var(--t3)}
+.ai.past .atm,.ai.past .add{color:#aaa}
 .adt{flex-shrink:0;min-width:52px}
 .adm{font-size:13px;font-weight:700;color:var(--t1)}
 .add{font-size:10px;color:var(--t3);margin-top:1px}
@@ -210,6 +219,7 @@ input:focus{border-color:var(--green)}
 .stag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;flex-shrink:0}
 .st-ong{background:var(--al);color:var(--ad)}
 .st-don{background:var(--gl);color:var(--gd)}
+.st-past{background:#eee;color:#777}
 /* 시간 선택 */
 .ampm-row{display:flex;gap:8px;margin-bottom:10px}
 .ampm-btn{flex:1;padding:9px;border-radius:8px;border:1px solid var(--bd);background:#fff;color:var(--t2);font-size:14px;font-weight:500;cursor:pointer}
@@ -476,10 +486,10 @@ input:focus{border-color:var(--green)}
     <div class="hdr-sub">관리자</div>
   </div>
   <div class="tabs">
-    <button class="tab on" id="schedTab_input" onclick="switchScheduleTab('input')">시간표입력</button>
-    <button class="tab" id="schedTab_regular" onclick="switchScheduleTab('regular')">정규표</button>
+    <button class="tab on" id="schedTab_regular" onclick="switchScheduleTab('regular')">정규표</button>
     <button class="tab" id="schedTab_this" onclick="switchScheduleTab('this')">이번주</button>
     <button class="tab" id="schedTab_next" onclick="switchScheduleTab('next')">다음주</button>
+    <button class="tab" id="schedTab_input" onclick="switchScheduleTab('input')">시간표수정</button>
   </div>
   <div class="sched-wrap">
     <div id="schedInputPane">
@@ -512,7 +522,7 @@ input:focus{border-color:var(--green)}
             <div style="font-size:13px;font-weight:800;color:var(--t1)" id="schedTableTitle">정규표</div>
             <div class="sched-note" style="margin:2px 0 0">각 칸은 시작~종료 시간 기준</div>
           </div>
-          <button class="alert-hide" onclick="switchScheduleTab('input')" style="margin:0">입력 탭으로</button>
+          <button class="alert-hide" onclick="switchScheduleTab('input')" style="margin:0">수정 탭으로</button>
         </div>
       </div>
       <div class="sched-table-wrap" id="schedTableWrap"></div>
@@ -1653,6 +1663,7 @@ let MASTER_PW="0000"; // 카페별 중간관리자 번호 (Firebase에서 로드
 let ADMIN_PW=localStorage.getItem('adminPw')||"admin1234";
 let cY=new Date().getFullYear(),cM=new Date().getMonth();
 let selDate=null,allSubs={},pendTake=null,pendEdit=null,pendDel=null;
+let subMonthCollapsed={};
 let currentCafe=null,cafes=[],editingCafeId=null,unsubscribe=null;
 let pickingFor='start',isAm=true,selH=9,selM=0;
 let tStartAm=true,tStartH=9,tStartM=0,tEndAm=false,tEndH=3,tEndM=0;
@@ -2042,11 +2053,43 @@ function renderAllList(){
   all.sort((a,b)=>a.date.localeCompare(b.date));
   const w=document.getElementById('alist');
   if(!all.length){w.innerHTML=`<div class="emsg" style="padding:36px 0">등록된 대타 요청이 없어요</div>`;return;}
-  w.innerHTML=all.map(s=>{
-    const d=new Date(s.date);const done=!!s.takenBy;
-    const names=done?`<span>${s.name}</span><span class="aw" style="font-size:11px">⇄</span><span class="tk" style="font-size:11px">${s.takenBy}</span>`:`<span>${s.name}</span>`;
-    return `<div class="ai"><div class="adt"><div class="adm">${d.getMonth()+1}/${d.getDate()}</div><div class="add">${DAYS[d.getDay()]}요일</div></div><div class="anum">${s.num}</div><div class="abody"><div class="anames">${names}</div><div class="atm">${s.timeStart}–${s.timeEnd}${s.note?' · '+s.note:''}</div></div><div class="stag ${done?'st-don':'st-ong'}">${done?'완료':'구함'}</div></div>`;
+  const today=new Date();today.setHours(0,0,0,0);
+  const thisMonthKey=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  const groups={};
+  all.forEach(s=>{
+    const key=s.date.slice(0,7);
+    if(!groups[key])groups[key]=[];
+    groups[key].push(s);
+  });
+  w.innerHTML=Object.keys(groups).sort().map(key=>{
+    const items=groups[key];
+    if(subMonthCollapsed[key]===undefined)subMonthCollapsed[key]=key<thisMonthKey;
+    const collapsed=!!subMonthCollapsed[key];
+    const [yy,mm]=key.split('-').map(Number);
+    const pastCount=items.filter(s=>parseLocalDate(s.date)<today).length;
+    const completeCount=items.filter(s=>s.takenBy||parseLocalDate(s.date)<today).length;
+    const body=collapsed?'':`<div class="amonth-body">${items.map(s=>{
+      const d=parseLocalDate(s.date);
+      const isPast=d<today;
+      const done=!!s.takenBy;
+      const names=done?`<span>${s.name}</span><span class="aw" style="font-size:11px">⇄</span><span class="tk" style="font-size:11px">${s.takenBy}</span>`:`<span>${s.name}</span>`;
+      const statusClass=isPast?'st-past':done?'st-don':'st-ong';
+      const statusText=isPast?'완료':done?'완료':'구함';
+      return `<div class="ai ${isPast?'past':''}"><div class="adt"><div class="adm">${d.getMonth()+1}/${d.getDate()}</div><div class="add">${DAYS[d.getDay()]}요일</div></div><div class="anum">${s.num}</div><div class="abody"><div class="anames">${names}</div><div class="atm">${s.timeStart}–${s.timeEnd}${s.note?' · '+s.note:''}</div></div><div class="stag ${statusClass}">${statusText}</div></div>`;
+    }).join('')}</div>`;
+    return `<div class="amonth">
+      <button class="amonth-head" onclick="toggleSubMonth('${key}')">
+        <span><span class="amonth-title">${yy}년 ${mm}월</span><span class="amonth-meta">전체 ${items.length} · 완료 ${completeCount}${pastCount?` · 지난 일정 ${pastCount}`:''}</span></span>
+        <span class="amonth-arrow">${collapsed?'펼치기':'접기'} ${collapsed?'▼':'▲'}</span>
+      </button>
+      ${body}
+    </div>`;
   }).join('');
+}
+
+function toggleSubMonth(key){
+  subMonthCollapsed[key]=!subMonthCollapsed[key];
+  renderAllList();
 }
 
 function switchTab(tab){
@@ -2120,7 +2163,7 @@ async function doCopy(){
 }
 
 // 시간표 보여ZUO
-let regularSchedules=[],scheduleTab='input',schedSelectedDays=[],schedColor='#FFF200',editingScheduleId=null;
+let regularSchedules=[],scheduleTab='regular',schedSelectedDays=[],schedColor='#FFF200',editingScheduleId=null;
 const SCHED_DAYS=[1,2,3,4,5,6,0];
 const SCHED_OPEN=7*60+30,SCHED_CLOSE=22*60;
 const SCHED_COLORS=['#FFF200','#F8C9AA','#CBE6C0','#FF006E','#B9D4EA','#FFE59A','#D9D9D9','#1827F2'];
@@ -2138,10 +2181,11 @@ function timeToMin(t){
 }
 function timeRangeLabel(start){return `${minToTime(start)}~${minToTime(start+30)}`;}
 function scheduleDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function scheduleDateLabel(d){return `${d.getMonth()+1}/${d.getDate()}`;}
 function getWeekStart(offset=0){const d=new Date();d.setHours(0,0,0,0);const diff=(d.getDay()+6)%7;d.setDate(d.getDate()-diff+(offset*7));return d;}
 function initSchedule(){
   buildScheduleControls();
-  switchScheduleTab(scheduleTab||'input');
+  switchScheduleTab(scheduleTab||'regular');
   loadScheduleData();
 }
 function buildScheduleControls(){
@@ -2359,7 +2403,7 @@ async function renderScheduleTable(){
   const weekStart=tab==='next'?getWeekStart(1):getWeekStart(0);
   const subsByDate=await getScheduleSubsForTab(tab);
   const visibleDays=SCHED_DAYS;
-  const dayCols=tab==='regular'?visibleDays:visibleDays.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]}`};});
+  const dayCols=tab==='regular'?visibleDays:visibleDays.map((d,i)=>{const dt=addDays(weekStart,i);return {day:d,date:scheduleDateKey(dt),label:`${DAYS[d]}<br>${scheduleDateLabel(dt)}`};});
   const slotCount=(SCHED_CLOSE-SCHED_OPEN)/30;
   let html=`<div class="sched-grid"><div class="sched-head" style="grid-column:1 / 3;grid-row:1">시간</div>`;
   dayCols.forEach((c,i)=>{html+=`<div class="sched-head" style="grid-column:${i+3};grid-row:1">${typeof c==='number'?DAYS[c]:c.label}</div>`;});
