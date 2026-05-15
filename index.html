@@ -791,17 +791,18 @@ input:focus{border-color:var(--green)}
   </div>
 </div>
 
-<!-- 화면7: 직원 관리 (마스터) -->
+<!-- 화면7: 직원 등록 관리 (마스터) -->
 <div class="screen" id="scEmpManage">
   <div class="hdr">
     <button class="back-btn" onclick="showScreen('scLabor')">← 뒤로</button>
-    <div class="hdr-title">직원 관리</div>
+    <div class="hdr-title">직원 등록 관리</div>
     <div class="hdr-sub">관리자</div>
   </div>  <!-- 관리자 빠른 이동 탭 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
-    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원 등록 관리</button>
     <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
     <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
+    <button onclick="quickNav('status')" id="qnav_status" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📅 근로현황 캘린더</button>
   </div>
   <div class="tabs">
     <button class="tab on" id="empTab1" onclick="switchEmpTab('active')">재직중</button>
@@ -872,9 +873,10 @@ input:focus{border-color:var(--green)}
     <div class="hdr-sub" id="payManagePeriod">2026년 4월</div>
   </div>  <!-- 관리자 빠른 이동 탭 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
-    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원 등록 관리</button>
     <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
     <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
+    <button onclick="quickNav('status')" id="qnav_status" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📅 근로현황 캘린더</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1029,9 +1031,10 @@ input:focus{border-color:var(--green)}
     <div class="hdr-sub" id="payTablePeriod">2026년 4월</div>
   </div>  <!-- 관리자 빠른 이동 탭 -->
   <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
-    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원 등록 관리</button>
     <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
     <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
+    <button onclick="quickNav('status')" id="qnav_status" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📅 근로현황 캘린더</button>
   </div>
   <!-- 탭 -->
   <div class="tabs" style="margin:10px 14px">
@@ -1085,10 +1088,10 @@ input:focus{border-color:var(--green)}
     <div class="hdr-sub" id="laborStatusPeriod">2026년 5월</div>
   </div>
   <div style="display:flex;background:#fff;border-bottom:1px solid var(--bd)">
-    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원관리</button>
+    <button onclick="quickNav('emp')" id="qnav_emp" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">👥 직원 등록 관리</button>
     <button onclick="quickNav('pay')" id="qnav_pay" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">💰 급여관리</button>
     <button onclick="quickNav('table')" id="qnav_table" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📊 월급여</button>
-    <button onclick="quickNav('status')" id="qnav_status" style="flex:1;padding:9px 4px;border:none;background:none;font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📅 현황</button>
+    <button onclick="quickNav('status')" id="qnav_status" style="flex:1;padding:9px 2px;border:none;background:none;font-size:10px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--t3)">📅 근로현황 캘린더</button>
   </div>
   <div style="padding:12px 14px;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -2392,21 +2395,13 @@ function formatScheduleHours(start,end){
   const h=(end-start)/60;
   return Number.isInteger(h)?String(h):h.toFixed(1);
 }
-function getSchedulePersonOrder(name){
-  const clean=(name||'').split('→')[0].trim();
-  const idx=regularSchedules.findIndex(s=>(s.name||'').trim()===clean);
-  return idx<0?9999:idx;
-}
 function layoutScheduleBlocks(blocks){
-  const people=[...new Set(blocks.map(b=>(b.orig||b.name||'').trim()))]
-    .sort((a,b)=>(getSchedulePersonOrder(a)-getSchedulePersonOrder(b))||a.localeCompare(b));
-  blocks.forEach(b=>{b.preferredLane=Math.max(0,people.indexOf((b.orig||b.name||'').trim()));});
-  blocks.sort((a,b)=>(a.start-b.start)||(a.preferredLane-b.preferredLane)||(a.end-b.end)||a.name.localeCompare(b.name));
-  const lanes=[0,0,0];
+  blocks.sort((a,b)=>(a.start-b.start)||(a.end-b.end)||a.name.localeCompare(b.name));
+  const lanes=[];
   blocks.forEach(b=>{
-    const preferred=Math.min(2,b.preferredLane||0);
-    let lane=lanes[preferred]<=b.start?preferred:lanes.findIndex(end=>end<=b.start);
-    if(lane<0)lane=preferred;
+    let lane=lanes.findIndex(end=>end<=b.start);
+    if(lane<0){lane=lanes.length;lanes.push(0);}
+    if(lane>2)lane=2;
     lanes[lane]=b.end;
     b.lane=lane;
   });
@@ -2441,14 +2436,14 @@ async function renderScheduleTable(){
     let blocks=[];
     regularSchedules.forEach(s=>{
       if(!(s.days||[]).includes(day))return;
-      blocks.push({name:s.name,orig:s.name,start:timeToMin(s.timeStart),end:timeToMin(s.timeEnd),isSub:false,color:s.color||null,personOrder:getSchedulePersonOrder(s.name)});
+      blocks.push({name:s.name,orig:s.name,start:timeToMin(s.timeStart),end:timeToMin(s.timeEnd),isSub:false,color:s.color||null});
     });
     if(date&&(subsByDate[date]||[]).length){
       (subsByDate[date]||[]).forEach(sub=>{
         const ss=timeToMin(sub.timeStart),ee=timeToMin(sub.timeEnd);
         const found=blocks.find(b=>b.orig===sub.name&&b.start===ss&&b.end===ee);
         if(found){found.name=`${sub.name}→${sub.takenBy}`;found.isSub=true;}
-        else{blocks.push({name:`${sub.name}→${sub.takenBy}`,orig:sub.name,start:ss,end:ee,isSub:true,personOrder:getSchedulePersonOrder(sub.name)});}
+        else{blocks.push({name:`${sub.name}→${sub.takenBy}`,orig:sub.name,start:ss,end:ee,isSub:true});}
       });
     }
     layoutScheduleBlocks(blocks).forEach(b=>{
