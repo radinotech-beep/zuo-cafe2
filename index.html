@@ -270,7 +270,7 @@ input:focus{border-color:var(--green)}
 .wk-date{font-size:9px;color:var(--t3);margin-bottom:1px}
 .wk-cell.selected .wk-date{color:#185FA5;font-weight:700}
 .wk-hrs{font-size:10px;font-weight:600;color:var(--gd)}
-.wk-time{font-size:8px;font-weight:700;color:var(--gd);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-time{font-size:8px;font-weight:700;color:var(--t2);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wk-cell.selected .wk-hrs{color:#185FA5}
 .sel-panel{background:#fff;border-radius:12px;border:2px solid #185FA5;padding:14px;margin-top:8px}
 .sel-panel-title{font-size:13px;font-weight:700;color:#185FA5;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e0ecff}
@@ -288,10 +288,11 @@ input:focus{border-color:var(--green)}
 .wk-calc-main{font-size:17px;font-weight:800;color:#185FA5}
 .wk-calc-sub{font-size:11px;color:var(--t2);margin-top:2px}
 .wk-legacy-hint{font-size:10px;color:var(--t3);line-height:1.45;margin-bottom:6px}
-.labor-status-cell{min-height:76px;border:1px solid #eee;border-radius:7px;background:#fff;padding:4px;overflow:hidden;cursor:pointer}
+.labor-status-cell{min-height:76px;border:1px solid #eee;border-radius:7px;background:#fff;padding:4px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
 .labor-status-date{font-size:10px;font-weight:700;color:var(--t3);margin-bottom:2px}
+.labor-status-lines{flex:1;min-height:0}
 .labor-status-line{font-size:9px;color:var(--t2);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.labor-status-total{font-size:10px;font-weight:800;color:var(--green);margin-top:2px}
+.labor-status-total{font-size:10px;font-weight:800;color:var(--green);margin-top:auto;padding-top:2px}
 .labor-status-selected{border:2px solid var(--green);background:var(--gl)}
 /* 급여 명세서 */
 .payslip{background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px}
@@ -1709,7 +1710,7 @@ let currentCafe=null,cafes=[],editingCafeId=null,unsubscribe=null;
 let pickingFor='start',isAm=true,selH=9,selM=0;
 let tStartAm=true,tStartH=9,tStartM=0,tEndAm=false,tEndH=3,tEndM=0;
 let employees=[],empUnsubscribe=null;
-let workData={},wkY=new Date().getFullYear(),wkM=new Date().getMonth(),wkSelDay=null,wkHours=4.5,lastSavedHours=undefined,wkStartTime='09:30',wkEndTime='14:20',wkBreakMin=0,wkPickingTime=null;
+let workData={},wkY=new Date().getFullYear(),wkM=new Date().getMonth(),wkSelDay=null,wkHours=4.5,lastSavedHours=undefined,lastSavedWorkPreset=null,wkStartTime='09:30',wkEndTime='14:20',wkBreakMin=0,wkPickingTime=null;
 let currentWorkerEmp=null,masterMenuDest='emp';
 let payY=new Date().getFullYear(),payM=new Date().getMonth();
 let psHoliRateVal=41280,psWeekCntVal=4;
@@ -2662,7 +2663,7 @@ function checkWorkerPw(){
 }
 function enterWorkerInput(){
   workData={};wkY=new Date().getFullYear();wkM=new Date().getMonth();wkSelDay=null;
-  lastSavedHours=undefined;
+  lastSavedHours=undefined;lastSavedWorkPreset=null;
   document.getElementById('workerInputName').textContent=currentWorkerEmp.name;
   document.getElementById('workerInputHdr').style.background=getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#1D9E75';
   initWkTimeSelects();
@@ -2797,9 +2798,15 @@ function openWkInput(d){
     wkBreakMin=Number(wd.breakMin)||0;
   } else {
     wkHours = (typeof lastSavedHours !== 'undefined') ? lastSavedHours : 4.5;
-    wkStartTime='09:30';
-    wkEndTime=setTimeFromMinutes(getTimeMinutes(wkStartTime)+Math.round(wkHours*60));
-    wkBreakMin=0;
+    if(lastSavedWorkPreset){
+      wkStartTime=lastSavedWorkPreset.startTime;
+      wkEndTime=lastSavedWorkPreset.endTime;
+      wkBreakMin=lastSavedWorkPreset.breakMin||0;
+    } else {
+      wkStartTime='09:30';
+      wkEndTime=setTimeFromMinutes(getTimeMinutes(wkStartTime)+Math.round(wkHours*60));
+      wkBreakMin=0;
+    }
   }
 
   document.getElementById('wkPanelTitle').textContent=`${wkM+1}월 ${d}일 실제 근무시간`;
@@ -2810,6 +2817,9 @@ function openWkInput(d){
   if(wd&&(!wd.startTime||!wd.endTime)){
     hint.textContent=`기존 입력값: ${formatHours2(wkHours)}시간 · 출근/퇴근 시간으로 다시 저장할 수 있어요.`;
     hint.style.color='var(--t3)';
+  } else if(!wd && lastSavedWorkPreset){
+    hint.textContent=`이전 입력값 ${lastSavedWorkPreset.startTime}~${lastSavedWorkPreset.endTime} · 휴게 ${lastSavedWorkPreset.breakMin||0}분을 불러왔어요.`;
+    hint.style.color='#185FA5';
   } else if(!wd && typeof lastSavedHours !== 'undefined'){
     hint.textContent=`이전 입력값 ${formatHours2(lastSavedHours)}시간 기준으로 기본 시간이 잡혔어요.`;
     hint.style.color='#185FA5';
@@ -2868,6 +2878,7 @@ const existing=await db.collection('workHours').where('empId','==',currentWorker
 if(!existing.empty){await Promise.all(existing.docs.map(doc=>db.collection('workHours').doc(doc.id).update(data)));}
 else{await db.collection('workHours').add(data);}
   lastSavedHours=workMin/60;
+  lastSavedWorkPreset={startTime:wkStartTime,endTime:wkEndTime,breakMin:wkBreakMin};
   wkSelDay=null;
   document.getElementById('wkPanel').style.display='none';
   loadWorkHours();
@@ -3004,9 +3015,10 @@ async function renderLaborStatus(){
   });
   laborStatusData={};
   Object.values(latest).forEach(dat=>{
+    if(!empMap[dat.empId]&&!dat.name)return;
     const day=Number(dat.day);if(!day)return;
     if(!laborStatusData[day])laborStatusData[day]=[];
-    laborStatusData[day].push({...dat,empName:empMap[dat.empId]||dat.name||'알 수 없음'});
+    laborStatusData[day].push({...dat,empName:empMap[dat.empId]||dat.name});
   });
   Object.values(laborStatusData).forEach(list=>list.sort((a,b)=>(a.empName||'').localeCompare(b.empName||'')));
   renderLaborStatusGrid();
@@ -3028,7 +3040,7 @@ function renderLaborStatusGrid(){
     const more=list.length>2?`<div class="labor-status-line">+${list.length-2}명</div>`:'';
     g.innerHTML+=`<div class="labor-status-cell ${laborStatusSelectedDay===d?'labor-status-selected':''}" onclick="selectLaborStatusDay(${d})">
       <div class="labor-status-date">${d}</div>
-      ${lines}${more}
+      <div class="labor-status-lines">${lines}${more}</div>
       ${totalMin?`<div class="labor-status-total">총 ${formatHours2(totalMin/60)}h</div>`:''}
     </div>`;
   }
