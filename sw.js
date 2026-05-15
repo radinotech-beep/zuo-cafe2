@@ -1,4 +1,4 @@
-﻿const CACHE='zuo-v18';
+﻿const CACHE='zuo-v19';
 const BASE='/zuo-cafe2/';
 const FILES=[BASE,BASE+'index.html',BASE+'manifest.json'];
 

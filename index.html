@@ -349,15 +349,16 @@ input:focus{border-color:var(--green)}
 .hc-val-sm{width:28px;text-align:center;border:1px solid var(--green);border-radius:5px;padding:2px;font-size:12px;font-weight:700;color:var(--green);background:#f0fdf8}
 /* 월급여 테이블 */
 .pay-tbl-wrap{overflow-x:hidden;margin-bottom:12px;border-radius:8px;border:1px solid var(--bd)}
-.pay-tbl{border-collapse:collapse;width:100%;table-layout:fixed;font-size:11px}
-.pay-tbl th{background:#BA7517;color:#fff;padding:6px 2px;text-align:center;font-weight:800;white-space:normal;border:1px solid #d59a4a;line-height:1.15}
-.pay-tbl td{padding:6px 2px;text-align:center;border:1px solid #eee;background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:#633806}
+.pay-tbl{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10px}
+.pay-tbl th{background:#BA7517;color:#fff;padding:6px 1px;text-align:center;font-weight:800;white-space:normal;border:1px solid #d59a4a;line-height:1.15}
+.pay-tbl td{padding:6px 1px;text-align:center;border:1px solid #eee;background:#fff;white-space:nowrap;overflow:hidden;text-overflow:clip;font-weight:700;color:#633806}
 .pay-tbl tr:last-child td{background:#FFF2CC;font-weight:800;color:#633806;border-top:2px solid #BA7517}
 .pay-tbl td.nm{text-align:center;font-weight:800;color:var(--t1);padding-left:2px}
 .pay-tbl td.pay-time{color:#185FA5}
 .pay-tbl .unit-h{color:#7b98b7;font-size:.9em;font-weight:700;margin-left:1px}
 .pay-tbl td.pay-net{font-weight:900;color:#12855b}
 .pay-tbl td.pay-deduct{color:var(--red)}
+.pay-tbl td.pay-money{font-size:9.5px}
 .info-box{border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px}
 .profit-row-wrap{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f5f5f5}
 .profit-row-wrap:last-child{border-bottom:none}
@@ -3718,7 +3719,13 @@ async function renderPayTable(){
   updatePayMonthLabels();
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const tbl=document.getElementById('payTable');
-  tbl.innerHTML=`<tr><th>이름</th><th>근무시간</th><th>시급합계</th><th>주휴수당</th><th>상여</th><th>기타</th><th>공제</th><th>실수령액</th></tr>`;
+  const money=v=>Number(v||0)?`${Number(v||0).toLocaleString()}원`:'0';
+  const hours=v=>`${formatHours2(v)}<span class="unit-h">h</span>`;
+  tbl.innerHTML=`<colgroup>
+    <col style="width:13%"><col style="width:12%"><col style="width:16%"><col style="width:16%">
+    <col style="width:13%"><col style="width:9%"><col style="width:9%"><col style="width:12%">
+  </colgroup>
+  <tr><th>이름</th><th>근무<br>시간</th><th>실수령<br>총액</th><th>시급<br>합계</th><th>주휴<br>수당</th><th>상여</th><th>기타</th><th>공제</th></tr>`;
   let sumH=0,sumB=0,sumHoli=0,sumBonus=0,sumEtc=0,sumDeduct=0,sumNet=0;
   // Firebase에서 전체 직원 직접 조회 (employees 배열 의존 안 함)
   const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
@@ -3733,26 +3740,26 @@ async function renderPayTable(){
     const resignBadge=emp.resigned?`<span style="font-size:9px;background:#f5f5f5;color:var(--t3);padding:1px 4px;border-radius:4px;margin-left:3px">퇴사</span>`:'';
     tbl.innerHTML+=`<tr>
       <td class="nm">${emp.name}${resignBadge}</td>
-      <td>${formatHours2(pay.h)}h</td>
-      <td>${pay.base.toLocaleString()}</td>
-      <td>${pay.holi.toLocaleString()}</td>
-      <td>${pay.bonus.toLocaleString()}</td>
-      <td>${pay.etc.toLocaleString()}</td>
-      <td style="color:var(--red)">${pay.totalDeduct.toLocaleString()}</td>
-      <td class="tot">${pay.net.toLocaleString()}</td>
+      <td class="pay-time">${hours(pay.h)}</td>
+      <td class="pay-net pay-money">${money(pay.net)}</td>
+      <td class="pay-money">${money(pay.base)}</td>
+      <td class="pay-money">${money(pay.holi)}</td>
+      <td class="pay-money">${money(pay.bonus)}</td>
+      <td class="pay-money">${money(pay.etc)}</td>
+      <td class="pay-deduct pay-money">${money(pay.totalDeduct)}</td>
     </tr>`;
   }
   tbl.innerHTML+=`<tr>
     <td class="nm">합계</td>
-    <td>${formatHours2(sumH)}h</td>
-    <td>${sumB.toLocaleString()}</td>
-    <td>${sumHoli.toLocaleString()}</td>
-    <td>${sumBonus.toLocaleString()}</td>
-    <td>${sumEtc.toLocaleString()}</td>
-    <td style="color:var(--red)">${sumDeduct.toLocaleString()}</td>
-    <td class="tot">${sumNet.toLocaleString()}</td>
+    <td class="pay-time">${hours(sumH)}</td>
+    <td class="pay-net pay-money">${money(sumNet)}</td>
+    <td class="pay-money">${money(sumB)}</td>
+    <td class="pay-money">${money(sumHoli)}</td>
+    <td class="pay-money">${money(sumBonus)}</td>
+    <td class="pay-money">${money(sumEtc)}</td>
+    <td class="pay-deduct pay-money">${money(sumDeduct)}</td>
   </tr>`;
-  document.getElementById('payTableTotal').textContent='₩'+sumNet.toLocaleString();
+  document.getElementById('payTableTotal').textContent=money(sumNet);
 }
 
 async function exportExcel(){
