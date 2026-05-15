@@ -1,4 +1,4 @@
-const CACHE='zuo-v15';
+﻿const CACHE='zuo-v16';
 const BASE='/zuo-cafe2/';
 const FILES=[BASE,BASE+'index.html',BASE+'manifest.json'];
 
@@ -20,12 +20,12 @@ self.addEventListener('fetch',e=>{
   e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
 });
 
-// 앱에서 메시지 받아서 알림 표시 (핵심!)
+// ?깆뿉??硫붿떆吏 諛쏆븘???뚮┝ ?쒖떆 (?듭떖!)
 self.addEventListener('message',e=>{
   if(e.data&&e.data.type==='SHOW_NOTIFICATION'){
     const{title,body,tag}=e.data;
     e.waitUntil(
-      self.registration.showNotification(title||'ZUO 알림',{
+      self.registration.showNotification(title||'ZUO ?뚮┝',{
         body:body||'',
         icon:'/zuo-cafe2/icons/icon-192.png',
         badge:'/zuo-cafe2/icons/icon-192.png',
@@ -37,12 +37,12 @@ self.addEventListener('message',e=>{
   }
 });
 
-// 서버 푸시 수신
+// ?쒕쾭 ?몄떆 ?섏떊
 self.addEventListener('push',e=>{
   if(!e.data)return;
   const data=e.data.json();
   e.waitUntil(
-    self.registration.showNotification(data.title||'ZUO 알림',{
+    self.registration.showNotification(data.title||'ZUO ?뚮┝',{
       body:data.body||'',
       icon:'/zuo-cafe2/icons/icon-192.png',
       badge:'/zuo-cafe2/icons/icon-192.png',
@@ -53,7 +53,7 @@ self.addEventListener('push',e=>{
   );
 });
 
-// 알림 클릭 시 앱 열기
+// ?뚮┝ ?대┃ ?????닿린
 self.addEventListener('notificationclick',e=>{
   e.notification.close();
   e.waitUntil(
