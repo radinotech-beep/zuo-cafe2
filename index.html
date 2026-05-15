@@ -66,6 +66,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .svc-grid .svc-icon{width:52px;height:52px;border-radius:14px}
 .svc-grid .svc-name{font-size:14px;line-height:1.25;word-break:keep-all}
 .svc-grid .svc-desc{font-size:10px;line-height:1.35;word-break:keep-all}
+.svc-card-focus-labor{background:#F4FBF8;border-color:#BFE8D8}
+.svc-card-focus-profit{background:#FFF8E8;border-color:#F0D8A6}
 /* 알림센터 */
 .alert-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 14px}
 .alert-stat{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center}
@@ -122,8 +124,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sched-time-cell{background:#f7f7f7;color:var(--t2);font-size:7px;font-weight:700;line-height:1.05;display:flex;align-items:center;justify-content:center;text-align:center;border-right:1px solid #111;border-bottom:1px solid #eee;z-index:1}
 .sched-day-bg{background:repeating-linear-gradient(to bottom,#fff 0,#fff 16px,#eee 16px,#eee 17px);border-right:1px solid #111;grid-row:2 / -1}
 .sched-block{border-radius:0;border:1px solid rgba(0,0,0,.16);display:flex;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:500;line-height:1.22;overflow:hidden;z-index:2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.sched-block span{display:block}
 .sched-block small{display:block;font-size:8px;font-weight:400;margin-top:2px}
 .sched-block.sub{background:#FCEBEB!important;color:var(--red)!important;border-color:#fca5a5}
+.sched-table-head.regular{background:#F4FBF8;border-color:#BFE8D8}
+.sched-table-head.this{background:#F7FAFF;border-color:#D6E7FF}
+.sched-table-head.next{background:#FFF8E8;border-color:#F0D8A6}
 .sched-note{font-size:11px;color:var(--t3);line-height:1.5;margin:8px 0}
 .sched-empty{padding:20px;text-align:center;color:var(--t3);font-size:13px}
 /* 대타 앱 */
@@ -292,8 +298,22 @@ input:focus{border-color:var(--green)}
 .labor-status-date{font-size:10px;font-weight:700;color:var(--t3);margin-bottom:2px}
 .labor-status-lines{flex:1;min-height:0}
 .labor-status-line{font-size:9px;color:var(--t2);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.labor-status-total{font-size:10px;font-weight:800;color:var(--green);margin-top:auto;padding-top:2px}
+.labor-status-total{font-size:9.5px;font-weight:800;margin-top:auto;padding-top:2px;display:flex;justify-content:space-between;gap:2px;white-space:nowrap}
+.labor-status-count{color:var(--gd)}
+.labor-status-hours{color:var(--green)}
 .labor-status-selected{border:2px solid var(--green);background:var(--gl)}
+.labor-headcount-card{cursor:pointer}
+.labor-headcount-off{background:#f7f7f7;color:var(--t3)!important}
+.labor-badge{display:inline-flex;align-items:center;justify-content:center;margin-top:3px;border-radius:12px;padding:3px 8px;font-size:10px;font-weight:800;line-height:1}
+.labor-badge.ok{background:#E8F7ED;color:#159447}
+.labor-badge.warn{background:#FFF3DC;color:#B46800}
+.labor-badge.danger{background:#FDEBEA;color:#D93025}
+.labor-basis{display:none;background:#fff8ed;border:1px solid #f0d7b5;border-radius:8px;color:#70490f;font-size:11px;line-height:1.45;padding:9px 11px;margin:-2px 0 10px}
+.labor-basis.show{display:block}
+.labor-basis-line{display:block;position:relative;padding-left:10px}
+.labor-basis-line:before{content:"-";position:absolute;left:0;color:#9b6a26;font-weight:900}
+.labor-basis strong{color:#BA7517;font-weight:900}
+.labor-basis-result{font-weight:900}
 /* 급여 명세서 */
 .payslip{background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:10px}
 .ps-hdr{background:var(--green);padding:14px 16px}
@@ -449,6 +469,18 @@ input:focus{border-color:var(--green)}
         <div class="svc-icon" style="background:#EAF6F2">🔔</div>
         <div><div class="svc-name">알림센터</div><div class="svc-desc">대타 · 급여 · 운영 알림</div></div>
       </div>
+      <div class="svc-card" onclick="enterSvc('notice')">
+        <div class="svc-icon" style="background:#FFF2CC">📢</div>
+        <div><div class="svc-name">공지사항 읽어ZUO</div><div class="svc-desc">매장 공지 관리</div></div>
+      </div>
+      <div class="svc-card svc-card-focus-labor" onclick="enterSvc('labor')">
+        <div class="svc-icon" style="background:#E6F1FB">📋</div>
+        <div><div class="svc-name">근로 관리해ZUO</div><div class="svc-desc">근무시간 · 급여 · 명세서</div></div>
+      </div>
+      <div class="svc-card svc-card-focus-profit" onclick="enterSvcWithMaster('profit')">
+        <div class="svc-icon" style="background:#E2EFDA">💰</div>
+        <div><div class="svc-name">수익 관리해ZUO</div><div class="svc-desc">수입 · 지출 · 추이</div></div>
+      </div>
       <div class="svc-card" onclick="enterSvc('sub')">
         <div class="svc-icon" id="svcIcon1" style="background:var(--gl)">🔄</div>
         <div><div class="svc-name">대타해ZUO</div><div class="svc-desc">요청 · 신청 · 스케줄</div></div>
@@ -456,18 +488,6 @@ input:focus{border-color:var(--green)}
       <div class="svc-card" onclick="enterSvc('schedule')">
         <div class="svc-icon" style="background:#E6F1FB">🗓️</div>
         <div><div class="svc-name">시간표 보여ZUO</div><div class="svc-desc">정규 · 이번주 · 다음주</div></div>
-      </div>
-      <div class="svc-card" onclick="enterSvc('labor')">
-        <div class="svc-icon" style="background:#E6F1FB">📋</div>
-        <div><div class="svc-name">근로 관리해ZUO</div><div class="svc-desc">근무시간 · 급여 · 명세서</div></div>
-      </div>
-      <div class="svc-card" onclick="enterSvc('notice')">
-        <div class="svc-icon" style="background:#FFF2CC">📢</div>
-        <div><div class="svc-name">공지사항 읽어ZUO</div><div class="svc-desc">매장 공지 관리</div></div>
-      </div>
-      <div class="svc-card" onclick="enterSvcWithMaster('profit')">
-        <div class="svc-icon" style="background:#E2EFDA">💰</div>
-        <div><div class="svc-name">수익 관리해ZUO</div><div class="svc-desc">수입 · 지출 · 추이</div></div>
       </div>
       <div class="svc-card" onclick="enterSvcWithMaster('health')">
         <div class="svc-icon" style="background:#FCEBEB">🏥</div>
@@ -491,10 +511,10 @@ input:focus{border-color:var(--green)}
     <div class="hdr-sub">관리자</div>
   </div>
   <div class="tabs">
-    <button class="tab on" id="schedTab_input" onclick="switchScheduleTab('input')">시간표입력</button>
-    <button class="tab" id="schedTab_regular" onclick="switchScheduleTab('regular')">정규표</button>
+    <button class="tab on" id="schedTab_regular" onclick="switchScheduleTab('regular')">정규표</button>
     <button class="tab" id="schedTab_this" onclick="switchScheduleTab('this')">이번주</button>
     <button class="tab" id="schedTab_next" onclick="switchScheduleTab('next')">다음주</button>
+    <button class="tab" id="schedTab_input" onclick="switchScheduleTab('input')">시간표입력</button>
   </div>
   <div class="sched-wrap">
     <div id="schedInputPane">
@@ -520,7 +540,7 @@ input:focus{border-color:var(--green)}
       </div>
     </div>
     <div id="schedTablePane" style="display:none">
-      <div class="sched-card" style="padding:10px 12px">
+      <div class="sched-card sched-table-head regular" id="schedTableHead" style="padding:10px 12px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
           <div>
             <div style="font-size:13px;font-weight:800;color:var(--t1)" id="schedTableTitle">정규표</div>
@@ -1059,10 +1079,14 @@ input:focus{border-color:var(--green)}
       <button class="btn-outline-s" onclick="changeLaborStatusMonth(1)">▶</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
-      <div class="alert-stat"><div class="alert-stat-num" id="laborStatusTotal">0.00h</div><div class="alert-stat-lbl">월 합계</div></div>
-      <div class="alert-stat"><div class="alert-stat-num" id="laborStatusEmpCnt">0명</div><div class="alert-stat-lbl">입력 직원</div></div>
-      <div class="alert-stat"><div class="alert-stat-num" id="laborStatusDayCnt">0일</div><div class="alert-stat-lbl">입력 날짜</div></div>
+      <div class="alert-stat"><div class="alert-stat-lbl" style="margin:0 0 5px">총 근무시간</div><div class="alert-stat-num" id="laborStatusTotal">0.00h</div></div>
+      <div class="alert-stat"><div class="alert-stat-lbl" style="margin:0 0 5px">총 근무 직원수</div><div class="alert-stat-num" id="laborStatusEmpCnt">0명</div></div>
+      <div class="alert-stat labor-headcount-card" id="laborHeadcountCard" onclick="toggleLaborHeadcountBasis()"><div class="alert-stat-lbl" style="margin:0 0 5px">월상시 인원</div><div class="alert-stat-num" id="laborStatusRegularCnt">0명</div><div id="laborStatusRegularBadge" class="labor-badge ok">5인 미만</div></div>
     </div>
+    <div style="display:flex;justify-content:flex-end;margin:-4px 0 8px">
+      <button class="alert-hide" id="laborHeadcountToggle" onclick="toggleLaborHeadcountEnabled(event)" style="margin:0">월상시 인원 표시 ON</button>
+    </div>
+    <div class="labor-basis" id="laborHeadcountBasis"></div>
     <div class="wk-grid" id="laborStatusGrid"></div>
     <div style="background:#fff;border:1px solid var(--bd);border-radius:10px;padding:12px;margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2173,7 +2197,7 @@ async function doCopy(){
 }
 
 // 시간표 보여ZUO
-let regularSchedules=[],scheduleTab='input',schedSelectedDays=[],schedColor='#FFF200';
+let regularSchedules=[],scheduleTab='regular',schedSelectedDays=[],schedColor='#FFF200';
 const SCHED_DAYS=[1,2,3,4,5,6,0];
 const SCHED_OPEN=7*60+30,SCHED_CLOSE=22*60;
 const SCHED_COLORS=['#FFF200','#F8C9AA','#CBE6C0','#FF006E','#B9D4EA','#FFE59A','#D9D9D9','#1827F2'];
@@ -2190,6 +2214,10 @@ function timeToMin(t){
   const [h,m]=t.split(':').map(Number);return (h||0)*60+(m||0);
 }
 function timeRangeLabel(start){return `${minToTime(start)}~${minToTime(start+30)}`;}
+function scheduleTimeCellLabel(start){
+  const h=Math.floor(start/60),m=start%60;
+  return `${h}시<br>${m}`;
+}
 function scheduleDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function getWeekStart(offset=0){const d=new Date();d.setHours(0,0,0,0);const diff=(d.getDay()+6)%7;d.setDate(d.getDate()-diff+(offset*7));return d;}
 function initSchedule(){
@@ -2367,6 +2395,8 @@ async function renderScheduleTable(){
   if(!pane||scheduleTab==='input')return;
   const tab=scheduleTab;
   document.getElementById('schedTableTitle').textContent=tab==='regular'?'정규 시간표':tab==='this'?'이번주 시간표':'다음주 시간표';
+  const head=document.getElementById('schedTableHead');
+  if(head)head.className=`sched-card sched-table-head ${tab}`;
   const weekStart=tab==='next'?getWeekStart(1):getWeekStart(0);
   const subsByDate=await getScheduleSubsForTab(tab);
   const visibleDays=SCHED_DAYS;
@@ -2376,7 +2406,7 @@ async function renderScheduleTable(){
   dayCols.forEach((c,i)=>{html+=`<div class="sched-head" style="grid-column:${i+2};grid-row:1">${typeof c==='number'?DAYS[c]:c.label}</div>`;});
   for(let i=0;i<slotCount;i++){
     const m=SCHED_OPEN+i*30;
-    html+=`<div class="sched-time-cell" style="grid-column:1;grid-row:${i+2}">${minToTime(m)}<br>~${minToTime(m+30)}</div>`;
+    html+=`<div class="sched-time-cell" style="grid-column:1;grid-row:${i+2}">${scheduleTimeCellLabel(m)}</div>`;
   }
   dayCols.forEach((c,i)=>{html+=`<div class="sched-day-bg" style="grid-column:${i+2}"></div>`;});
   dayCols.forEach((col,colIdx)=>{
@@ -2402,7 +2432,7 @@ async function renderScheduleTable(){
       const dayLaneCount=Math.min(3,Math.max(1,...blocks.map(x=>(x.lane||0)+1)));
       const width=100/dayLaneCount;
       const left=(b.lane||0)*width;
-      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+2};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig,b.color)}">${formatScheduleBlockName(b.name)}<small>${formatScheduleHours(b.start,b.end)}</small></div>`;
+      html+=`<div class="sched-block ${b.isSub?'sub':''}" style="grid-column:${colIdx+2};grid-row:${rowStart} / ${rowEnd};margin-left:${left}%;width:${width}%;${b.isSub?'':getScheduleNameStyle(b.orig,b.color)}"><span>${formatScheduleBlockName(b.name)}</span><small>${formatScheduleHours(b.start,b.end)}</small></div>`;
     });
   });
   html+='</div>';
@@ -2990,7 +3020,71 @@ function quickNav(dest){
   setQuickNav(dest);
 }
 
-let laborStatusY=new Date().getFullYear(),laborStatusM=new Date().getMonth(),laborStatusData={},laborStatusSelectedDay=null;
+let laborStatusY=new Date().getFullYear(),laborStatusM=new Date().getMonth(),laborStatusData={},laborStatusSelectedDay=null,laborHeadcountOpen=false;
+function getLaborHeadcountKey(){return currentCafe?`zuo_labor_headcount_${currentCafe.id}`:'zuo_labor_headcount';}
+function isLaborHeadcountEnabled(){return localStorage.getItem(getLaborHeadcountKey())!=='off';}
+function toggleLaborHeadcountEnabled(e){
+  if(e)e.stopPropagation();
+  localStorage.setItem(getLaborHeadcountKey(),isLaborHeadcountEnabled()?'off':'on');
+  laborHeadcountOpen=false;
+  renderLaborStatusGrid();
+}
+function toggleLaborHeadcountBasis(){
+  if(!isLaborHeadcountEnabled())return;
+  laborHeadcountOpen=!laborHeadcountOpen;
+  const box=document.getElementById('laborHeadcountBasis');
+  if(box)box.classList.toggle('show',laborHeadcountOpen);
+}
+function calcLaborHeadcountStats(){
+  let dailyPeopleSum=0,workDays=0,daysFiveOrMore=0,daysUnderFive=0;
+  Object.values(laborStatusData).forEach(list=>{
+    if(!list.length)return;
+    const people=new Set(list.map(x=>x.empId||x.empName));
+    const cnt=people.size;
+    workDays++;
+    dailyPeopleSum+=cnt;
+    if(cnt>=5)daysFiveOrMore++;
+    else daysUnderFive++;
+  });
+  const avg=workDays?dailyPeopleSum/workDays:0;
+  const ratio=workDays?daysFiveOrMore/workDays:0;
+  let status='5인 미만',level='ok';
+  if(avg>=5&&daysUnderFive/workDays>=0.5){status='주의';level='warn';}
+  else if(avg>=5||ratio>0.5){status='5인 이상';level='danger';}
+  else if(avg>=4.5||ratio>=0.4){status='주의';level='warn';}
+  return {avg,workDays,daysFiveOrMore,ratio,status,level};
+}
+function renderLaborHeadcountStats(){
+  const enabled=isLaborHeadcountEnabled();
+  const card=document.getElementById('laborHeadcountCard');
+  const val=document.getElementById('laborStatusRegularCnt');
+  const badge=document.getElementById('laborStatusRegularBadge');
+  const toggle=document.getElementById('laborHeadcountToggle');
+  const basis=document.getElementById('laborHeadcountBasis');
+  if(!card||!val||!badge||!basis)return;
+  if(toggle)toggle.textContent=`월상시 인원 표시 ${enabled?'ON':'OFF'}`;
+  card.classList.toggle('labor-headcount-off',!enabled);
+  if(!enabled){
+    val.textContent='숨김';
+    badge.textContent='OFF';
+    badge.className='labor-badge';
+    basis.classList.remove('show');
+    basis.innerHTML='';
+    return;
+  }
+  const s=calcLaborHeadcountStats();
+  val.textContent=`${s.avg.toFixed(1)}명`;
+  badge.textContent=s.status;
+  badge.className=`labor-badge ${s.level}`;
+  const pct=s.workDays?Math.round(s.ratio*100):0;
+  const resultColor=s.level==='danger'?'#D93025':s.level==='warn'?'#B46800':'#159447';
+  const resultText=s.level==='warn'?'주의가 필요한 상태':`${s.status} 사업장`;
+  basis.innerHTML=`
+    <span class="labor-basis-line">월평균 근무직원은 <strong>${s.avg.toFixed(1)}명</strong>입니다.</span>
+    <span class="labor-basis-line">전체 가동일 <strong>${s.workDays}일</strong> 중 <strong>${s.daysFiveOrMore}일(${pct}%)</strong>이 5인 이상 근무일입니다.</span>
+    <span class="labor-basis-line">입력된 근무기록 기준 <span class="labor-basis-result" style="color:${resultColor}">${resultText}</span> 참고값입니다.</span>`;
+  basis.classList.toggle('show',laborHeadcountOpen);
+}
 async function changeLaborStatusMonth(dir){
   laborStatusM+=dir;
   if(laborStatusM>11){laborStatusM=0;laborStatusY++;}
@@ -3036,17 +3130,18 @@ function renderLaborStatusGrid(){
     monthMin+=totalMin;
     if(list.length)dayCnt++;
     list.forEach(x=>empSet.add(x.empId||x.empName));
-    const lines=list.slice(0,2).map(x=>`<div class="labor-status-line">${shortScheduleName(x.empName)} ${formatHours2(getWorkHours(x))}</div>`).join('');
+    const peopleCnt=new Set(list.map(x=>x.empId||x.empName)).size;
+    const lines=list.slice(0,2).map(x=>`<div class="labor-status-line">${x.empName} ${formatHours2(getWorkHours(x))}</div>`).join('');
     const more=list.length>2?`<div class="labor-status-line">+${list.length-2}명</div>`:'';
     g.innerHTML+=`<div class="labor-status-cell ${laborStatusSelectedDay===d?'labor-status-selected':''}" onclick="selectLaborStatusDay(${d})">
       <div class="labor-status-date">${d}</div>
       <div class="labor-status-lines">${lines}${more}</div>
-      ${totalMin?`<div class="labor-status-total">총 ${formatHours2(totalMin/60)}h</div>`:''}
+      ${totalMin?`<div class="labor-status-total"><span class="labor-status-count">${peopleCnt}명</span><span class="labor-status-hours">총 ${formatHours2(totalMin/60)}h</span></div>`:''}
     </div>`;
   }
   document.getElementById('laborStatusTotal').textContent=`${formatHours2(monthMin/60)}h`;
   document.getElementById('laborStatusEmpCnt').textContent=`${empSet.size}명`;
-  document.getElementById('laborStatusDayCnt').textContent=`${dayCnt}일`;
+  renderLaborHeadcountStats();
   if(laborStatusSelectedDay)renderLaborStatusDetail(laborStatusSelectedDay);
   else{document.getElementById('laborStatusDetailTitle').textContent='날짜를 선택하세요';document.getElementById('laborStatusDetail').textContent='날짜를 누르면 직원별 근로현황이 표시됩니다.';}
 }
@@ -3057,9 +3152,9 @@ function renderLaborStatusDetail(day){
   if(!list.length){document.getElementById('laborStatusDetail').innerHTML='입력된 근무시간이 없어요.';return;}
   const totalMin=list.reduce((sum,x)=>sum+getWorkMinutes(x),0);
   document.getElementById('laborStatusDetail').innerHTML=list.map(x=>{
-    const time=x.startTime&&x.endTime?`${x.startTime}~${x.endTime}`:'기존입력';
+    const time=x.startTime&&x.endTime?`${x.startTime}~${x.endTime}`:'시간만 기록';
     return `<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #f2f2f2;padding:5px 0"><span>${x.empName} · ${time}</span><b>${formatHours2(getWorkHours(x))}h</b></div>`;
-  }).join('')+`<div style="display:flex;justify-content:space-between;margin-top:8px;font-weight:800;color:var(--green)"><span>총 근로시간</span><span>${formatHours2(totalMin/60)}h</span></div>`;
+  }).join('')+`<div style="display:flex;justify-content:space-between;margin-top:8px;font-weight:800;color:var(--green)"><span>근무 인원</span><span>${new Set(list.map(x=>x.empId||x.empName)).size}명</span></div><div style="display:flex;justify-content:space-between;margin-top:6px;font-weight:800;color:var(--green)"><span>총 근로시간</span><span>${formatHours2(totalMin/60)}h</span></div>`;
 }
 
 let currentEmpTab='active';
