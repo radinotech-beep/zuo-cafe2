@@ -1668,12 +1668,7 @@ input:focus{border-color:var(--green)}
     <div class="fr"><label class="fl">입장 비밀번호</label><input type="password" id="cafePwInput" placeholder="직원들이 입장할 비밀번호" style="width:100%"></div>
     <div class="fr">
       <label class="fl">카페 색상 테마</label>
-      <div class="color-picker" id="colorPicker">
-        <div class="color-dot selected" data-color="green" style="background:#1D9E75" onclick="selectColor('green',this)"></div>
-        <div class="color-dot" data-color="orange" style="background:#BA7517" onclick="selectColor('orange',this)"></div>
-        <div class="color-dot" data-color="red" style="background:#A32D2D" onclick="selectColor('red',this)"></div>
-        <div class="color-dot" data-color="yellow" style="background:#8a7200" onclick="selectColor('yellow',this)"></div>
-      </div>
+      <div class="color-picker" id="colorPicker"></div>
     </div>
     <div class="fr">
   <label class="fl">노출 순서</label>
@@ -1769,6 +1764,7 @@ const colorMap={
   red:{main:'#A32D2D',light:'#FCEBEB',dark:'#791F1F'},
   yellow:{main:'#8a7200',light:'#FFFBE6',dark:'#5a4a00'}
 };
+const THEME_COLORS=['green','blue','purple','pink','orange','red','yellow'];
 
 // 스플래시
 setTimeout(()=>{
@@ -2668,9 +2664,14 @@ function renderAdminCafeList(){
 }
 
 let selectedColor='green';
-function selectColor(color,el){selectedColor=color;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));el.classList.add('selected');}
-function openAddCafe(){editingCafeId=null;selectedColor='green';document.getElementById('cafeEditTitle').textContent='카페 추가';document.getElementById('cafeNameInput').value='';document.getElementById('cafePwInput').value='';document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));document.querySelector('.color-dot[data-color="green"]').classList.add('selected');document.getElementById('cafeEditModal').classList.add('open');}
-function openEditCafe(id){const cafe=cafes.find(c=>c.id===id);if(!cafe)return;editingCafeId=id;selectedColor=cafe.color||'green';document.getElementById('cafeEditTitle').textContent='카페 수정';document.getElementById('cafeNameInput').value=cafe.name;document.getElementById('cafePwInput').value=cafe.password;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));const dot=document.querySelector(`.color-dot[data-color="${selectedColor}"]`);if(dot)dot.classList.add('selected');document.getElementById('cafeOrderInput').value=cafe.order||'';document.getElementById('cafeEditModal').classList.add('open');}
+function renderThemeDots(){
+  const picker=document.getElementById('colorPicker');
+  if(!picker)return;
+  picker.innerHTML=THEME_COLORS.map(c=>`<div class="color-dot ${selectedColor===c?'selected':''}" data-color="${c}" style="background:${colorMap[c].main}" onclick="selectColor('${c}',this)"></div>`).join('');
+}
+function selectColor(color,el){selectedColor=color;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));if(el)el.classList.add('selected');}
+function openAddCafe(){editingCafeId=null;selectedColor='green';document.getElementById('cafeEditTitle').textContent='카페 추가';document.getElementById('cafeNameInput').value='';document.getElementById('cafePwInput').value='';document.getElementById('cafeOrderInput').value='';renderThemeDots();document.getElementById('cafeEditModal').classList.add('open');}
+function openEditCafe(id){const cafe=cafes.find(c=>c.id===id);if(!cafe)return;editingCafeId=id;selectedColor=cafe.color||'green';document.getElementById('cafeEditTitle').textContent='카페 수정';document.getElementById('cafeNameInput').value=cafe.name;document.getElementById('cafePwInput').value=cafe.password;document.getElementById('cafeOrderInput').value=cafe.order||'';renderThemeDots();document.getElementById('cafeEditModal').classList.add('open');}
 function closeCafeEdit(){document.getElementById('cafeEditModal').classList.remove('open');editingCafeId=null;}
 async function saveCafe(){const name=document.getElementById('cafeNameInput').value.trim();const pw=document.getElementById('cafePwInput').value.trim();if(!name){alert('카페 이름을 입력해 주세요');return;}if(!pw){alert('입장 비밀번호를 입력해 주세요');return;}const order=parseInt(document.getElementById('cafeOrderInput').value)||99;
 if(editingCafeId){await db.collection('cafes').doc(editingCafeId).update({name,password:pw,color:selectedColor,order});}
