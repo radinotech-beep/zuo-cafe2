@@ -1756,7 +1756,7 @@ let pickingFor='start',isAm=true,selH=9,selM=0;
 let tStartAm=true,tStartH=9,tStartM=0,tEndAm=false,tEndH=3,tEndM=0;
 let employees=[],empUnsubscribe=null;
 let workData={},wkY=new Date().getFullYear(),wkM=new Date().getMonth(),wkSelDay=null,wkHours=4.5,lastSavedHours=undefined,lastSavedWorkPreset=null,wkStartTime='09:30',wkEndTime='14:20',wkBreakMin=0,wkPickingTime=null;
-let currentWorkerEmp=null,masterMenuDest='emp';
+let currentWorkerEmp=null,workerAuthPurpose='time',masterMenuDest='emp';
 let payY=new Date().getFullYear(),payM=new Date().getMonth();
 let psHoliRateVal=41280,psWeekCntVal=4;
 
@@ -1799,7 +1799,7 @@ function applyTheme(color){
 function goHome(){
   if(unsubscribe){unsubscribe();unsubscribe=null;}
   if(empUnsubscribe){empUnsubscribe();empUnsubscribe=null;}
-  currentCafe=null;selDate=null;isAdminMode=false;
+  currentCafe=null;selDate=null;isAdminMode=false;currentWorkerEmp=null;
   showScreen('scHome');loadCafes();
 }
 
@@ -1887,20 +1887,24 @@ function checkAdminModePw(){
 }
 function enterAsWorker(){
   isAdminMode=false;
+  currentWorkerEmp=null;
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
   document.getElementById('svcWorkerHdr').style.background=cm.main;
   document.getElementById('svcWorkerCafeName').textContent=currentCafe.name;
   document.getElementById('svcIcon2').style.background=cm.light;
   loadEmployees();
-  showScreen('scSvcWorker');
+  workerAuthPurpose='entry';
+  setTimeout(()=>enterWorkerMenu('entry'),employees.length?0:800);
 }
 function enterWorkerTimeInput(){
+  if(currentWorkerEmp&&!currentWorkerEmp.resigned){enterWorkerInput();return;}
   // 직원 선택 모달 표시
+  workerAuthPurpose='time';
   if(!employees.length){
     loadEmployees();
-    setTimeout(enterWorkerMenu,800);
+    setTimeout(()=>enterWorkerMenu('time'),800);
   } else {
-    enterWorkerMenu();
+    enterWorkerMenu('time');
   }
 }
 
@@ -1919,8 +1923,19 @@ function goWorkerBack(){
   else{showScreen('scSvcWorker');}
 }
 function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
+function hasWorkerSession(){
+  return !!(currentWorkerEmp&&currentWorkerEmp.id&&!currentWorkerEmp.resigned);
+}
+function requireWorkerSession(){
+  if(isAdminMode)return true;
+  if(hasWorkerSession())return true;
+  workerAuthPurpose='entry';
+  enterWorkerMenu('entry');
+  return false;
+}
 
 function enterSvc(type){
+  if(!isAdminMode&&['notice','sub','health'].includes(type)&&!requireWorkerSession())return;
   const cm=colorMap[currentCafe.color||'green']||colorMap.green;
   const hdrIds={sub:'appHdr',labor:'laborHdr',notice:'noticeHdr',health:'healthHdr',supply:'supplyHdr',profit:'profitHdr',alerts:'alertsHdr',schedule:'scheduleHdr'};
   const nameIds={sub:'appCafeName',labor:'laborCafeName',notice:'noticeCafeName',health:'healthCafeName',supply:'supplyCafeName',profit:'profitCafeName',alerts:'alertsCafeName',schedule:'scheduleCafeName'};
@@ -2703,16 +2718,28 @@ function openWorkerPw(empId){
 function closeWorkerPw(){document.getElementById('workerPwModal').classList.remove('open');}
 function checkWorkerPw(){
   const pw=document.getElementById('workerPwInput').value.trim();
-  if(pw===currentWorkerEmp.password||isMaster(pw)){
+  if(currentWorkerEmp?.resigned){
+    document.getElementById('workerPwError').textContent='퇴사자는 입장할 수 없어요';
+    document.getElementById('workerPwError').style.display='block';
+    return;
+  }
+  if(pw&&((pw===currentWorkerEmp.password)||isMaster(pw))){
     closeWorkerPw();
     // 직원 선택 팝업도 닫기
     document.getElementById('workerSelectModal').classList.remove('open');
-    enterWorkerInput();
+    if(workerAuthPurpose==='entry'){
+      showScreen('scSvcWorker');
+      showToast(`${currentWorkerEmp.name}님, 입장했어요`);
+    } else {
+      enterWorkerInput();
+    }
   } else {
+    document.getElementById('workerPwError').textContent='비밀번호가 틀렸어요 ❌';
     document.getElementById('workerPwError').style.display='block';
   }
 }
 function enterWorkerInput(){
+  if(!hasWorkerSession()){workerAuthPurpose='time';enterWorkerMenu('time');return;}
   workData={};wkY=new Date().getFullYear();wkM=new Date().getMonth();wkSelDay=null;
   lastSavedHours=undefined;lastSavedWorkPreset=null;
   document.getElementById('workerInputName').textContent=currentWorkerEmp.name;
@@ -2982,14 +3009,20 @@ function enterSvcWithMaster(type){
   document.getElementById('masterPwError').style.display='none';
   document.getElementById('masterPwModal').classList.add('open');
 }
-function enterWorkerMenu(){
+function enterWorkerMenu(purpose='time'){
+  workerAuthPurpose=purpose;
   const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
   const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
   const w=document.getElementById('workerSelectList');
-  if(!employees.length){
+  const active=employees.filter(e=>!e.resigned);
+  const title=document.querySelector('#workerSelectModal .mt');
+  const sub=document.querySelector('#workerSelectModal .mt + div');
+  if(title)title.textContent=purpose==='entry'?'직원 입장 - 본인 선택':'근무시간 입력 - 직원 선택';
+  if(sub)sub.textContent=purpose==='entry'?'본인 이름을 선택하고 비밀번호를 입력하세요':'본인 이름을 선택하세요';
+  if(!active.length){
     w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 직원이 없어요</div>`;
   } else {
-    w.innerHTML=employees.filter(e=>!e.resigned).map((e,i)=>`
+    w.innerHTML=active.map((e,i)=>`
       <div onclick="openWorkerPw('${e.id}')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f5f5f5;cursor:pointer">
         <div style="width:38px;height:38px;border-radius:50%;background:${colors[i%5]};color:${tcolors[i%5]};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${e.name.substring(0,2)}</div>
         <div style="font-size:14px;font-weight:600;color:var(--t1)">${e.name}</div>
