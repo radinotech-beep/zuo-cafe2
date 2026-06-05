@@ -1057,6 +1057,7 @@ input:focus{border-color:var(--green)}
       <div style="font-size:22px;font-weight:700;color:var(--gd)" id="payTableTotal">₩0</div>
     </div>
     <button class="btn-primary" onclick="exportExcel()">📊 엑셀로 내보내기</button>
+    <button onclick="exportBankTransferExcel()" style="width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px solid #185FA5;background:#fff;color:#185FA5;font-size:13px;font-weight:600;cursor:pointer">🏦 은행 대량이체 양식 내보내기</button>
     <button onclick="exportDailyExcel()" style="width:100%;margin-top:8px;padding:11px;border-radius:8px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:13px;font-weight:600;cursor:pointer">📑 세무사 제출 자료 내보내기</button>
   </div>
 
@@ -3938,6 +3939,54 @@ async function exportExcel(){
   ws['!ref']=XLSX.utils.encode_range(range);
   XLSX.utils.book_append_sheet(wb,ws,`${payY}년 ${payM+1}월`);
   XLSX.writeFile(wb,`급여현황_${payY}년${payM+1}월.xlsx`);
+}
+
+async function exportBankTransferExcel(){
+  const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
+  const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+  const allEmps=[];empSnap.forEach(d=>allEmps.push({id:d.id,...d.data()}));
+  allEmps.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  const transferRows=[
+    ['입금은행','입금계좌번호','이체금액','수취인','공란','공란','받는분 통장표시내용','내 통장표시내용']
+  ];
+  const missingRows=[
+    ['이름','은행','계좌번호','실수령액','확인사항']
+  ];
+  let total=0,count=0;
+  for(const emp of allEmps){
+    const pay=await calcEmpPay(emp,period);
+    if(emp.resigned&&!pay.hasData)continue;
+    if(!pay.hasData||pay.net<=0)continue;
+    const bank=(emp.bank||'').trim();
+    const acct=(emp.acct||'').replace(/[-\s]/g,'').trim();
+    const name=(emp.name||'').trim();
+    if(!bank||!acct){
+      missingRows.push([name,bank,acct,pay.net,!bank&&!acct?'은행/계좌 누락':!bank?'은행 누락':'계좌 누락']);
+      continue;
+    }
+    transferRows.push([bank,acct,pay.net,name,'','',`월급여`,`${name}급여`]);
+    total+=pay.net;count++;
+  }
+  if(count===0&&missingRows.length===1){showToast('내보낼 은행 이체 대상이 없어요');return;}
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(transferRows);
+  ws['!cols']=[{wch:12},{wch:22},{wch:12},{wch:12},{wch:8},{wch:8},{wch:18},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws,'은행이체');
+  const summary=XLSX.utils.aoa_to_sheet([
+    ['기간',`${payY}년 ${payM+1}월`],
+    ['이체 건수',count],
+    ['이체 합계',total],
+    ['작성 기준','월 급여 현황의 실수령액']
+  ]);
+  summary['!cols']=[{wch:12},{wch:24}];
+  XLSX.utils.book_append_sheet(wb,summary,'요약');
+  if(missingRows.length>1){
+    const miss=XLSX.utils.aoa_to_sheet(missingRows);
+    miss['!cols']=[{wch:12},{wch:12},{wch:20},{wch:12},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,miss,'확인필요');
+  }
+  XLSX.writeFile(wb,`은행이체_${payY}년${payM+1}월.xlsx`);
+  showToast(`🏦 은행 이체 양식 ${count}건 내보냈어요`);
 }
 // 주휴수당 계산기
 function openHoliCalc(){
