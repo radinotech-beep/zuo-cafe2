@@ -576,3 +576,47 @@
   boot();
   document.addEventListener('DOMContentLoaded',boot);
 })();
+/* Supply clean list v2: clearer labels, serial numbers, edit history popup */
+(function(){
+  function installSupplyCleanListV2(){
+    if(typeof supplyStatus==='undefined'||typeof supplyList==='undefined')return false;
+    const addBtn=[...document.querySelectorAll('#scSupply button')].find(b=>/^\+\s*(추가|소모품 항목 추가)/.test((b.textContent||'').trim()));
+    if(addBtn) addBtn.textContent='+ 소모품 항목 추가';
+    if(!document.getElementById('zuoSupplyCleanListV2Style')){
+      const style=document.createElement('style');
+      style.id='zuoSupplyCleanListV2Style';
+      style.textContent=`
+        .supply-clean-row{grid-template-columns:minmax(86px,1.25fr) 48px 72px 64px 72px 48px!important}
+        .supply-clean-row.head{font-size:9.3px!important;color:#40514d!important;background:#f3f7f5!important}
+        .supply-clean-history-row{grid-template-columns:58px 70px 66px 1fr!important}
+        .supply-clean-add{margin:8px 0 0!important;background:#ba7517!important;font-weight:500!important}
+        .supply-clean-name{font-weight:500!important}
+        .supply-clean-serial{color:#777;margin-right:4px;font-size:11px}
+        @media(max-width:390px){.supply-clean-row{grid-template-columns:minmax(76px,1.2fr) 42px 62px 56px 62px 42px!important}}
+      `;
+      document.head.appendChild(style);
+    }
+    function shortDate(v){if(!v)return '-';const s=String(v);const m=s.match(/^(\d{4})[-.](\d{1,2})[-.](\d{1,2})/);if(!m)return s;return `${m[1].slice(2)}.${String(m[2]).padStart(2,'0')}/${String(m[3]).padStart(2,'0')}`;}
+    function shortCycle(s){const n=parseInt(s.cycleNum)||0;if(!n)return '-';const unit=s.cycleUnit==='month'?'개월':s.cycleUnit==='year'?'년':'일';return `${n}${unit}`;}
+    function dday(diff){if(diff===null||diff===undefined)return '<span class="supply-clean-dday neutral">-</span>';const label=diff<0?'D+'+Math.abs(diff):(diff===0?'D-day':'D-'+diff);const cls=diff<0?'over':diff<=3?'soon':'ok';return `<span class="supply-clean-dday ${cls}">${label}</span>`;}
+    function money(v){return supplyMoneyNum(v)?supplyMoney(v):'-';}
+    window.openSupplyHistoryView=function(id,idx){openSupplyHistoryModal(id,idx);};
+    function historyHtml(s,st){
+      const hist=st.hist||[];
+      const rows=hist.length?`<div class="supply-clean-history"><div class="supply-clean-history-row head"><span>교체일</span><span>교체경과일</span><span>교체비용</span><span>업체/연락처</span></div>${hist.slice().reverse().map((h,revIdx)=>{const idx=hist.length-1-revIdx;const prev=idx>0?hist[idx-1]:null;const elapsed=prev&&prev.date&&h.date?Math.max(0,Math.round((supplyParseDate(h.date)-supplyParseDate(prev.date))/86400000))+'일':'첫 등록';const contact=[h.vendor,h.tel].filter(Boolean).map(supplyEsc).join(' / ')||'-';return `<div class="supply-clean-history-row" onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}',${idx})"><span>${shortDate(h.date)}</span><span>${elapsed}</span><span>${money(h.cost)}</span><span>${contact}</span></div>`;}).join('')}</div>`:`<div class="supply-clean-empty">아직 교체 이력이 없어요</div>`;
+      return `<div class="supply-clean-detail">${rows}<button class="supply-clean-add" onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}')">+ 교체이력 추가</button></div>`;
+    }
+    window.renderSupply=function(){
+      const w=document.getElementById('supplyList');if(!w)return;
+      const summary=document.getElementById('supplySummary');if(summary)summary.innerHTML='';
+      if(!supplyList.length){w.innerHTML=`<div class="supply-empty">등록된 소모품이 없어요<br><span style="font-size:11px">+ 소모품 항목 추가로 먼저 등록하세요</span></div>`;return;}
+      const list=[...supplyList].sort((a,b)=>{const da=supplyStatus(a).nextDate||'9999-99-99';const db=supplyStatus(b).nextDate||'9999-99-99';return da.localeCompare(db);});
+      w.innerHTML=`<div class="supply-clean-table"><div class="supply-clean-row head"><span>항목</span><span>주기</span><span>최근교체일</span><span>교체비용</span><span>다음교체일</span><span>D-day</span></div>${list.map((s,i)=>{const st=supplyStatus(s);const latest=st.latest;const open=supplyExpandedId===s.id;return `<div class="supply-clean-row" onclick="supplyExpandedId=supplyExpandedId==='${s.id}'?null:'${s.id}';renderSupply()"><div class="supply-clean-name" title="${supplyEsc(s.name)}"><span class="supply-clean-serial">${i+1}.</span>${supplyEsc(s.name)}</div><span class="supply-clean-cell supply-clean-cycle" onclick="event.stopPropagation();openSupplyEdit('${s.id}')">${shortCycle(s)}</span><span class="supply-clean-cell">${shortDate(st.lastDate)}</span><span class="supply-clean-cell">${money(latest?.cost)}</span><span class="supply-clean-cell">${shortDate(st.nextDate)}</span>${dday(st.diff)}${open?historyHtml(s,st):''}</div>`;}).join('')}</div>`;
+    };
+    if(document.getElementById('supplyList'))window.renderSupply();
+    return true;
+  }
+  function boot(){try{if(!installSupplyCleanListV2())setTimeout(boot,200);}catch(e){console.error('supply clean list v2:',e);}}
+  boot();
+  document.addEventListener('DOMContentLoaded',boot);
+})();
