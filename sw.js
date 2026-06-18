@@ -1,6 +1,6 @@
-﻿const CACHE='zuo-v24';
+﻿const CACHE='zuo-v26';
 const BASE='/zuo-cafe2/';
-const FILES=[BASE,BASE+'index.html',BASE+'manifest.json'];
+const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-fixes.js'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
@@ -20,12 +20,12 @@ self.addEventListener('fetch',e=>{
   e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
 });
 
-// ?깆뿉??硫붿떆吏 諛쏆븘???뚮┝ ?쒖떆 (?듭떖!)
+// Show notifications requested by the page.
 self.addEventListener('message',e=>{
   if(e.data&&e.data.type==='SHOW_NOTIFICATION'){
     const{title,body,tag}=e.data;
     e.waitUntil(
-      self.registration.showNotification(title||'ZUO ?뚮┝',{
+      self.registration.showNotification(title||'ZUO 알림',{
         body:body||'',
         icon:'/zuo-cafe2/icons/icon-192.png',
         badge:'/zuo-cafe2/icons/icon-192.png',
@@ -37,12 +37,12 @@ self.addEventListener('message',e=>{
   }
 });
 
-// ?쒕쾭 ?몄떆 ?섏떊
+// Receive push messages from a server.
 self.addEventListener('push',e=>{
   if(!e.data)return;
   const data=e.data.json();
   e.waitUntil(
-    self.registration.showNotification(data.title||'ZUO ?뚮┝',{
+    self.registration.showNotification(data.title||'ZUO 알림',{
       body:data.body||'',
       icon:'/zuo-cafe2/icons/icon-192.png',
       badge:'/zuo-cafe2/icons/icon-192.png',
@@ -53,7 +53,7 @@ self.addEventListener('push',e=>{
   );
 });
 
-// ?뚮┝ ?대┃ ?????닿린
+// Open the app when a notification is clicked.
 self.addEventListener('notificationclick',e=>{
   e.notification.close();
   e.waitUntil(
