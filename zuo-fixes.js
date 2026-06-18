@@ -1,6 +1,39 @@
-﻿// Runtime fixes for issues found during review.
+﻿// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
 (function(){
   var originalOpenWkInput=null;
+
+  function injectPayTableStyle(){
+    if(document.getElementById('zuoPayTableStyleFix'))return;
+    const style=document.createElement('style');
+    style.id='zuoPayTableStyleFix';
+    style.textContent=`
+      .pay-tbl-wrap{border-color:#e5e5e5;background:#fff}
+      .pay-tbl{font-size:10px;background:#fff}
+      .pay-tbl th{background:#fff!important;color:#111!important;font-weight:600!important;border:1px solid #e5e5e5!important;padding:7px 2px!important;line-height:1.2!important}
+      .pay-tbl td{background:#fff!important;color:#111!important;font-weight:500!important;border:1px solid #ececec!important;padding:7px 2px!important}
+      .pay-tbl td.nm{background:#F7FAFF!important;color:#111!important;font-weight:600!important}
+      .pay-tbl td.pay-time{background:#F0F7FF!important;color:#111!important;font-weight:600!important}
+      .pay-tbl td.pay-net{background:#EEF9F3!important;color:#111!important;font-weight:600!important}
+      .pay-tbl td.pay-deduct{color:#111!important}
+      .pay-tbl td.pay-money{font-size:9.5px!important;color:#111!important}
+      .pay-tbl .unit-h{color:#111!important;font-weight:500!important}
+      .pay-tbl tr:last-child td{background:#fff!important;color:#111!important;font-weight:600!important;border-top:1px solid #d8d8d8!important}
+      .pay-tbl tr:last-child td.nm{background:#F7FAFF!important}
+      .pay-tbl tr:last-child td.pay-time{background:#F0F7FF!important}
+      .pay-tbl tr:last-child td.pay-net{background:#EEF9F3!important}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function profitFixedValue(key){
+    if(profitData&&profitData[key]!==undefined)return profitData[key]||0;
+    if(profitFixed&&profitFixed[key+'_fixed'])return profitFixed[key+'_val']||0;
+    return 0;
+  }
+
+  function renderFixedButton(key,isFixed){
+    return `<button class="profit-pin ${isFixed?'on':''}" data-fixed-key="${key}" onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${isFixed?'var(--amb)':'var(--bd)'};background:${isFixed?'var(--amb)':'#fff'};color:${isFixed?'#fff':'var(--t3)'};cursor:pointer;white-space:nowrap">📌${isFixed?' 고정항목':''}</button>`;
+  }
 
   function patchProfitRows(){
     if(typeof PROFIT_EXPENSE_ITEMS==='undefined'||typeof profitData==='undefined'||typeof profitFixed==='undefined')return false;
@@ -15,20 +48,63 @@
           <span style="font-size:12px;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</span>
           ${isSalary?`<button onclick="loadSalaryFromLabor()" style="flex-shrink:0;font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--green);background:#fff;color:var(--green);cursor:pointer;white-space:nowrap">📂 불러오기</button>`:''}
           <span style="font-size:10px;color:var(--t3);flex-shrink:0;min-width:32px;text-align:right" id="pct_${key}">0%</span>
-          <button class="${isFixed?'on':''}" onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${isFixed?'var(--amb)':'var(--bd)'};background:${isFixed?'var(--amb)':'#fff'};color:${isFixed?'#fff':'var(--t3)'};cursor:pointer;white-space:nowrap">📌 ${isFixed?'고정항목':''}</button>
+          ${renderFixedButton(key,isFixed)}
           <input type="text" inputmode="numeric" id="pi_${key}" placeholder="0" oninput="formatCurrencyInput(this);calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
         </div>`;
       }).join('');
-      PROFIT_EXPENSE_ITEMS.forEach(item=>{
-        const key=item.key;
-        const hasSaved=profitData[key]!==undefined;
-        const val=hasSaved?profitData[key]:(profitFixed[key+'_fixed']?profitFixed[key+'_val']||0:0);
-        setCurrencyValue('pi_'+key,val||0);
-      });
-      const hasSavedRev=profitData.revenue!==undefined;
-      const rev=hasSavedRev?profitData.revenue:(profitFixed.revenue_fixed?profitFixed.revenue_val||0:0);
+      PROFIT_EXPENSE_ITEMS.forEach(item=>setCurrencyValue('pi_'+item.key,profitFixedValue(item.key)));
+      const rev=profitFixedValue('revenue');
       if(document.getElementById('pi_revenue'))setCurrencyValue('pi_revenue',rev||0);
       calcProfitTotals();
+    };
+    return true;
+  }
+
+  function patchProfitFixedToggle(){
+    if(typeof profitFixed==='undefined')return false;
+    window.toggleFixed=function(key,btn){
+      const nowFixed=!(profitFixed[key+'_fixed']===true);
+      const value=getCurrencyValue('pi_'+key);
+      profitFixed[key+'_fixed']=nowFixed;
+      profitFixed[key+'_val']=value;
+      if(btn){
+        btn.classList.toggle('on',nowFixed);
+        btn.dataset.fixedKey=key;
+        btn.innerHTML=nowFixed?'📌 고정항목':'📌';
+        btn.style.border=`1px solid ${nowFixed?'var(--amb)':'var(--bd)'}`;
+        btn.style.background=nowFixed?'var(--amb)':'#fff';
+        btn.style.color=nowFixed?'#fff':'var(--t3)';
+      }
+      saveProfitFixed();
+      showToast(nowFixed?'📌 고정항목으로 저장했어요':'고정항목을 해제했어요');
+    };
+    return true;
+  }
+
+  function patchProfitFixedSave(){
+    if(typeof db==='undefined'||typeof profitFixed==='undefined')return false;
+    window.saveProfitFixed=async function(){
+      const fixedSnap=await db.collection('profitFixed').where('cafeId','==',currentCafe.id).limit(1).get();
+      const data={cafeId:currentCafe.id,...profitFixed};
+      if(!fixedSnap.empty){await db.collection('profitFixed').doc(fixedSnap.docs[0].id).update(data);}
+      else{await db.collection('profitFixed').add(data);}
+    };
+    return true;
+  }
+
+  function patchProfitSave(){
+    if(typeof PROFIT_EXPENSE_ITEMS==='undefined'||typeof PROFIT_KEYS==='undefined')return false;
+    window.saveProfit=async function(){
+      const period=`${profitY}-${String(profitM+1).padStart(2,'0')}`;
+      const data={cafeId:currentCafe.id,period,revenue:getVal('revenue')};
+      PROFIT_EXPENSE_ITEMS.forEach(i=>data[i.key]=getVal(i.key));
+      PROFIT_KEYS.forEach(k=>{
+        if(profitFixed[k+'_fixed'])profitFixed[k+'_val']=getVal(k);
+      });
+      await saveProfitFixed();
+      if(profitData.docId){await db.collection('profits').doc(profitData.docId).update(data);}
+      else{const ref=await db.collection('profits').add(data);profitData.docId=ref.id;}
+      showToast('✅ 저장됐어요!');
     };
     return true;
   }
@@ -57,41 +133,28 @@
     return true;
   }
 
-  function isCurrentWorkMonthConfirmed(){
-    return typeof wkIsConfirmed!=='undefined'&&wkIsConfirmed&&!isAdminMode;
-  }
-
-  function updateWorkPanelActions(){
-    const panel=document.getElementById('wkPanel');
-    if(!panel)return;
-    const actionRow=panel.querySelector('div[style*="display:flex"][style*="gap:8px"]');
-    if(!actionRow)return;
-    const firstBtn=actionRow.querySelector('button');
-    if(!firstBtn)return;
-    const hasSaved=!!(workData&&wkSelDay&&workData[wkSelDay]);
-    firstBtn.textContent=hasSaved?'삭제':'비우기';
-    firstBtn.onclick=hasSaved?deleteWkHours:resetWkInput;
-    firstBtn.style.color=hasSaved?'var(--red)':'var(--t2)';
-    firstBtn.style.borderColor=hasSaved?'#fca5a5':'var(--bd)';
-
-    const saveBtn=actionRow.querySelector('.fok');
-    if(saveBtn)saveBtn.innerHTML=hasSaved?'💾 수정 저장':'💾 저장';
-  }
-
   function patchWorkInputUi(){
     if(typeof openWkInput!=='function')return false;
     if(!originalOpenWkInput)originalOpenWkInput=openWkInput;
     window.openWkInput=function(d){
       originalOpenWkInput(d);
-      updateWorkPanelActions();
+      const panel=document.getElementById('wkPanel');
+      const actionRow=panel?.querySelector('div[style*="display:flex"][style*="gap:8px"]');
+      const firstBtn=actionRow?.querySelector('button');
+      const hasSaved=!!(workData&&wkSelDay&&workData[wkSelDay]);
+      if(firstBtn){
+        firstBtn.textContent=hasSaved?'삭제':'비우기';
+        firstBtn.onclick=hasSaved?deleteWkHours:resetWkInput;
+        firstBtn.style.color=hasSaved?'var(--red)':'var(--t2)';
+        firstBtn.style.borderColor=hasSaved?'#fca5a5':'var(--bd)';
+      }
+      const saveBtn=actionRow?.querySelector('.fok');
+      if(saveBtn)saveBtn.innerHTML=hasSaved?'💾 수정 저장':'💾 저장';
     };
     window.deleteWkHours=async function(){
       if(!wkSelDay||!currentWorkerEmp)return;
-      const saved=workData&&workData[wkSelDay];
-      if(!saved){resetWkInput();return;}
-      if(isCurrentWorkMonthConfirmed()){
-        showToast('🔒 확정된 데이터는 삭제할 수 없어요. 관리자에게 문의하세요.');return;
-      }
+      if(!(workData&&workData[wkSelDay])){resetWkInput();return;}
+      if(typeof wkIsConfirmed!=='undefined'&&wkIsConfirmed&&!isAdminMode){showToast('🔒 확정된 데이터는 삭제할 수 없어요. 관리자에게 문의하세요.');return;}
       if(!confirm(`${wkM+1}월 ${wkSelDay}일 근무시간을 삭제할까요?`))return;
       const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
       const snap=await db.collection('workHours').where('empId','==',currentWorkerEmp.id).where('period','==',period).where('day','==',wkSelDay).get();
@@ -110,9 +173,7 @@
       if(!wkSelDay)return;
       const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
       const confirmSnap=await db.collection('workConfirm').where('empId','==',currentWorkerEmp.id).where('period','==',period).get();
-      if(!confirmSnap.empty&&confirmSnap.docs[0].data().confirmed&&!isAdminMode){
-        showToast('🔒 확정된 데이터는 수정할 수 없어요. 관리자에게 문의하세요.');return;
-      }
+      if(!confirmSnap.empty&&confirmSnap.docs[0].data().confirmed&&!isAdminMode){showToast('🔒 확정된 데이터는 수정할 수 없어요. 관리자에게 문의하세요.');return;}
       updateWkTimeUi();
       const note=document.getElementById('wkNote').value.trim();
       const workMin=calcCurrentWorkMin();
@@ -131,7 +192,11 @@
   }
 
   function applyPatches(){
+    injectPayTableStyle();
     patchProfitRows();
+    patchProfitFixedToggle();
+    patchProfitFixedSave();
+    patchProfitSave();
     patchProfitExcel();
     patchWorkInputUi();
     patchWorkHourSave();
