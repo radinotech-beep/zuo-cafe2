@@ -500,67 +500,79 @@
   boot();
   document.addEventListener('DOMContentLoaded',boot);
 })();
-/* Supply one-line final UI */
+/* Supply clean list UI: compact rows, light type, explicit history add */
 (function(){
-  function installSupplyOneLine(){
+  function installSupplyCleanList(){
     if(typeof supplyStatus==='undefined'||typeof supplyList==='undefined')return false;
-    if(!document.getElementById('zuoSupplyOneLineStyle')){
+    const addBtn=[...document.querySelectorAll('#scSupply button')].find(b=>(b.textContent||'').trim()==='+ 추가');
+    if(addBtn) addBtn.textContent='+ 소모품 항목 추가';
+    if(!document.getElementById('zuoSupplyCleanListStyle')){
       const style=document.createElement('style');
-      style.id='zuoSupplyOneLineStyle';
+      style.id='zuoSupplyCleanListStyle';
       style.textContent=`
         .supply-summary{display:none!important}
-        .supply-card-list{display:block!important}
-        .supply-one-wrap{background:#fff;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:10px}
-        .supply-one-row{display:grid;grid-template-columns:minmax(86px,1.35fr) 66px 74px 68px 74px 54px 78px;gap:6px;align-items:center;padding:10px 10px;border-top:1px solid #f1f1f1;background:#fff}
-        .supply-one-row:first-child{border-top:none}
-        .supply-one-row.head{background:#fafafa;color:#777;font-size:10px;font-weight:800;padding:8px 10px}
-        .supply-one-name{font-size:15px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-        .supply-one-cell{font-size:11px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-        .supply-one-muted{color:#777;font-size:10px}
-        .supply-one-dday{font-size:11px;font-weight:900;border-radius:999px;padding:4px 6px;text-align:center;white-space:nowrap}
-        .supply-one-dday.ok{background:var(--gl);color:var(--gd)}
-        .supply-one-dday.soon{background:var(--al);color:var(--ad)}
-        .supply-one-dday.over{background:#FCEBEB;color:var(--red)}
-        .supply-one-dday.neutral{background:#f4f4f4;color:#888}
-        .supply-one-add{border:none;background:var(--green);color:#fff;border-radius:7px;padding:7px 5px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
-        .supply-one-tools{display:flex;gap:5px;margin-top:7px}
-        .supply-one-tools button{border:1px solid var(--bd);background:#fff;border-radius:6px;padding:4px 7px;font-size:10px;color:#666}
-        .supply-one-history{grid-column:1/-1;background:#fcfcfc;border-top:1px solid #f1f1f1;padding:8px 10px 10px}
-        .supply-one-history-title{font-size:12px;font-weight:900;margin-bottom:6px;color:#111}
-        .supply-one-history-row{display:grid;grid-template-columns:78px 54px 72px 1fr;gap:6px;align-items:center;padding:6px 0;border-top:1px solid #f1f1f1;font-size:11px;color:#333;cursor:pointer}
-        .supply-one-history-row.head{color:#888;font-size:10px;font-weight:800;border-top:none;cursor:default;padding-top:0}
-        .supply-one-history-row b{font-size:12px;color:#111}
-        .supply-one-empty{font-size:12px;color:#999;text-align:center;padding:12px;border:1px dashed #e5e5e5;border-radius:8px;background:#fff}
-        @media(max-width:430px){
-          .supply-one-row{grid-template-columns:minmax(72px,1.2fr) 54px 64px 56px 64px 46px 58px;gap:4px;padding:9px 7px}
-          .supply-one-row.head{font-size:9px;padding:7px}
-          .supply-one-name{font-size:14px}.supply-one-cell{font-size:10px}.supply-one-add{font-size:10px;padding:7px 3px}.supply-one-dday{font-size:10px;padding:4px 4px}
+        .supply-card,.supply-simple-card,.supply-one-wrap{box-shadow:none!important;border:none!important;background:transparent!important}
+        .supply-clean-table{background:#fff;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden;margin:10px 0 14px}
+        .supply-clean-row{display:grid;grid-template-columns:minmax(72px,1.25fr) 48px 56px 64px 56px 48px;gap:4px;align-items:center;padding:9px 8px;border-top:1px solid #ececec;background:#fff;color:#111}
+        .supply-clean-row:nth-child(even){background:#fcfcfc}
+        .supply-clean-row:first-child{border-top:none}
+        .supply-clean-row.head{background:#f4f7f6;color:#4f5f5b;font-size:9.5px;font-weight:500;padding:7px 8px}
+        .supply-clean-name{font-size:13.5px;font-weight:500;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+        .supply-clean-cell{font-size:10.5px;font-weight:400;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+        .supply-clean-cycle{cursor:pointer;color:#0f6e56;text-decoration:underline;text-underline-offset:2px}
+        .supply-clean-dday{display:inline-block;font-size:10px;font-weight:500;border-radius:999px;padding:4px 5px;text-align:center;white-space:nowrap;min-width:38px}
+        .supply-clean-dday.ok{background:#e8f5ef;color:#0f6e56}.supply-clean-dday.soon{background:#faeeda;color:#854f0b}.supply-clean-dday.over{background:#fcebeb;color:#c93434}.supply-clean-dday.neutral{background:#f1f1f1;color:#777}
+        .supply-clean-detail{grid-column:1/-1;background:#fbfbfb;border-top:1px solid #e8e8e8;padding:9px 8px 10px}
+        .supply-clean-add{width:100%;border:none;background:#ba7517;color:#fff;border-radius:7px;padding:8px;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:8px}
+        .supply-clean-history{border:1px solid #eeeeee;border-radius:7px;overflow:hidden;background:#fff}
+        .supply-clean-history-row{display:grid;grid-template-columns:58px 48px 62px 1fr;gap:5px;align-items:center;padding:7px 8px;border-top:1px solid #f0f0f0;font-size:10.5px;font-weight:400;color:#222;cursor:pointer}
+        .supply-clean-history-row:first-child{border-top:none}
+        .supply-clean-history-row.head{background:#f8f8f8;color:#777;font-size:9.5px;font-weight:500;cursor:default}
+        .supply-clean-history-row span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+        .supply-clean-empty{font-size:11px;color:#888;text-align:center;padding:10px;border:1px dashed #ddd;border-radius:7px;background:#fff}
+        @media(max-width:390px){
+          .supply-clean-row{grid-template-columns:minmax(64px,1.15fr) 42px 52px 56px 52px 43px;gap:3px;padding:8px 6px}
+          .supply-clean-row.head{font-size:9px;padding:7px 6px}.supply-clean-name{font-size:13px}.supply-clean-cell{font-size:10px}.supply-clean-dday{font-size:9.5px;min-width:34px;padding:4px 4px}
         }
       `;
       document.head.appendChild(style);
     }
-    function ddaySpan(diff){
-      if(diff===null||diff===undefined)return '<span class="supply-one-dday neutral">-</span>';
+    function shortDate(v){
+      if(!v)return '-';
+      const s=String(v);
+      const m=s.match(/^(\d{4})[-.](\d{1,2})[-.](\d{1,2})/);
+      if(!m)return s;
+      return `${m[1].slice(2)}.${String(m[2]).padStart(2,'0')}/${String(m[3]).padStart(2,'0')}`;
+    }
+    function shortCycle(s){
+      const n=parseInt(s.cycleNum)||0;
+      if(!n)return '-';
+      const unit=s.cycleUnit==='month'?'개월':s.cycleUnit==='year'?'년':'일';
+      return `${n}${unit}`;
+    }
+    function dday(diff){
+      if(diff===null||diff===undefined)return '<span class="supply-clean-dday neutral">-</span>';
       const label=diff<0?'D+'+Math.abs(diff):(diff===0?'D-day':'D-'+diff);
       const cls=diff<0?'over':diff<=3?'soon':'ok';
-      return `<span class="supply-one-dday ${cls}">${label}</span>`;
+      return `<span class="supply-clean-dday ${cls}">${label}</span>`;
     }
-    function historyBlock(s,st){
+    function money(v){return supplyMoneyNum(v)?supplyMoney(v):'-';}
+    function historyHtml(s,st){
       const hist=st.hist||[];
-      if(!hist.length)return '<div class="supply-one-history"><div class="supply-one-empty">아직 교체 이력이 없어요</div></div>';
-      return `<div class="supply-one-history"><div class="supply-one-history-title">교체 이력</div><div class="supply-one-history-row head"><span>교체일</span><span>경과</span><span>비용</span><span>업체/연락처</span></div>${hist.slice().reverse().map((h,revIdx)=>{const idx=hist.length-1-revIdx;const prev=idx>0?hist[idx-1]:null;const elapsed=prev&&prev.date&&h.date?Math.max(0,Math.round((supplyParseDate(h.date)-supplyParseDate(prev.date))/86400000))+'일':'첫 등록';const contact=[h.vendor,h.tel].filter(Boolean).map(supplyEsc).join(' / ')||'-';return `<div class="supply-one-history-row" onclick="openSupplyHistoryView('${s.id}',${idx})"><b>${supplyDateLabel(h.date)}</b><span>${elapsed}</span><span>${supplyMoney(h.cost)}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${contact}</span></div>`;}).join('')}</div>`;
+      const rows=hist.length?`<div class="supply-clean-history"><div class="supply-clean-history-row head"><span>교체일</span><span>경과</span><span>비용</span><span>업체/연락처</span></div>${hist.slice().reverse().map((h,revIdx)=>{const idx=hist.length-1-revIdx;const prev=idx>0?hist[idx-1]:null;const elapsed=prev&&prev.date&&h.date?Math.max(0,Math.round((supplyParseDate(h.date)-supplyParseDate(prev.date))/86400000))+'일':'첫 등록';const contact=[h.vendor,h.tel].filter(Boolean).map(supplyEsc).join(' / ')||'-';return `<div class="supply-clean-history-row" onclick="openSupplyHistoryView('${s.id}',${idx})"><span>${shortDate(h.date)}</span><span>${elapsed}</span><span>${money(h.cost)}</span><span>${contact}</span></div>`;}).join('')}</div>`:`<div class="supply-clean-empty">아직 교체 이력이 없어요</div>`;
+      return `<div class="supply-clean-detail"><button class="supply-clean-add" onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}')">+ 교체이력 추가</button>${rows}</div>`;
     }
     window.renderSupply=function(){
       const w=document.getElementById('supplyList');if(!w)return;
       const summary=document.getElementById('supplySummary');if(summary)summary.innerHTML='';
-      if(!supplyList.length){w.innerHTML=`<div class="supply-empty">등록된 소모품이 없어요<br><span style="font-size:11px">+ 추가로 소모품 이름과 관리주기를 먼저 등록하세요</span></div>`;return;}
+      if(!supplyList.length){w.innerHTML=`<div class="supply-empty">등록된 소모품이 없어요<br><span style="font-size:11px">+ 소모품 항목 추가로 먼저 등록하세요</span></div>`;return;}
       const list=[...supplyList].sort((a,b)=>{const da=supplyStatus(a).nextDate||'9999-99-99';const db=supplyStatus(b).nextDate||'9999-99-99';return da.localeCompare(db);});
-      w.innerHTML=`<div class="supply-one-wrap"><div class="supply-one-row head"><span>항목</span><span>교체주기</span><span>최근교체</span><span>비용</span><span>다음교체</span><span>D-day</span><span></span></div>${list.map(s=>{const st=supplyStatus(s);const latest=st.latest;const open=supplyExpandedId===s.id;return `<div class="supply-one-row" onclick="supplyExpandedId=supplyExpandedId==='${s.id}'?null:'${s.id}';renderSupply()"><div><div class="supply-one-name" title="${supplyEsc(s.name)}">${supplyEsc(s.name)}</div><div class="supply-one-tools"><button onclick="event.stopPropagation();openSupplyEdit('${s.id}')">수정</button><button onclick="event.stopPropagation();deleteSupply('${s.id}')">삭제</button></div></div><span class="supply-one-cell">${supplyCycleText(s)}</span><span class="supply-one-cell">${supplyDateLabel(st.lastDate)}</span><span class="supply-one-cell">${supplyMoney(latest?.cost)}</span><span class="supply-one-cell">${supplyDateLabel(st.nextDate)}</span>${ddaySpan(st.diff)}<button class="supply-one-add" onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}')">이력 추가</button>${open?historyBlock(s,st):''}</div>`;}).join('')}</div>`;
+      w.innerHTML=`<div class="supply-clean-table"><div class="supply-clean-row head"><span>항목</span><span>주기</span><span>최근</span><span>비용</span><span>다음</span><span>D-day</span></div>${list.map(s=>{const st=supplyStatus(s);const latest=st.latest;const open=supplyExpandedId===s.id;return `<div class="supply-clean-row" onclick="supplyExpandedId=supplyExpandedId==='${s.id}'?null:'${s.id}';renderSupply()"><div class="supply-clean-name" title="${supplyEsc(s.name)}">${supplyEsc(s.name)}</div><span class="supply-clean-cell supply-clean-cycle" onclick="event.stopPropagation();openSupplyEdit('${s.id}')">${shortCycle(s)}</span><span class="supply-clean-cell">${shortDate(st.lastDate)}</span><span class="supply-clean-cell">${money(latest?.cost)}</span><span class="supply-clean-cell">${shortDate(st.nextDate)}</span>${dday(st.diff)}${open?historyHtml(s,st):''}</div>`;}).join('')}</div>`;
     };
     if(document.getElementById('supplyList'))window.renderSupply();
     return true;
   }
-  function boot(){try{if(!installSupplyOneLine())setTimeout(boot,200);}catch(e){console.error('supply one-line ui:',e);}}
+  function boot(){try{if(!installSupplyCleanList())setTimeout(boot,200);}catch(e){console.error('supply clean list ui:',e);}}
   boot();
   document.addEventListener('DOMContentLoaded',boot);
 })();
