@@ -1,4 +1,4 @@
-﻿﻿// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
+﻿﻿﻿// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
 (function(){
   var originalOpenWkInput=null;
 
@@ -314,3 +314,4 @@
     showToast('✅ 저장됐어요!');
   };
 })();
+

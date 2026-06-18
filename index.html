@@ -1,4 +1,4 @@
-﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -367,6 +367,9 @@ input:focus{border-color:var(--green)}
 .profit-pin.on{background:var(--amb);border-color:var(--amb);color:#fff}
 .profit-input{width:110px;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;text-align:right;outline:none}
 .profit-input:focus{border-color:var(--green)}
+
+/* 소모품 카드형 관리 */
+.supply-page{padding:12px 14px 18px;overflow-y:auto}.supply-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}.supply-stat{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:10px 8px;text-align:center}.supply-stat b{display:block;font-size:16px;color:#111;margin-bottom:2px}.supply-stat span{font-size:10px;color:var(--t3)}.supply-card-list{display:block}.supply-card{background:#fff;border:1px solid var(--bd);border-radius:12px;margin-bottom:9px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.03)}.supply-card-main{padding:12px;cursor:pointer}.supply-card-top{display:flex;align-items:flex-start;gap:8px}.supply-card-name{font-size:15px;font-weight:800;color:#111;flex:1;min-width:0}.supply-cycle{font-size:10px;color:var(--t3);margin-top:2px}.supply-dday{font-size:12px;font-weight:900;border-radius:999px;padding:4px 8px;white-space:nowrap}.supply-dday.ok{background:var(--gl);color:var(--gd)}.supply-dday.soon{background:var(--al);color:var(--ad)}.supply-dday.over{background:#FCEBEB;color:var(--red)}.supply-dday.neutral{background:#f4f4f4;color:var(--t3)}.supply-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.supply-meta div{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:8px 6px;min-width:0}.supply-meta span{display:block;font-size:9px;color:var(--t3);margin-bottom:3px}.supply-meta b{display:block;font-size:11px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.supply-detail{border-top:1px solid #eee;background:#fcfcfc;padding:12px}.supply-actions{display:flex;gap:7px;margin-bottom:10px}.supply-actions button{flex:1;border-radius:8px;padding:9px 7px;font-size:12px;font-weight:800;cursor:pointer}.supply-primary{border:none;background:var(--green);color:#fff}.supply-soft{border:1px solid var(--bd);background:#fff;color:#333}.supply-danger{border:1px solid #fca5a5;background:#fff;color:var(--red)}.supply-latest{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:10px}.supply-latest-title{font-size:12px;font-weight:800;color:#111;margin-bottom:5px}.supply-latest-body{font-size:12px;color:#555;line-height:1.55}.supply-timeline-title{font-size:12px;font-weight:900;color:#111;margin:10px 0 7px}.supply-history{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:9px 10px;margin-bottom:7px;cursor:pointer}.supply-history-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.supply-history-date{font-size:13px;font-weight:900;color:#111}.supply-history-cost{font-size:12px;font-weight:800;color:var(--green)}.supply-history-body{font-size:11px;color:#666;line-height:1.45;margin-top:4px}.supply-history-btns{display:flex;gap:4px;margin-top:7px}.supply-history-btns button{border:1px solid var(--bd);background:#fff;border-radius:6px;padding:4px 8px;font-size:10px;color:#555}.supply-history-btns button:last-child{border-color:#fca5a5;color:var(--red)}.supply-empty{background:#fff;border:1px dashed var(--bd);border-radius:12px;padding:28px 12px;text-align:center;color:var(--t3);font-size:13px}#supplyHistoryModal .modal{max-height:88vh;overflow-y:auto}.supply-view-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f3f3f3;font-size:13px}.supply-view-row span{color:var(--t3)}.supply-view-row b{color:#111;text-align:right}
 </style>
 </head>
 <body>
@@ -1198,22 +1201,15 @@ input:focus{border-color:var(--green)}
     <div><div class="hdr-title" id="supplyCafeName">카페</div><div class="hdr-sub">소모품 관리해ZUO</div></div>
     <button id="supplyAddBtn" style="display:block;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer" onclick="openSupplyAdd()">+ 추가</button>
   </div>
-  <div style="padding:12px 14px;overflow-y:auto">
+  <div class="supply-page">
     <div id="supplyAlertBanner"></div>
-
-    <!-- 테이블 헤더 -->
-    <div style="display:grid;grid-template-columns:1fr 80px 80px 44px;background:var(--green);border-radius:10px 10px 0 0;padding:8px 12px;gap:4px">
-      <div style="font-size:11px;font-weight:700;color:#fff">소모품</div>
-      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">최근교체일</div>
-      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">차기교체일</div>
-      <div style="font-size:11px;font-weight:700;color:#fff;text-align:center">D-day</div>
-    </div>
-    <div id="supplyList" style="border:1px solid var(--bd);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;background:#fff"></div>
+    <div id="supplySummary" class="supply-summary"></div>
+    <div id="supplyList" class="supply-card-list"></div>
   </div>
 </div>
-
+<!-- 기존 소모품 상세 화면 미사용 -->
 <!-- 화면15-1: 소모품 상세 -->
-<div class="screen" id="scSupplyDetail">
+<div class="screen" id="scSupplyDetail" style="display:none">
   <div class="hdr" id="supplyDetailHdr">
     <button class="back-btn" onclick="showScreen('scSupply')">← 뒤로</button>
     <div class="hdr-title" id="supplyDetailName">소모품</div>
@@ -1359,73 +1355,24 @@ input:focus{border-color:var(--green)}
 
 <!-- 소모품 추가/수정 모달 -->
 <div class="mbg" id="supplyModal">
-  <div class="modal" style="max-height:90vh;overflow-y:auto">
-    <div class="mh"></div>
-    <div class="mt" id="supplyModalTitle">소모품 추가</div>
-    <div class="fr">
-      <label class="fl">소모품 이름 <span style="color:var(--red)">*필수</span></label>
-      <input type="text" id="supplyName" placeholder="예: 에스프레소 필터" style="width:100%">
-    </div>
-    <div class="fr">
-      <label class="fl">관리주기 <span style="color:var(--red)">*필수</span></label>
-      <div style="display:flex;gap:6px">
-        <input type="number" id="supplyCycleNum" placeholder="숫자" oninput="calcSupplyNext()" style="flex:1;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;outline:none">
-        <select id="supplyCycleUnit" onchange="calcSupplyNext()" style="border:1px solid var(--bd);border-radius:8px;padding:9px 10px;font-size:13px;outline:none;background:#fff;color:var(--t1)">
-          <option value="day">일</option>
-          <option value="month">월</option>
-          <option value="year">년</option>
-        </select>
-      </div>
-    </div>
-    <div class="fr">
-      <label class="fl">최근 교체일 <span style="color:var(--red)">*필수</span></label>
-      <input type="date" id="supplyLastDate" oninput="calcSupplyNext()" style="width:100%">
-    </div>
-    <div style="background:var(--gl);border-radius:10px;padding:12px 14px;margin-bottom:12px">
-      <div style="font-size:11px;color:var(--gd);margin-bottom:6px">차기 교체일</div>
-      <div style="font-size:20px;font-weight:800;color:var(--gd)" id="supplyNextDate">-</div>
-    </div>
-    <div style="background:#f5f5f5;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--t3)">📝 선택 항목 (메모)</div>
-    <div class="fr">
-      <label class="fl">교체 비용 <span style="color:var(--t3);font-size:10px">(선택)</span></label>
-      <input type="text" id="supplyCost" inputmode="numeric" placeholder="예: 50,000" oninput="formatCurrencyInput(this)" style="width:100%">
-    </div>
-    <div class="fr">
-      <label class="fl">교체 업체명 <span style="color:var(--t3);font-size:10px">(선택)</span></label>
-      <input type="text" id="supplyVendor" placeholder="예: OO서비스" style="width:100%">
-    </div>
-    <div class="fr">
-      <label class="fl">연락처 <span style="color:var(--t3);font-size:10px">(선택)</span></label>
-      <input type="tel" id="supplyVendorTel" placeholder="예: 010-0000-0000" style="width:100%">
-    </div>
-    <div class="fr">
-      <label class="fl">기타 메모 <span style="color:var(--t3);font-size:10px">(선택)</span></label>
-      <input type="text" id="supplyMemo" placeholder="기타 메모 입력" style="width:100%">
-    </div>
-    <div class="mbtns">
-      <button class="mcnl" onclick="closeSupplyModal()">취소</button>
-      <button class="mok" onclick="saveSupply()">저장</button>
-    </div>
-  </div>
-</div>
-
-<!-- 교체완료 등록 모달 -->
-<div class="mbg" id="supplyCompleteModal">
   <div class="modal">
     <div class="mh"></div>
-    <div class="mt">✅ 교체 완료 등록</div>
-    <div style="background:var(--gl);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--gd)">교체 이력에 누적 저장돼요</div>
-    <div class="fr"><label class="fl">교체 비용 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="text" id="completeCost" inputmode="numeric" placeholder="예: 50,000" oninput="formatCurrencyInput(this)" style="width:100%"></div>
-    <div class="fr"><label class="fl">교체 업체명 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="text" id="completeVendor" placeholder="예: OO서비스" style="width:100%"></div>
-    <div class="fr"><label class="fl">연락처 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="tel" id="completeTel" placeholder="010-0000-0000" style="width:100%"></div>
-    <div class="fr"><label class="fl">기타 메모 <span style="color:var(--t3);font-size:10px">(선택)</span></label><input type="text" id="completeMemo" placeholder="메모 입력" style="width:100%"></div>
-    <div class="mbtns">
-      <button class="mcnl" onclick="closeCompleteSupply()">취소</button>
-      <button class="mok" onclick="confirmCompleteSupply()">등록</button>
+    <div class="mt" id="supplyModalTitle">소모품 최초 등록</div>
+    <div class="fr"><label class="fl">소모품 이름</label><input type="text" id="supplyName" placeholder="예: 정수기 필터" style="width:100%"></div>
+    <div class="fr"><label class="fl">관리주기</label><div style="display:flex;gap:8px"><input type="number" id="supplyCycleNum" placeholder="숫자" oninput="calcSupplyNext()" style="flex:1;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-size:14px;outline:none"><select id="supplyCycleUnit" onchange="calcSupplyNext()" style="border:1px solid var(--bd);border-radius:8px;padding:9px 10px;font-size:13px;outline:none;background:#fff;color:var(--t1)"><option value="day">일</option><option value="month">개월</option><option value="year">년</option></select></div></div>
+    <div id="supplyInitialFields">
+      <div style="background:var(--gl);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:11px;color:var(--gd);line-height:1.55">첫 등록 시 아래 내용이 첫 번째 교체 이력으로 바로 저장돼요.</div>
+      <div class="fr"><label class="fl">최초 교체일</label><input type="date" id="supplyLastDate" oninput="calcSupplyNext()" style="width:100%"></div>
+      <div style="background:var(--gl);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--gd);font-weight:500">다음 교체 예정일</span><span style="font-size:18px;font-weight:800;color:var(--gd)" id="supplyNextDate">-</span></div>
+      <div class="fr"><label class="fl">교체 비용</label><input type="text" id="supplyCost" inputmode="numeric" placeholder="예: 50,000" oninput="formatCurrencyInput(this)" style="width:100%"></div>
+      <div class="fr"><label class="fl">업체명</label><input type="text" id="supplyVendor" placeholder="예: OO서비스" style="width:100%"></div>
+      <div class="fr"><label class="fl">연락처</label><input type="tel" id="supplyVendorTel" placeholder="예: 010-0000-0000" style="width:100%"></div>
+      <div class="fr"><label class="fl">메모</label><input type="text" id="supplyMemo" placeholder="예: 2층 정수기 필터 교체" style="width:100%"></div>
     </div>
+    <div class="mbtns"><button class="mcnl" onclick="closeSupplyModal()">취소</button><button class="mok" onclick="saveSupply()">저장</button></div>
   </div>
 </div>
-
+<div class="mbg" id="supplyHistoryModal"><div class="modal"><div class="mh"></div><div class="mt" id="supplyHistoryTitle">교체 등록</div><div id="supplyHistoryView" style="display:none"></div><div id="supplyHistoryForm"><div class="fr"><label class="fl">교체일</label><input type="date" id="shDate" style="width:100%"></div><div class="fr"><label class="fl">비용</label><input type="text" id="shCost" inputmode="numeric" placeholder="예: 50,000" oninput="formatCurrencyInput(this)" style="width:100%"></div><div class="fr"><label class="fl">업체명</label><input type="text" id="shVendor" placeholder="업체명" style="width:100%"></div><div class="fr"><label class="fl">연락처</label><input type="tel" id="shTel" placeholder="010-0000-0000" style="width:100%"></div><div class="fr"><label class="fl">메모</label><input type="text" id="shMemo" placeholder="메모" style="width:100%"></div></div><div class="mbtns"><button class="mcnl" onclick="closeSupplyHistoryModal()">닫기</button><button class="mok" id="supplyHistorySaveBtn" onclick="saveSupplyHistoryEntry()">저장</button></div></div></div>
 <!-- 보건증 추가/수정 모달 -->
 <div class="mbg" id="healthModal">
   <div class="modal">
@@ -4468,305 +4415,39 @@ async function deleteHealth(id){
 }
 
 // ===== 소모품 관리 =====
-let supplyList=[],editingSupplyId=null;
-function loadSupply(){
-  isSupplyMaster=true; // 서비스 진입 시 이미 인증됨
-  db.collection('supplies').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{
-    supplyList=[];snap.forEach(d=>supplyList.push({id:d.id,...d.data()}));
-    supplyList.sort((a,b)=>a.nextDate.localeCompare(b.nextDate));
-    renderSupply();checkSupplyAlerts();
-  });
-}
-function checkSupplyAlerts(){
-  const today=new Date();today.setHours(0,0,0,0);
-  const alerts=supplyList.filter(s=>{
-    const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
-    return diff<=1&&diff>=0;
-  });
-  const banner=document.getElementById('supplyAlertBanner');
-  if(!alerts.length){banner.innerHTML='';return;}
-  banner.innerHTML=`<div style="background:var(--al);border-radius:10px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--amb)">
-    <div style="font-size:12px;font-weight:700;color:var(--ad);margin-bottom:6px">⚠️ 교체 임박!</div>
-    ${alerts.map(s=>{
-      const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
-      return `<div style="font-size:12px;color:var(--t1);padding:3px 0">${s.name} — <b style="color:var(--ad)">${diff===0?'오늘 교체일!':'내일 교체일!'}</b></div>`;
-    }).join('')}
-  </div>`;
-}
-function cycleLabel(s){
-  if(!s.cycleNum||!s.cycleUnit) return s.cycle?`${s.cycle}일`:'';
-  const u={day:'일',month:'월',year:'년'};
-  return `${s.cycleNum}${u[s.cycleUnit]||'일'}`;
-}
+let supplyList=[],editingSupplyId=null,currentSupplyId=null,supplyExpandedId=null;
+let editingSupplyHistory={supplyId:null,index:null};
 let isSupplyMaster=false;
-function checkSupplyMaster(){
-  const pw=prompt('관리자 번호를 입력하세요');
-  if(pw===null)return;
-  if(isMaster(pw)){
-    isSupplyMaster=true;
-    document.getElementById('supplyAddBtn').style.display='block';
-    document.getElementById('supplyMasterArea').style.display='none';
-    showToast('✅ 관리자 인증됐어요!');
-  } else alert('번호가 틀렸어요 ❌');
-}
-function renderSupply(){
-  const today=new Date();today.setHours(0,0,0,0);
-  const thisMonth=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-  const w=document.getElementById('supplyList');
-  if(!supplyList.length){
-    w.innerHTML=`<div style="text-align:center;padding:24px;font-size:13px;color:var(--t3)">등록된 소모품이 없어요</div>`;
-    return;
-  }
-  w.innerHTML=supplyList.map((s,i)=>{
-    const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
-    const isAlert=diff<=1&&diff>=0;const isOver=diff<0;
-    const dColor=isOver?'var(--red)':isAlert?'var(--amb)':'var(--gd)';
-    const dLabel=isOver?`D+${Math.abs(diff)}`:`D-${diff}`;
-    const bg=i%2===0?'#fff':'#fafafa';
-    return `<div onclick="openSupplyDetail('${s.id}')" style="display:grid;grid-template-columns:1fr 80px 80px 44px;padding:10px 12px;gap:4px;border-bottom:1px solid #f0f0f0;background:${bg};cursor:pointer;align-items:center">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--t1)">${s.name}</div>
-        <div style="font-size:10px;color:var(--t3);margin-top:1px">주기 ${cycleLabel(s)}</div>
-      </div>
-      <div style="font-size:11px;color:var(--t2);text-align:center">${s.lastDate||'-'}</div>
-      <div style="font-size:11px;font-weight:600;color:${dColor};text-align:center">${s.nextDate||'-'}</div>
-      <div style="text-align:center">
-        <div style="font-size:10px;font-weight:700;color:${dColor};background:${isOver?'#FCEBEB':isAlert?'var(--al)':'var(--gl)'};border-radius:6px;padding:2px 4px">${dLabel}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // 금월 소모품 비용 합계
-  const monthCosts=[];
-  let monthTotal=0;
-  supplyList.forEach(s=>{
-    (s.history||[]).forEach(h=>{
-      if(h.date&&h.date.startsWith(thisMonth)&&h.cost&&parseInt(h.cost)>0){
-        monthCosts.push({name:s.name,cost:parseInt(h.cost)});
-        monthTotal+=parseInt(h.cost);
-      }
-    });
-  });
-  const costHtml=monthCosts.length?`
-    <div style="background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-top:12px">
-      <div style="background:#534AB7;padding:8px 14px"><span style="font-size:12px;font-weight:700;color:#fff">📊 금월 소모품 비용 (${today.getMonth()+1}월)</span></div>
-      ${monthCosts.map(c=>`<div style="display:flex;justify-content:space-between;padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:12px">
-        <span style="color:var(--t2)">${c.name}</span>
-        <span style="color:var(--t1);font-weight:500">₩${c.cost.toLocaleString()}</span>
-      </div>`).join('')}
-      <div style="display:flex;justify-content:space-between;padding:10px 14px;background:#EEEDFE">
-        <span style="font-size:13px;font-weight:700;color:#3C3489">합계</span>
-        <span style="font-size:15px;font-weight:800;color:#3C3489">₩${monthTotal.toLocaleString()}</span>
-      </div>
-    </div>`:'';
-  // 비용 카드를 supplyList div 다음에 추가
-  const container=document.getElementById('supplyList').parentNode;
-  let costCard=document.getElementById('supplyCostCard');
-  if(!costCard){costCard=document.createElement('div');costCard.id='supplyCostCard';container.appendChild(costCard);}
-  costCard.innerHTML=costHtml;
-}
-let currentSupplyId=null;
-function openSupplyDetail(id){
-  currentSupplyId=id;
-  const s=supplyList.find(x=>x.id===id);if(!s)return;
-  const today=new Date();today.setHours(0,0,0,0);
-  const next=new Date(s.nextDate);const diff=Math.ceil((next-today)/(1000*60*60*24));
-  const isOver=diff<0;const isAlert=diff<=3&&diff>=0;
-  const dColor=isOver?'var(--red)':isAlert?'var(--amb)':'var(--gd)';
-  const dLabel=isOver?`D+${Math.abs(diff)}`:`D-${diff}`;
-  const cm=colorMap[currentCafe.color||'green']||colorMap.green;
-  document.getElementById('supplyDetailHdr').style.background=cm.main;
-  document.getElementById('supplyDetailName').textContent=s.name;
-  document.getElementById('supplyDetailEditBtn').style.display=isSupplyMaster?'block':'none';
-  // 3분할 현황 업데이트
-  document.getElementById('detailLastDate').textContent=s.lastDate||'-';
-  const nextEl=document.getElementById('detailNextDate');
-  nextEl.textContent=s.nextDate||'-';
-  nextEl.style.color=dColor;
-  const ddayEl=document.getElementById('detailDday');
-  ddayEl.textContent=dLabel;
-  ddayEl.style.color=dColor;
-  // 교체 이력
-  renderSupplyHistory(s);
-  // 오늘 날짜 기본값
-  document.getElementById('newHistoryDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('newHistoryCost').value='';
-  document.getElementById('newHistoryVendor').value='';
-  document.getElementById('newHistoryTel').value='';
-  document.getElementById('newHistoryMemo').value='';
-  showScreen('scSupplyDetail');
-}
-function openSupplyEditFromDetail(){
-  if(currentSupplyId)openSupplyEdit(currentSupplyId);
-}
-function renderSupplyHistory(s){
-  const list=document.getElementById('supplyHistoryList');
-  const history=(s.history||[]).slice().reverse();
-  if(!history.length){
-    list.innerHTML=`<div style="text-align:center;padding:16px;font-size:12px;color:var(--t3)">교체 이력이 없어요</div>`;
-    return;
-  }
-  list.innerHTML=history.map((h,i)=>{
-    const realIdx=(s.history.length-1)-i;
-    return `<div style="display:grid;grid-template-columns:80px 70px 1fr 56px;padding:8px 12px;border-bottom:1px solid #f5f5f5;background:${i%2===0?'#fff':'#fafafa'};align-items:center;gap:4px">
-      <div style="font-size:12px;color:var(--t1)">${h.date}</div>
-      <div style="font-size:12px;color:var(--t2)">${h.cost?'₩'+parseInt(h.cost).toLocaleString():'-'}</div>
-      <div style="font-size:11px;color:var(--t3)">${[h.vendor,h.tel,h.memo].filter(Boolean).join(' · ')||'-'}</div>
-      <div style="display:flex;gap:2px;justify-content:flex-end">
-        <button onclick="editSupplyHistory(${realIdx})" style="background:none;border:1px solid var(--bd);border-radius:5px;padding:2px 5px;font-size:9px;color:var(--t2);cursor:pointer">수정</button>
-        <button onclick="deleteSupplyHistory(${realIdx})" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:2px 5px;font-size:9px;color:var(--red);cursor:pointer">삭제</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-function editSupplyHistory(idx){
-  const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
-  const h=s.history[idx];if(!h)return;
-  document.getElementById('newHistoryDate').value=h.date||'';
-  document.getElementById('newHistoryCost').value=h.cost||'';
-  document.getElementById('newHistoryVendor').value=h.vendor||'';
-  document.getElementById('newHistoryTel').value=h.tel||'';
-  document.getElementById('newHistoryMemo').value=h.memo||'';
-  // 수정 모드 - 기존 이력 삭제 후 새로 추가
-  if(confirm('이 이력을 수정할까요? 수정 후 저장 버튼을 눌러주세요')){
-    deleteSupplyHistory(idx,true);
-  }
-}
-async function deleteSupplyHistory(idx,silent=false){
-  const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
-  if(!silent&&!confirm('이 이력을 삭제할까요?'))return;
-  const history=[...s.history];
-  history.splice(idx,1);
-  // 최근 교체일 업데이트
-  const sorted=[...history].sort((a,b)=>b.date.localeCompare(a.date));
-  const lastDate=sorted.length?sorted[0].date:s.lastDate;
-  const d=new Date(lastDate);d.setDate(d.getDate()+(s.cycle||0));
-  const nextDate=sorted.length?d.toISOString().split('T')[0]:s.nextDate;
-  await db.collection('supplies').doc(currentSupplyId).update({history,lastDate,nextDate});
-  s.history=history;s.lastDate=lastDate;s.nextDate=nextDate;
-  renderSupplyHistory(s);
-  if(!silent)showToast('삭제됐어요');
-}
-async function addSupplyHistory(){
-  const date=document.getElementById('newHistoryDate').value;
-  if(!date){alert('교체일을 입력해주세요');return;}
-  const s=supplyList.find(x=>x.id===currentSupplyId);if(!s)return;
-  const entry={
-    date,
-    cost:getCurrencyValue('newHistoryCost').toString(),
-    vendor:document.getElementById('newHistoryVendor').value.trim(),
-    tel:document.getElementById('newHistoryTel').value.trim(),
-    memo:document.getElementById('newHistoryMemo').value.trim()
-  };
-  const history=[...(s.history||[]),entry];
-  // 차기 교체일 업데이트
-  const days=s.cycle||0;
-  const d=new Date(date);d.setDate(d.getDate()+days);
-  const nextDate=d.toISOString().split('T')[0];
-  await db.collection('supplies').doc(currentSupplyId).update({history,lastDate:date,nextDate});
-  // 로컬 업데이트
-  s.history=history;s.lastDate=date;s.nextDate=nextDate;
-  renderSupplyHistory(s);
-  // 정보카드 갱신
-  openSupplyDetail(currentSupplyId);
-  document.getElementById('newHistoryDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('newHistoryCost').value='';
-  document.getElementById('newHistoryVendor').value='';
-  document.getElementById('newHistoryTel').value='';
-  document.getElementById('newHistoryMemo').value='';
-  showToast('✅ 교체 이력이 추가됐어요!');
-}
-
-function calcCycleDays(){
-  const num=parseInt(document.getElementById('supplyCycleNum').value)||0;
-  const unit=document.getElementById('supplyCycleUnit').value;
-  if(!num)return 0;
-  if(unit==='day')return num;
-  if(unit==='month')return num*30;
-  if(unit==='year')return num*365;
-  return num;
-}
-function calcSupplyNext(){
-  const days=calcCycleDays();
-  const last=document.getElementById('supplyLastDate').value;
-  if(!days||!last){document.getElementById('supplyNextDate').textContent='-';return;}
-  const d=new Date(last);d.setDate(d.getDate()+days);
-  document.getElementById('supplyNextDate').textContent=d.toISOString().split('T')[0];
-}
-function openSupplyAdd(){
-  editingSupplyId=null;
-  document.getElementById('supplyModalTitle').textContent='소모품 추가';
-  ['supplyName','supplyLastDate','supplyCost','supplyVendor','supplyVendorTel','supplyMemo'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('supplyCycleNum').value='';
-  document.getElementById('supplyCycleUnit').value='day';
-  document.getElementById('supplyNextDate').textContent='-';
-  document.getElementById('supplyModal').classList.add('open');
-}
-function openSupplyEdit(id){
-  editingSupplyId=id;const s=supplyList.find(x=>x.id===id);
-  document.getElementById('supplyModalTitle').textContent='소모품 수정';
-  document.getElementById('supplyName').value=s.name;
-  document.getElementById('supplyCycleNum').value=s.cycleNum||s.cycle||'';
-  document.getElementById('supplyCycleUnit').value=s.cycleUnit||'day';
-  document.getElementById('supplyLastDate').value=s.lastDate;
-  document.getElementById('supplyNextDate').textContent=s.nextDate;
-  const lastH=s.history&&s.history.length?s.history[s.history.length-1]:null;
-  document.getElementById('supplyCost').value=lastH?.cost||'';
-  document.getElementById('supplyVendor').value=lastH?.vendor||s.vendor||'';
-  document.getElementById('supplyVendorTel').value=lastH?.tel||s.tel||'';
-  document.getElementById('supplyMemo').value=lastH?.memo||s.memo||'';
-  document.getElementById('supplyModal').classList.add('open');
-}
-function closeSupplyModal(){document.getElementById('supplyModal').classList.remove('open');}
-async function saveSupply(){
-  const name=document.getElementById('supplyName').value.trim();
-  const cycleNum=parseInt(document.getElementById('supplyCycleNum').value)||0;
-  const cycleUnit=document.getElementById('supplyCycleUnit').value;
-  const lastDate=document.getElementById('supplyLastDate').value;
-  if(!name){alert('소모품 이름을 입력해주세요');return;}
-  if(!cycleNum){alert('관리주기를 입력해주세요');return;}
-  if(!lastDate){alert('최근 교체일을 입력해주세요');return;}
-  const days=calcCycleDays();
-  const d=new Date(lastDate);d.setDate(d.getDate()+days);
-  const nextDate=d.toISOString().split('T')[0];
-  const data={cafeId:currentCafe.id,name,cycleNum,cycleUnit,cycle:days,lastDate,nextDate,
-    vendor:document.getElementById('supplyVendor').value.trim(),
-    tel:document.getElementById('supplyVendorTel').value.trim(),
-    memo:document.getElementById('supplyMemo').value.trim()};
-  if(editingSupplyId){await db.collection('supplies').doc(editingSupplyId).update(data);}
-  else{data.history=[];await db.collection('supplies').add(data);}
-  closeSupplyModal();showToast('✅ 저장됐어요!');
-}
-// 교체완료 모달
-let completingSupplyId=null;
-function openCompleteSupply(id){
-  completingSupplyId=id;
-  const s=supplyList.find(x=>x.id===id);
-  document.getElementById('completeCost').value=s.vendor?'':document.getElementById('supplyCost')?.value||'';
-  document.getElementById('completeVendor').value=s.vendor||'';
-  document.getElementById('completeTel').value=s.tel||'';
-  document.getElementById('completeMemo').value=s.memo||'';
-  document.getElementById('supplyCompleteModal').classList.add('open');
-}
-function closeCompleteSupply(){document.getElementById('supplyCompleteModal').classList.remove('open');completingSupplyId=null;}
-async function confirmCompleteSupply(){
-  const s=supplyList.find(x=>x.id===completingSupplyId);if(!s)return;
-  const today=new Date().toISOString().split('T')[0];
-  const d=new Date(today);d.setDate(d.getDate()+s.cycle);
-  const nextDate=d.toISOString().split('T')[0];
-  const history=s.history||[];
-  history.push({
-    date:today,
-    cost:document.getElementById('completeCost').value.trim(),
-    vendor:document.getElementById('completeVendor').value.trim(),
-    tel:document.getElementById('completeTel').value.trim(),
-    memo:document.getElementById('completeMemo').value.trim()
-  });
-  await db.collection('supplies').doc(completingSupplyId).update({lastDate:today,nextDate,history});
-  closeCompleteSupply();showToast('✅ 교체 완료 등록됐어요!');
-}
-async function deleteSupply(id){if(!confirm('삭제할까요?'))return;await db.collection('supplies').doc(id).delete();showToast('삭제됐어요');}
-
+function supplyEsc(v){return String(v??'').replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));}
+function supplyMoneyNum(v){return parseInt(String(v??'').replace(/[^0-9]/g,''),10)||0;}
+function supplyMoney(v){const n=supplyMoneyNum(v);return n?n.toLocaleString()+'원':'-';}
+function supplyDateLabel(v){return v?String(v).replace(/-/g,'.'):'-';}
+function supplyToday(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function supplyLocalKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function supplyParseDate(v){if(!v)return null;const [y,m,d]=String(v).split('-').map(Number);if(!y||!m||!d)return null;return new Date(y,m-1,d);}
+function supplyAddCycle(dateStr,s){const d=supplyParseDate(dateStr);if(!d)return '';const n=Number(s.cycleNum||s.cycle||0)||0;const unit=s.cycleUnit||'day';if(unit==='month')d.setMonth(d.getMonth()+n);else if(unit==='year')d.setFullYear(d.getFullYear()+n);else d.setDate(d.getDate()+n);return supplyLocalKey(d);}
+function supplyCycleText(s){const n=Number(s.cycleNum||0)||0;if(n){const unit=s.cycleUnit||'day';return `${n}${unit==='month'?'개월':unit==='year'?'년':'일'}마다`;}return s.cycle?`${s.cycle}일마다`:'주기 없음';}
+function supplySortedHistory(s){return [...(s.history||[])].filter(h=>h&&h.date).sort((a,b)=>String(a.date).localeCompare(String(b.date)));}
+function supplyStatus(s){const hist=supplySortedHistory(s);const latest=hist[hist.length-1]||null;const lastDate=latest?.date||s.lastDate||'';const nextDate=lastDate?supplyAddCycle(lastDate,s):(s.nextDate||'');const next=supplyParseDate(nextDate);const diff=next?Math.ceil((next-supplyToday())/(1000*60*60*24)):null;const monthKey=supplyLocalKey(supplyToday()).slice(0,7);const monthTotal=hist.reduce((sum,h)=>String(h.date||'').startsWith(monthKey)?sum+supplyMoneyNum(h.cost):sum,0);return {hist,latest,lastDate,nextDate,diff,monthTotal};}
+function supplyDdayBadge(diff){if(diff===null||diff===undefined)return `<span class="supply-dday neutral">-</span>`;const label=diff<0?`D+${Math.abs(diff)}`:diff===0?'D-day':`D-${diff}`;const cls=diff<0?'over':diff<=3?'soon':'ok';return `<span class="supply-dday ${cls}">${label}</span>`;}
+function loadSupply(){isSupplyMaster=true;db.collection('supplies').where('cafeId','==',currentCafe.id).onSnapshot(snap=>{supplyList=[];snap.forEach(d=>supplyList.push({id:d.id,...d.data()}));renderSupply();checkSupplyAlerts();});}
+function checkSupplyAlerts(){const alerts=supplyList.filter(s=>{const st=supplyStatus(s);return st.diff!==null&&st.diff<=1;});const banner=document.getElementById('supplyAlertBanner');if(!banner)return;if(!alerts.length){banner.innerHTML='';return;}banner.innerHTML=`<div style="background:var(--al);border-radius:10px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--amb)"><div style="font-size:12px;font-weight:700;color:var(--ad);margin-bottom:6px">교체 확인 필요</div>${alerts.map(s=>{const st=supplyStatus(s);return `<div style="font-size:12px;color:var(--t1);padding:3px 0">${supplyEsc(s.name)} - <b style="color:var(--ad)">${st.diff<0?'교체일 지남':st.diff===0?'오늘 교체일':'내일 교체일'}</b></div>`;}).join('')}</div>`;}
+function renderSupply(){const w=document.getElementById('supplyList');if(!w)return;const summary=document.getElementById('supplySummary');const stats=supplyList.reduce((acc,s)=>{const st=supplyStatus(s);acc.total++;acc.month+=st.monthTotal;if(st.diff!==null&&st.diff<=3)acc.soon++;return acc;},{total:0,soon:0,month:0});if(summary)summary.innerHTML=`<div class="supply-stat"><b>${stats.total}</b><span>관리 항목</span></div><div class="supply-stat"><b>${stats.soon}</b><span>임박/지남</span></div><div class="supply-stat"><b>${stats.month.toLocaleString()}</b><span>이번달 비용</span></div>`;if(!supplyList.length){w.innerHTML=`<div class="supply-empty">등록된 소모품이 없어요<br><span style="font-size:11px">+ 추가로 첫 교체 이력까지 함께 등록하세요</span></div>`;return;}const list=[...supplyList].sort((a,b)=>{const da=supplyStatus(a).nextDate||'9999-99-99';const dbb=supplyStatus(b).nextDate||'9999-99-99';return da.localeCompare(dbb);});w.innerHTML=list.map(s=>{const st=supplyStatus(s);const latest=st.latest;const open=supplyExpandedId===s.id;return `<div class="supply-card"><div class="supply-card-main" onclick="toggleSupplyDetail('${s.id}')"><div class="supply-card-top"><div style="flex:1;min-width:0"><div class="supply-card-name">${supplyEsc(s.name)}</div><div class="supply-cycle">${supplyCycleText(s)} · 이력 ${st.hist.length}건</div></div>${supplyDdayBadge(st.diff)}</div><div class="supply-meta"><div><span>최근 교체</span><b>${supplyDateLabel(st.lastDate)}</b></div><div><span>다음 교체</span><b>${supplyDateLabel(st.nextDate)}</b></div><div><span>최근 비용</span><b>${supplyMoney(latest?.cost)}</b></div></div></div>${open?renderSupplyDetail(s,st):''}</div>`;}).join('');}
+function renderSupplyDetail(s,st){const latest=st.latest;const latestText=latest?`${supplyMoney(latest.cost)}${latest.vendor?' · '+supplyEsc(latest.vendor):''}${latest.tel?' · '+supplyEsc(latest.tel):''}${latest.memo?'<br>'+supplyEsc(latest.memo):''}`:'아직 교체 이력이 없어요.';const timeline=st.hist.length?st.hist.slice().reverse().map((h,revIdx)=>{const idx=st.hist.length-1-revIdx;return `<div class="supply-history" onclick="openSupplyHistoryView('${s.id}',${idx})"><div class="supply-history-head"><div class="supply-history-date">${supplyDateLabel(h.date)}</div><div class="supply-history-cost">${supplyMoney(h.cost)}</div></div><div class="supply-history-body">${[h.vendor,h.tel,h.memo].filter(Boolean).map(supplyEsc).join(' · ')||'상세 내용 없음'}</div><div class="supply-history-btns"><button onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}',${idx})">수정</button><button onclick="event.stopPropagation();deleteSupplyHistoryEntry('${s.id}',${idx})">삭제</button></div></div>`;}).join(''):`<div class="supply-empty" style="padding:18px">교체 이력이 없어요</div>`;return `<div class="supply-detail"><div class="supply-actions"><button class="supply-primary" onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}')">+ 교체 등록</button><button class="supply-soft" onclick="event.stopPropagation();openSupplyEdit('${s.id}')">정보 수정</button><button class="supply-danger" onclick="event.stopPropagation();deleteSupply('${s.id}')">삭제</button></div><div class="supply-latest"><div class="supply-latest-title">최근 교체 내용</div><div class="supply-latest-body">${latestText}</div></div><div class="supply-timeline-title">교체 이력</div>${timeline}</div>`;}
+function toggleSupplyDetail(id){supplyExpandedId=supplyExpandedId===id?null:id;currentSupplyId=id;renderSupply();}
+function calcCycleDays(){const num=parseInt(document.getElementById('supplyCycleNum').value)||0;const unit=document.getElementById('supplyCycleUnit').value;if(!num)return 0;if(unit==='day')return num;if(unit==='month')return num*30;if(unit==='year')return num*365;return num;}
+function calcSupplyNext(){const last=document.getElementById('supplyLastDate')?.value;const next=document.getElementById('supplyNextDate');if(!next)return;const s={cycleNum:parseInt(document.getElementById('supplyCycleNum').value)||0,cycleUnit:document.getElementById('supplyCycleUnit').value};next.textContent=last&&s.cycleNum?supplyAddCycle(last,s):'-';}
+function openSupplyAdd(){editingSupplyId=null;document.getElementById('supplyModalTitle').textContent='소모품 최초 등록';document.getElementById('supplyInitialFields').style.display='block';['supplyName','supplyLastDate','supplyCost','supplyVendor','supplyVendorTel','supplyMemo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('supplyCycleNum').value='';document.getElementById('supplyCycleUnit').value='day';document.getElementById('supplyNextDate').textContent='-';document.getElementById('supplyModal').classList.add('open');}
+function openSupplyEdit(id){editingSupplyId=id;const s=supplyList.find(x=>x.id===id);if(!s)return;document.getElementById('supplyModalTitle').textContent='소모품 정보 수정';document.getElementById('supplyInitialFields').style.display='none';document.getElementById('supplyName').value=s.name||'';document.getElementById('supplyCycleNum').value=s.cycleNum||'';document.getElementById('supplyCycleUnit').value=s.cycleUnit||'day';document.getElementById('supplyModal').classList.add('open');}
+function closeSupplyModal(){document.getElementById('supplyModal').classList.remove('open');editingSupplyId=null;}
+async function saveSupply(){const name=document.getElementById('supplyName').value.trim();const cycleNum=parseInt(document.getElementById('supplyCycleNum').value)||0;const cycleUnit=document.getElementById('supplyCycleUnit').value;if(!name){alert('소모품 이름을 입력해주세요');return;}if(!cycleNum){alert('관리주기를 입력해주세요');return;}const base={cafeId:currentCafe.id,name,cycleNum,cycleUnit,cycle:calcCycleDays()};if(editingSupplyId){const s=supplyList.find(x=>x.id===editingSupplyId);const st=supplyStatus({...s,...base});base.lastDate=st.lastDate;base.nextDate=st.nextDate;await db.collection('supplies').doc(editingSupplyId).update(base);showToast('✅ 소모품 정보가 수정됐어요');}else{const lastDate=document.getElementById('supplyLastDate').value;if(!lastDate){alert('최초 교체일을 입력해주세요');return;}const entry={date:lastDate,cost:String(getCurrencyValue('supplyCost')),vendor:document.getElementById('supplyVendor').value.trim(),tel:document.getElementById('supplyVendorTel').value.trim(),memo:document.getElementById('supplyMemo').value.trim()};base.vendor=entry.vendor;base.tel=entry.tel;base.memo=entry.memo;base.history=[entry];base.lastDate=lastDate;base.nextDate=supplyAddCycle(lastDate,base);base.createdAt=Date.now();await db.collection('supplies').add(base);showToast('✅ 소모품이 등록됐어요');}closeSupplyModal();}
+function openSupplyHistoryModal(id,idx=null){editingSupplyHistory={supplyId:id,index:idx};const s=supplyList.find(x=>x.id===id);const hist=supplySortedHistory(s||{});const h=idx===null?{}:hist[idx]||{};document.getElementById('supplyHistoryTitle').textContent=idx===null?'교체 등록':'교체 이력 수정';document.getElementById('supplyHistoryView').style.display='none';document.getElementById('supplyHistoryForm').style.display='block';document.getElementById('supplyHistorySaveBtn').style.display='block';document.getElementById('shDate').value=h.date||supplyLocalKey(supplyToday());setCurrencyValue('shCost',supplyMoneyNum(h.cost));document.getElementById('shVendor').value=h.vendor||s?.vendor||'';document.getElementById('shTel').value=h.tel||s?.tel||'';document.getElementById('shMemo').value=h.memo||'';document.getElementById('supplyHistoryModal').classList.add('open');}
+function closeSupplyHistoryModal(){document.getElementById('supplyHistoryModal').classList.remove('open');editingSupplyHistory={supplyId:null,index:null};}
+async function updateSupplyDocFromHistory(id,history){const s=supplyList.find(x=>x.id===id);if(!s)return;const sorted=[...history].filter(h=>h&&h.date).sort((a,b)=>String(a.date).localeCompare(String(b.date)));const latest=sorted[sorted.length-1]||null;const lastDate=latest?.date||'';const nextDate=lastDate?supplyAddCycle(lastDate,s):'';await db.collection('supplies').doc(id).update({history:sorted,lastDate,nextDate});}
+async function saveSupplyHistoryEntry(){const {supplyId,index}=editingSupplyHistory;if(!supplyId)return;const s=supplyList.find(x=>x.id===supplyId);if(!s)return;const date=document.getElementById('shDate').value;if(!date){alert('교체일을 입력해주세요');return;}const entry={date,cost:String(getCurrencyValue('shCost')),vendor:document.getElementById('shVendor').value.trim(),tel:document.getElementById('shTel').value.trim(),memo:document.getElementById('shMemo').value.trim()};const hist=supplySortedHistory(s);if(index===null)hist.push(entry);else hist[index]=entry;await updateSupplyDocFromHistory(supplyId,hist);closeSupplyHistoryModal();showToast(index===null?'✅ 교체 이력이 추가됐어요':'✅ 교체 이력이 수정됐어요');}
+async function deleteSupplyHistoryEntry(id,idx){const s=supplyList.find(x=>x.id===id);if(!s)return;if(!confirm('이 교체 이력을 삭제할까요?'))return;const hist=supplySortedHistory(s);hist.splice(idx,1);await updateSupplyDocFromHistory(id,hist);showToast('삭제됐어요');}
+function openSupplyHistoryView(id,idx){const s=supplyList.find(x=>x.id===id);const h=supplySortedHistory(s||{})[idx];if(!h)return;document.getElementById('supplyHistoryTitle').textContent='교체 상세';document.getElementById('supplyHistoryForm').style.display='none';document.getElementById('supplyHistorySaveBtn').style.display='none';document.getElementById('supplyHistoryView').style.display='block';document.getElementById('supplyHistoryView').innerHTML=`<div class="supply-view-row"><span>교체일</span><b>${supplyDateLabel(h.date)}</b></div><div class="supply-view-row"><span>비용</span><b>${supplyMoney(h.cost)}</b></div><div class="supply-view-row"><span>업체</span><b>${supplyEsc(h.vendor||'-')}</b></div><div class="supply-view-row"><span>연락처</span><b>${supplyEsc(h.tel||'-')}</b></div><div class="supply-view-row"><span>메모</span><b>${supplyEsc(h.memo||'-')}</b></div>`;document.getElementById('supplyHistoryModal').classList.add('open');}
+async function deleteSupply(id){const s=supplyList.find(x=>x.id===id);if(!confirm(`'${s?.name||'소모품'}' 항목과 모든 교체 이력을 삭제할까요?`))return;await db.collection('supplies').doc(id).delete();if(supplyExpandedId===id)supplyExpandedId=null;showToast('삭제됐어요');}
 // ===== 수익 관리 =====
 let profitY=new Date().getFullYear(),profitM=new Date().getMonth();
 let profitData={},profitFixed={};
@@ -5152,9 +4833,10 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20260618f"></script>
+<script src="zuo-fixes.js?v=20260618g"></script>
 </body>
 </html>
+
 
 
 
