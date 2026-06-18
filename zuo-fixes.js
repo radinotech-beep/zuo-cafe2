@@ -1,4 +1,4 @@
-﻿﻿// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
+// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
 (function(){
   var originalOpenWkInput=null;
 
@@ -315,3 +315,137 @@
   };
 })();
 
+
+// Profit fixed-item policy v3: pinned values lock inputs and override saved 0 values from the effective month forward.
+(function(){
+  function ready(){return typeof window.PROFIT_EXPENSE_ITEMS!=='undefined'||typeof PROFIT_EXPENSE_ITEMS!=='undefined';}
+  function expenseItems(){return typeof PROFIT_EXPENSE_ITEMS==='undefined'?[]:PROFIT_EXPENSE_ITEMS;}
+  function keys(){return ['revenue',...expenseItems().map(i=>i.key)];}
+  function padPeriod(p){
+    const m=String(p||'').match(/^(\d{4})-(\d{1,2})$/);
+    if(!m)return '';
+    return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+  }
+  function period(){return `${profitY}-${String(profitM+1).padStart(2,'0')}`;}
+  function moneyNum(v){return Number(v)||0;}
+  function fixedHistory(key){
+    const histKey=key+'_fixedHistory';
+    let hist=Array.isArray(profitFixed?.[histKey])?[...profitFixed[histKey]]:[];
+    if(!hist.length&&profitFixed?.[key+'_fixed']){
+      const start=padPeriod(profitFixed[key+'_start'])||padPeriod(profitFixed[key+'_fixedStart'])||period();
+      hist.push({start,active:true,val:moneyNum(profitFixed[key+'_val']),updatedAt:profitFixed[key+'_updatedAt']||0});
+    }
+    hist=hist.map(ev=>({
+      start:padPeriod(ev.start),
+      active:ev.active!==false,
+      val:moneyNum(ev.val),
+      updatedAt:moneyNum(ev.updatedAt)
+    })).filter(ev=>ev.start).sort((a,b)=>a.start.localeCompare(b.start)||a.updatedAt-b.updatedAt);
+    profitFixed[histKey]=hist;
+    return hist;
+  }
+  function fixedState(key,p=period()){
+    p=padPeriod(p)||period();
+    let state={active:false,val:0,start:null};
+    fixedHistory(key).forEach(ev=>{if(ev.start<=p)state={active:ev.active!==false,val:moneyNum(ev.val),start:ev.start};});
+    return state;
+  }
+  function setFixedEvent(key,active,val,p=period()){
+    p=padPeriod(p)||period();
+    const hist=fixedHistory(key).filter(ev=>ev.start!==p);
+    hist.push({start:p,active:!!active,val:moneyNum(val),updatedAt:Date.now()});
+    hist.sort((a,b)=>a.start.localeCompare(b.start)||a.updatedAt-b.updatedAt);
+    profitFixed[key+'_fixedHistory']=hist;
+    const latest=fixedState(key,'9999-12');
+    profitFixed[key+'_fixed']=latest.active;
+    profitFixed[key+'_val']=latest.val;
+    profitFixed[key+'_start']=latest.start;
+  }
+  function displayValue(key){
+    const st=fixedState(key);
+    if(st.active)return st.val;
+    return profitData&&profitData[key]!==undefined?moneyNum(profitData[key]):0;
+  }
+  function lockInput(key,active){
+    const el=document.getElementById('pi_'+key);if(!el)return;
+    el.disabled=!!active;
+    el.readOnly=!!active;
+    el.dataset.fixedLocked=active?'1':'0';
+    el.title=active?'고정비용 해제 후 수정할 수 있어요':'';
+    el.style.background=active?'#f3f4f6':'#fff';
+    el.style.color=active?'#777':'var(--t1)';
+    el.style.cursor=active?'not-allowed':'text';
+  }
+  function pinButton(key,st){
+    return `<button class="profit-pin ${st.active?'on':''}" data-fixed-key="${key}" onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${st.active?'var(--amb)':'var(--bd)'};background:${st.active?'var(--amb)':'#fff'};color:${st.active?'#fff':'var(--t3)'};cursor:pointer;white-space:nowrap">📌${st.active?' 고정중':''}</button>`;
+  }
+  function applyRevenueLock(){
+    const st=fixedState('revenue');
+    const el=document.getElementById('pi_revenue');
+    if(el){setCurrencyValue('pi_revenue',displayValue('revenue'));lockInput('revenue',st.active);}
+  }
+  function install(){
+    if(!ready()||typeof db==='undefined')return false;
+    window.renderProfitRows=function(){
+      const w=document.getElementById('profitExpenseRows');if(!w)return;
+      w.innerHTML=expenseItems().map(item=>{
+        const key=item.key;
+        const st=fixedState(key);
+        const salaryLocked=key==='salary'&&st.active;
+        return `<div style="display:flex;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid #f5f5f5">
+          <span style="font-size:12px;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</span>
+          ${key==='salary'?`<button ${salaryLocked?'disabled':''} onclick="${salaryLocked?'showToast(\'고정비용 해제 후 불러올 수 있어요\')':'loadSalaryFromLabor()'}" style="flex-shrink:0;font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--green);background:${salaryLocked?'#f3f4f6':'#fff'};color:${salaryLocked?'#999':'var(--green)'};cursor:${salaryLocked?'not-allowed':'pointer'};white-space:nowrap">📂 불러오기</button>`:''}
+          <span style="font-size:10px;color:var(--t3);flex-shrink:0;min-width:32px;text-align:right" id="pct_${key}">0%</span>
+          ${pinButton(key,st)}
+          <input type="text" inputmode="numeric" id="pi_${key}" placeholder="0" oninput="if(this.dataset.fixedLocked==='1'){return;}formatCurrencyInput(this);calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
+        </div>`;
+      }).join('');
+      expenseItems().forEach(item=>{const st=fixedState(item.key);setCurrencyValue('pi_'+item.key,displayValue(item.key));lockInput(item.key,st.active);});
+      applyRevenueLock();
+      calcProfitTotals();
+    };
+    window.toggleFixed=function(key,btn){
+      const p=period();
+      const st=fixedState(key,p);
+      if(st.active){
+        setFixedEvent(key,false,st.val,p);
+        lockInput(key,false);
+        showToast('고정비용을 해제했어요. 이제 수정할 수 있어요.');
+      }else{
+        const val=getCurrencyValue('pi_'+key);
+        setFixedEvent(key,true,val,p);
+        setCurrencyValue('pi_'+key,val);
+        lockInput(key,true);
+        showToast(`📌 ${p}부터 고정비용으로 적용돼요`);
+      }
+      if(btn){const next=fixedState(key,p);btn.classList.toggle('on',next.active);btn.innerHTML=next.active?'📌 고정중':'📌';btn.style.border=`1px solid ${next.active?'var(--amb)':'var(--bd)'}`;btn.style.background=next.active?'var(--amb)':'#fff';btn.style.color=next.active?'#fff':'var(--t3)';}
+      saveProfitFixed();
+      if(typeof calcProfitTotals==='function')calcProfitTotals();
+    };
+    window.saveProfitFixed=async function(){
+      const fixedSnap=await db.collection('profitFixed').where('cafeId','==',currentCafe.id).limit(1).get();
+      const data={cafeId:currentCafe.id,...profitFixed};
+      if(!fixedSnap.empty)await db.collection('profitFixed').doc(fixedSnap.docs[0].id).update(data);
+      else await db.collection('profitFixed').add(data);
+    };
+    window.saveProfit=async function(){
+      const p=period();
+      const data={cafeId:currentCafe.id,period:p,revenue:getVal('revenue')};
+      expenseItems().forEach(i=>data[i.key]=getVal(i.key));
+      await saveProfitFixed();
+      if(profitData.docId)await db.collection('profits').doc(profitData.docId).update(data);
+      else{const ref=await db.collection('profits').add(data);profitData.docId=ref.id;}
+      showToast('✅ 저장됐어요!');
+    };
+    const oldLoadSalary=window.loadSalaryFromLabor;
+    if(typeof oldLoadSalary==='function')window.loadSalaryFromLabor=async function(){
+      if(fixedState('salary').active){showToast('고정비용 해제 후 불러올 수 있어요');return;}
+      return oldLoadSalary.apply(this,arguments);
+    };
+    if(document.getElementById('profitExpenseRows'))window.renderProfitRows();
+    return true;
+  }
+  function boot(){if(!install())setTimeout(boot,200);}
+  boot();
+  document.addEventListener('DOMContentLoaded',boot);
+})();
