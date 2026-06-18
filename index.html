@@ -2434,7 +2434,8 @@ function nextBirthdayInfo(emp,today=new Date()){
   if(target<base)target=new Date(base.getFullYear()+1,b.month-1,b.day);
   const diff=Math.round((target-base)/(1000*60*60*24));
   return {...b,date:target,diff,dateKey:localDateKey(target)};
-}\nasync function fetchActiveEmployees(){
+}
+async function fetchActiveEmployees(){
   if(employees&&employees.length)return employees.filter(e=>!e.resigned);
   const snap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
   const list=[];snap.forEach(d=>list.push({id:d.id,...d.data()}));
@@ -4843,7 +4844,7 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20260618l"></script>
+<script src="zuo-fixes.js?v=20260618m"></script>
 </body>
 </html>
 
