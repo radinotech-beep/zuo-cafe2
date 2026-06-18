@@ -1,4 +1,4 @@
-﻿const CACHE='zuo-v28';
+﻿﻿const CACHE='zuo-v30';
 const BASE='/zuo-cafe2/';
 const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-fixes.js'];
 
@@ -37,3 +37,4 @@ self.addEventListener('notificationclick',e=>{
   e.notification.close();
   e.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(cs=>{if(cs.length>0){cs[0].focus();return;}return clients.openWindow(BASE);}));
 });
+

@@ -1,4 +1,4 @@
-﻿// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
+﻿﻿// Runtime fixes for reviewed issues, worktime edit/delete, pay table style, and profit fixed items.
 (function(){
   var originalOpenWkInput=null;
 
@@ -204,4 +204,113 @@
 
   applyPatches();
   document.addEventListener('DOMContentLoaded',applyPatches);
+})();
+
+// Profit fixed-item policy v2: lock while pinned and apply from the pinned month forward only.
+(function(){
+  function profitPeriod(){return `${profitY}-${String(profitM+1).padStart(2,'0')}`;}
+  function normalizeFixedHistory(key){
+    const histKey=key+'_fixedHistory';
+    let hist=Array.isArray(profitFixed?.[histKey])?[...profitFixed[histKey]]:[];
+    if(!hist.length&&profitFixed?.[key+'_fixed']){
+      const start=profitFixed[key+'_start']||'0000-00';
+      hist.push({start,active:true,val:Number(profitFixed[key+'_val'])||0});
+    }
+    hist=hist
+      .filter(x=>x&&x.start)
+      .map(x=>({start:String(x.start),active:x.active!==false,val:Number(x.val)||0,updatedAt:x.updatedAt||0}))
+      .sort((a,b)=>a.start.localeCompare(b.start)||(a.updatedAt||0)-(b.updatedAt||0));
+    profitFixed[histKey]=hist;
+    return hist;
+  }
+  function fixedStateFor(key,period=profitPeriod()){
+    const hist=normalizeFixedHistory(key);
+    let state={active:false,val:0,start:null};
+    hist.forEach(ev=>{if(ev.start<=period)state={active:ev.active!==false,val:Number(ev.val)||0,start:ev.start};});
+    return state;
+  }
+  function setFixedEvent(key,active,val,period=profitPeriod()){
+    const hist=normalizeFixedHistory(key).filter(ev=>ev.start!==period);
+    hist.push({start:period,active:!!active,val:Number(val)||0,updatedAt:Date.now()});
+    hist.sort((a,b)=>a.start.localeCompare(b.start)||(a.updatedAt||0)-(b.updatedAt||0));
+    profitFixed[key+'_fixedHistory']=hist;
+    const current=fixedStateFor(key,'9999-12');
+    profitFixed[key+'_fixed']=current.active;
+    profitFixed[key+'_val']=current.val;
+    profitFixed[key+'_start']=current.start;
+  }
+  function fixedBtnHtml(key,state){
+    return `<button class="profit-pin ${state.active?'on':''}" data-fixed-key="${key}" onclick="toggleFixed('${key}',this)" style="flex-shrink:0;font-size:10px;padding:2px 5px;border-radius:4px;border:1px solid ${state.active?'var(--amb)':'var(--bd)'};background:${state.active?'var(--amb)':'#fff'};color:${state.active?'#fff':'var(--t3)'};cursor:pointer;white-space:nowrap">📌${state.active?' 고정중':''}</button>`;
+  }
+  function setProfitInputLock(key,state){
+    const el=document.getElementById('pi_'+key);if(!el)return;
+    el.disabled=!!state.active;
+    el.title=state.active?'고정항목 해제 후 수정할 수 있어요':'';
+    el.style.background=state.active?'#f7f7f7':'#fff';
+    el.style.color=state.active?'#777':'var(--t1)';
+  }
+  function valueForProfitKey(key){
+    if(profitData&&profitData[key]!==undefined)return Number(profitData[key])||0;
+    const st=fixedStateFor(key);
+    return st.active?st.val:0;
+  }
+  window.renderProfitRows=function(){
+    const w=document.getElementById('profitExpenseRows');if(!w||typeof PROFIT_EXPENSE_ITEMS==='undefined')return;
+    w.innerHTML=PROFIT_EXPENSE_ITEMS.map(item=>{
+      const key=item.key;
+      const state=fixedStateFor(key);
+      const isSalary=key==='salary';
+      return `<div style="display:flex;align-items:center;gap:5px;padding:6px 0;border-bottom:1px solid #f5f5f5">
+        <span style="font-size:12px;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</span>
+        ${isSalary?`<button onclick="loadSalaryFromLabor()" style="flex-shrink:0;font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid var(--green);background:#fff;color:var(--green);cursor:pointer;white-space:nowrap">📂 불러오기</button>`:''}
+        <span style="font-size:10px;color:var(--t3);flex-shrink:0;min-width:32px;text-align:right" id="pct_${key}">0%</span>
+        ${fixedBtnHtml(key,state)}
+        <input type="text" inputmode="numeric" id="pi_${key}" placeholder="0" oninput="formatCurrencyInput(this);calcProfitTotals()" style="width:85px;border:1px solid var(--bd);border-radius:6px;padding:4px 6px;font-size:12px;text-align:right;outline:none;flex-shrink:0">
+      </div>`;
+    }).join('');
+    PROFIT_EXPENSE_ITEMS.forEach(item=>{
+      const key=item.key,state=fixedStateFor(key);
+      setCurrencyValue('pi_'+key,valueForProfitKey(key));
+      setProfitInputLock(key,state);
+    });
+    const revState=fixedStateFor('revenue');
+    if(document.getElementById('pi_revenue')){
+      setCurrencyValue('pi_revenue',valueForProfitKey('revenue'));
+      setProfitInputLock('revenue',revState);
+    }
+    calcProfitTotals();
+  };
+  window.toggleFixed=function(key,btn){
+    const period=profitPeriod();
+    const state=fixedStateFor(key,period);
+    if(state.active){
+      setFixedEvent(key,false,state.val,period);
+      if(btn){btn.classList.remove('on');btn.innerHTML='📌';btn.style.border='1px solid var(--bd)';btn.style.background='#fff';btn.style.color='var(--t3)';}
+      setProfitInputLock(key,{active:false});
+      showToast('고정항목을 해제했어요. 이제 수정할 수 있어요.');
+    }else{
+      const val=getCurrencyValue('pi_'+key);
+      setFixedEvent(key,true,val,period);
+      if(btn){btn.classList.add('on');btn.innerHTML='📌 고정중';btn.style.border='1px solid var(--amb)';btn.style.background='var(--amb)';btn.style.color='#fff';}
+      setProfitInputLock(key,{active:true});
+      showToast(`📌 ${period}부터 고정항목으로 적용돼요`);
+    }
+    saveProfitFixed();
+    calcProfitTotals();
+  };
+  window.saveProfitFixed=async function(){
+    const fixedSnap=await db.collection('profitFixed').where('cafeId','==',currentCafe.id).limit(1).get();
+    const data={cafeId:currentCafe.id,...profitFixed};
+    if(!fixedSnap.empty)await db.collection('profitFixed').doc(fixedSnap.docs[0].id).update(data);
+    else await db.collection('profitFixed').add(data);
+  };
+  window.saveProfit=async function(){
+    const period=profitPeriod();
+    const data={cafeId:currentCafe.id,period,revenue:getVal('revenue')};
+    PROFIT_EXPENSE_ITEMS.forEach(i=>data[i.key]=getVal(i.key));
+    await saveProfitFixed();
+    if(profitData.docId)await db.collection('profits').doc(profitData.docId).update(data);
+    else{const ref=await db.collection('profits').add(data);profitData.docId=ref.id;}
+    showToast('✅ 저장됐어요!');
+  };
 })();
