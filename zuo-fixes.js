@@ -449,3 +449,54 @@
   boot();
   document.addEventListener('DOMContentLoaded',boot);
 })();
+/* Supply simple final UI: status card + one history-add button + list */
+(function(){
+  function installSupplySimpleFinal(){
+    if(typeof supplyStatus==='undefined'||typeof supplyList==='undefined')return false;
+    if(!document.getElementById('zuoSupplySimpleFinalStyle')){
+      const style=document.createElement('style');
+      style.id='zuoSupplySimpleFinalStyle';
+      style.textContent=`
+        .supply-summary{display:none!important}
+        .supply-card{border-radius:10px!important;margin-bottom:10px!important;box-shadow:none!important}
+        .supply-simple-card{padding:12px;background:#fff}
+        .supply-simple-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+        .supply-simple-name{font-size:17px;font-weight:900;color:#111;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+        .supply-simple-edit{border:none;background:transparent;color:#777;font-size:11px;padding:4px 2px;cursor:pointer;white-space:nowrap}
+        .supply-simple-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px}
+        .supply-simple-box{background:#fafafa;border:1px solid #ececec;border-radius:8px;padding:8px 9px;min-width:0}
+        .supply-simple-box span{display:block;font-size:9px;color:#888;margin-bottom:4px;white-space:nowrap}
+        .supply-simple-box b{display:block;font-size:12px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .supply-simple-add{width:100%;border:none;background:var(--green);color:#fff;border-radius:8px;padding:10px 8px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:9px}
+        .supply-simple-history{border-top:1px solid #f0f0f0;padding-top:8px}
+        .supply-simple-history-title{font-size:12px;font-weight:900;color:#111;margin-bottom:6px}
+        .supply-simple-row{display:grid;grid-template-columns:78px 54px 72px 1fr;gap:6px;align-items:center;padding:8px 0;border-top:1px solid #f5f5f5;font-size:11px;color:#333;cursor:pointer}
+        .supply-simple-row:first-of-type{border-top:none}
+        .supply-simple-row.head{font-size:10px;color:#888;font-weight:800;cursor:default;padding-top:0}
+        .supply-simple-row b{font-size:12px;color:#111}
+        .supply-simple-sub{font-size:10px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .supply-simple-note{grid-column:1/-1;font-size:10px;color:#777;line-height:1.4;white-space:normal}
+        .supply-simple-empty{font-size:12px;color:#999;text-align:center;padding:12px 6px;border:1px dashed #e5e5e5;border-radius:8px;background:#fff}
+      `;
+      document.head.appendChild(style);
+    }
+    window.renderSupply=function(){
+      const w=document.getElementById('supplyList');if(!w)return;
+      const summary=document.getElementById('supplySummary');if(summary)summary.innerHTML='';
+      if(!supplyList.length){w.innerHTML=`<div class="supply-empty">등록된 소모품이 없어요<br><span style="font-size:11px">+ 추가로 소모품 이름과 관리주기를 먼저 등록하세요</span></div>`;return;}
+      const list=[...supplyList].sort((a,b)=>{const da=supplyStatus(a).nextDate||'9999-99-99';const db=supplyStatus(b).nextDate||'9999-99-99';return da.localeCompare(db);});
+      w.innerHTML=list.map(s=>{
+        const st=supplyStatus(s);
+        const latest=st.latest;
+        const hist=st.hist||[];
+        const history=hist.length?`<div class="supply-simple-history"><div class="supply-simple-history-title">교체 이력</div><div class="supply-simple-row head"><span>교체일</span><span>경과</span><span>비용</span><span>업체/연락처</span></div>${hist.slice().reverse().map((h,revIdx)=>{const idx=hist.length-1-revIdx;const prev=idx>0?hist[idx-1]:null;const elapsed=prev&&prev.date&&h.date?Math.max(0,Math.round((supplyParseDate(h.date)-supplyParseDate(prev.date))/86400000))+`일`:`첫 등록`;const contact=[h.vendor,h.tel].filter(Boolean).map(supplyEsc).join(' / ')||'-';const memo=h.memo?`<div class="supply-simple-note">${supplyEsc(h.memo)}</div>`:'';return `<div class="supply-simple-row" onclick="openSupplyHistoryView('${s.id}',${idx})"><b>${supplyDateLabel(h.date)}</b><span>${elapsed}</span><span>${supplyMoney(h.cost)}</span><div class="supply-simple-sub">${contact}</div>${memo}</div>`;}).join('')}</div>`:`<div class="supply-simple-empty">아직 교체 이력이 없어요</div>`;
+        return `<div class="supply-card"><div class="supply-simple-card"><div class="supply-simple-head"><div class="supply-simple-name" title="${supplyEsc(s.name)}">${supplyEsc(s.name)}</div><button class="supply-simple-edit" onclick="openSupplyEdit('${s.id}')">수정</button>${supplyDdayBadge(st.diff)}</div><div class="supply-simple-grid"><div class="supply-simple-box"><span>교체주기</span><b>${supplyCycleText(s)}</b></div><div class="supply-simple-box"><span>최근 교체</span><b>${supplyDateLabel(st.lastDate)}</b></div><div class="supply-simple-box"><span>교체비용</span><b>${supplyMoney(latest?.cost)}</b></div><div class="supply-simple-box"><span>다음 교체</span><b>${supplyDateLabel(st.nextDate)}</b></div></div><button class="supply-simple-add" onclick="openSupplyHistoryModal('${s.id}')">+ 교체이력 추가</button>${history}</div></div>`;
+      }).join('');
+    };
+    if(document.getElementById('supplyList'))window.renderSupply();
+    return true;
+  }
+  function boot(){if(!installSupplySimpleFinal())setTimeout(boot,200);}
+  boot();
+  document.addEventListener('DOMContentLoaded',boot);
+})();
