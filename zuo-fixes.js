@@ -500,3 +500,67 @@
   boot();
   document.addEventListener('DOMContentLoaded',boot);
 })();
+/* Supply one-line final UI */
+(function(){
+  function installSupplyOneLine(){
+    if(typeof supplyStatus==='undefined'||typeof supplyList==='undefined')return false;
+    if(!document.getElementById('zuoSupplyOneLineStyle')){
+      const style=document.createElement('style');
+      style.id='zuoSupplyOneLineStyle';
+      style.textContent=`
+        .supply-summary{display:none!important}
+        .supply-card-list{display:block!important}
+        .supply-one-wrap{background:#fff;border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:10px}
+        .supply-one-row{display:grid;grid-template-columns:minmax(86px,1.35fr) 66px 74px 68px 74px 54px 78px;gap:6px;align-items:center;padding:10px 10px;border-top:1px solid #f1f1f1;background:#fff}
+        .supply-one-row:first-child{border-top:none}
+        .supply-one-row.head{background:#fafafa;color:#777;font-size:10px;font-weight:800;padding:8px 10px}
+        .supply-one-name{font-size:15px;font-weight:900;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+        .supply-one-cell{font-size:11px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+        .supply-one-muted{color:#777;font-size:10px}
+        .supply-one-dday{font-size:11px;font-weight:900;border-radius:999px;padding:4px 6px;text-align:center;white-space:nowrap}
+        .supply-one-dday.ok{background:var(--gl);color:var(--gd)}
+        .supply-one-dday.soon{background:var(--al);color:var(--ad)}
+        .supply-one-dday.over{background:#FCEBEB;color:var(--red)}
+        .supply-one-dday.neutral{background:#f4f4f4;color:#888}
+        .supply-one-add{border:none;background:var(--green);color:#fff;border-radius:7px;padding:7px 5px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+        .supply-one-tools{display:flex;gap:5px;margin-top:7px}
+        .supply-one-tools button{border:1px solid var(--bd);background:#fff;border-radius:6px;padding:4px 7px;font-size:10px;color:#666}
+        .supply-one-history{grid-column:1/-1;background:#fcfcfc;border-top:1px solid #f1f1f1;padding:8px 10px 10px}
+        .supply-one-history-title{font-size:12px;font-weight:900;margin-bottom:6px;color:#111}
+        .supply-one-history-row{display:grid;grid-template-columns:78px 54px 72px 1fr;gap:6px;align-items:center;padding:6px 0;border-top:1px solid #f1f1f1;font-size:11px;color:#333;cursor:pointer}
+        .supply-one-history-row.head{color:#888;font-size:10px;font-weight:800;border-top:none;cursor:default;padding-top:0}
+        .supply-one-history-row b{font-size:12px;color:#111}
+        .supply-one-empty{font-size:12px;color:#999;text-align:center;padding:12px;border:1px dashed #e5e5e5;border-radius:8px;background:#fff}
+        @media(max-width:430px){
+          .supply-one-row{grid-template-columns:minmax(72px,1.2fr) 54px 64px 56px 64px 46px 58px;gap:4px;padding:9px 7px}
+          .supply-one-row.head{font-size:9px;padding:7px}
+          .supply-one-name{font-size:14px}.supply-one-cell{font-size:10px}.supply-one-add{font-size:10px;padding:7px 3px}.supply-one-dday{font-size:10px;padding:4px 4px}
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    function ddaySpan(diff){
+      if(diff===null||diff===undefined)return '<span class="supply-one-dday neutral">-</span>';
+      const label=diff<0?'D+'+Math.abs(diff):(diff===0?'D-day':'D-'+diff);
+      const cls=diff<0?'over':diff<=3?'soon':'ok';
+      return `<span class="supply-one-dday ${cls}">${label}</span>`;
+    }
+    function historyBlock(s,st){
+      const hist=st.hist||[];
+      if(!hist.length)return '<div class="supply-one-history"><div class="supply-one-empty">아직 교체 이력이 없어요</div></div>';
+      return `<div class="supply-one-history"><div class="supply-one-history-title">교체 이력</div><div class="supply-one-history-row head"><span>교체일</span><span>경과</span><span>비용</span><span>업체/연락처</span></div>${hist.slice().reverse().map((h,revIdx)=>{const idx=hist.length-1-revIdx;const prev=idx>0?hist[idx-1]:null;const elapsed=prev&&prev.date&&h.date?Math.max(0,Math.round((supplyParseDate(h.date)-supplyParseDate(prev.date))/86400000))+'일':'첫 등록';const contact=[h.vendor,h.tel].filter(Boolean).map(supplyEsc).join(' / ')||'-';return `<div class="supply-one-history-row" onclick="openSupplyHistoryView('${s.id}',${idx})"><b>${supplyDateLabel(h.date)}</b><span>${elapsed}</span><span>${supplyMoney(h.cost)}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${contact}</span></div>`;}).join('')}</div>`;
+    }
+    window.renderSupply=function(){
+      const w=document.getElementById('supplyList');if(!w)return;
+      const summary=document.getElementById('supplySummary');if(summary)summary.innerHTML='';
+      if(!supplyList.length){w.innerHTML=`<div class="supply-empty">등록된 소모품이 없어요<br><span style="font-size:11px">+ 추가로 소모품 이름과 관리주기를 먼저 등록하세요</span></div>`;return;}
+      const list=[...supplyList].sort((a,b)=>{const da=supplyStatus(a).nextDate||'9999-99-99';const db=supplyStatus(b).nextDate||'9999-99-99';return da.localeCompare(db);});
+      w.innerHTML=`<div class="supply-one-wrap"><div class="supply-one-row head"><span>항목</span><span>교체주기</span><span>최근교체</span><span>비용</span><span>다음교체</span><span>D-day</span><span></span></div>${list.map(s=>{const st=supplyStatus(s);const latest=st.latest;const open=supplyExpandedId===s.id;return `<div class="supply-one-row" onclick="supplyExpandedId=supplyExpandedId==='${s.id}'?null:'${s.id}';renderSupply()"><div><div class="supply-one-name" title="${supplyEsc(s.name)}">${supplyEsc(s.name)}</div><div class="supply-one-tools"><button onclick="event.stopPropagation();openSupplyEdit('${s.id}')">수정</button><button onclick="event.stopPropagation();deleteSupply('${s.id}')">삭제</button></div></div><span class="supply-one-cell">${supplyCycleText(s)}</span><span class="supply-one-cell">${supplyDateLabel(st.lastDate)}</span><span class="supply-one-cell">${supplyMoney(latest?.cost)}</span><span class="supply-one-cell">${supplyDateLabel(st.nextDate)}</span>${ddaySpan(st.diff)}<button class="supply-one-add" onclick="event.stopPropagation();openSupplyHistoryModal('${s.id}')">이력 추가</button>${open?historyBlock(s,st):''}</div>`;}).join('')}</div>`;
+    };
+    if(document.getElementById('supplyList'))window.renderSupply();
+    return true;
+  }
+  function boot(){try{if(!installSupplyOneLine())setTimeout(boot,200);}catch(e){console.error('supply one-line ui:',e);}}
+  boot();
+  document.addEventListener('DOMContentLoaded',boot);
+})();
