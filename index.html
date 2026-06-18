@@ -2418,9 +2418,23 @@ function monthLabelFromDate(d){return `${d.getFullYear()}년 ${d.getMonth()+1}�
 function getHiddenAlertKey(){return `zuo_hidden_alerts_${currentCafe.id}_${localDateKey(new Date())}`;}
 function getHiddenAlerts(){try{return JSON.parse(localStorage.getItem(getHiddenAlertKey())||'[]');}catch(e){return [];}}
 function setHiddenAlerts(ids){localStorage.setItem(getHiddenAlertKey(),JSON.stringify(ids));}
-function getAlertColor(a){return a.level==='urgent'?'#E24B4A':a.category==='sub'?'#1D9E75':a.category==='pay'?'#185FA5':a.type==='health'?'#E24B4A':'#EF9F27';}
-function getAlertBadge(a){if(a.level==='urgent')return '긴급';if(a.category==='sub')return '대타';if(a.category==='pay')return '급여';return '관리';}
-async function fetchActiveEmployees(){
+function getAlertColor(a){return a.type==='birthday'?'#D9467A':a.level==='urgent'?'#E24B4A':a.category==='sub'?'#1D9E75':a.category==='pay'?'#185FA5':a.type==='health'?'#E24B4A':'#EF9F27';}
+function getAlertBadge(a){if(a.type==='birthday')return '생일';if(a.level==='urgent')return '긴급';if(a.category==='sub')return '대타';if(a.category==='pay')return '급여';return '관리';}
+function parseEmpBirthday(emp){
+  const raw=String(emp?.rrn||'').replace(/[^0-9]/g,'');
+  if(raw.length<6)return null;
+  const mm=parseInt(raw.slice(2,4),10),dd=parseInt(raw.slice(4,6),10);
+  if(mm<1||mm>12||dd<1||dd>31)return null;
+  return {month:mm,day:dd,label:`${mm}월 ${dd}일`};
+}
+function nextBirthdayInfo(emp,today=new Date()){
+  const b=parseEmpBirthday(emp);if(!b)return null;
+  const base=new Date(today);base.setHours(0,0,0,0);
+  let target=new Date(base.getFullYear(),b.month-1,b.day);target.setHours(0,0,0,0);
+  if(target<base)target=new Date(base.getFullYear()+1,b.month-1,b.day);
+  const diff=Math.round((target-base)/(1000*60*60*24));
+  return {...b,date:target,diff,dateKey:localDateKey(target)};
+}\nasync function fetchActiveEmployees(){
   if(employees&&employees.length)return employees.filter(e=>!e.resigned);
   const snap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
   const list=[];snap.forEach(d=>list.push({id:d.id,...d.data()}));
@@ -4764,7 +4778,13 @@ async function checkAndNotify(){
   if(localStorage.getItem(key))return;
   try{
     const alerts=[];
-    const hSnap=await db.collection('healthCerts').where('cafeId','==',currentCafe.id).get();
+    const empSnap=await db.collection('employees').where('cafeId','==',currentCafe.id).get();
+    empSnap.forEach(d=>{
+      const emp={id:d.id,...d.data()};
+      if(emp.resigned)return;
+      const b=nextBirthdayInfo(emp,today);
+      if(b&&b.diff===0)alerts.push({title:'🎂 직원 생일',body:`오늘은 ${emp.name}님 생일이에요!`});
+    });    const hSnap=await db.collection('healthCerts').where('cafeId','==',currentCafe.id).get();
     hSnap.forEach(d=>{
       const h=d.data();
       const diff=Math.ceil((new Date(h.expireDate)-today)/(1000*60*60*24));
@@ -4823,7 +4843,7 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20260618j"></script>
+<script src="zuo-fixes.js?v=20260618k"></script>
 </body>
 </html>
 
