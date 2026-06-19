@@ -620,3 +620,36 @@
   boot();
   document.addEventListener('DOMContentLoaded',boot);
 })();
+/* Supply mobile fit: keep all columns visible on phone */
+(function(){
+  function installSupplyMobileFit(){
+    if(!document.getElementById('zuoSupplyMobileFitStyle')){
+      const style=document.createElement('style');
+      style.id='zuoSupplyMobileFitStyle';
+      style.textContent=`
+        #scSupply .supply-page{padding:10px 8px 18px!important;overflow-x:hidden!important}
+        #scSupply .supply-clean-table{width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow:hidden!important}
+        #scSupply .supply-clean-row{box-sizing:border-box!important;width:100%!important;grid-template-columns:minmax(58px,1.25fr) 38px 58px 56px 58px 42px!important;gap:3px!important;padding:8px 6px!important}
+        #scSupply .supply-clean-row.head{font-size:8.5px!important;padding:7px 6px!important}
+        #scSupply .supply-clean-name{font-size:12.5px!important;font-weight:500!important}
+        #scSupply .supply-clean-serial{font-size:10px!important;margin-right:2px!important}
+        #scSupply .supply-clean-cell{font-size:9.8px!important}
+        #scSupply .supply-clean-dday{font-size:9px!important;min-width:34px!important;padding:3px 4px!important;box-sizing:border-box!important}
+        #scSupply .supply-clean-history-row{grid-template-columns:54px 62px 58px minmax(0,1fr)!important;gap:4px!important;padding:7px 6px!important;font-size:9.8px!important}
+        #scSupply .supply-clean-history-row.head{font-size:8.8px!important}
+        #scSupply .supply-clean-detail{padding:8px 6px 9px!important}
+        #scSupply .hdr button[onclick="openSupplyAdd()"]{font-size:10.5px!important;padding:6px 8px!important;white-space:nowrap!important}
+        @media(max-width:360px){
+          #scSupply .supply-clean-row{grid-template-columns:minmax(50px,1.2fr) 34px 52px 50px 52px 38px!important;gap:2px!important;padding:8px 5px!important}
+          #scSupply .supply-clean-row.head{font-size:8px!important}
+          #scSupply .supply-clean-name{font-size:12px!important}
+          #scSupply .supply-clean-cell{font-size:9.2px!important}
+          #scSupply .supply-clean-dday{font-size:8.8px!important;min-width:32px!important;padding:3px 3px!important}
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+  installSupplyMobileFit();
+  document.addEventListener('DOMContentLoaded',installSupplyMobileFit);
+})();
