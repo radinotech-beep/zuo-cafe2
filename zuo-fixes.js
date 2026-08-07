@@ -653,3 +653,155 @@
   installSupplyMobileFit();
   document.addEventListener('DOMContentLoaded',installSupplyMobileFit);
 })();
+
+/* Task #50: admin worker-channel PIN bypass + payslip holiday-rate refresh */
+(function(){
+  function closeWorkerModals(){
+    var pw=document.getElementById('workerPwModal');
+    var sel=document.getElementById('workerSelectModal');
+    if(pw)pw.classList.remove('open');
+    if(sel)sel.classList.remove('open');
+  }
+
+  function enterWorkerAsAdmin(purpose){
+    closeWorkerModals();
+    if(purpose==='entry'){
+      showScreen('scSvcWorker');
+      showToast(`${currentWorkerEmp.name}님 채널 (관리자 입장)`);
+    }else{
+      enterWorkerInput();
+    }
+  }
+
+  function patchWorkerAdminBypass(){
+    if(window.__zuoTask50WorkerPatched)return true;
+    if(typeof openWorkerPw!=='function'||typeof enterWorkerInput!=='function')return false;
+
+    var originalOpenWorkerPw=openWorkerPw;
+    window.openWorkerPw=function(empId){
+      var emp=employees.find(function(e){return e.id===empId;});
+      if(!emp)return;
+      currentWorkerEmp=emp;
+      if(isAdminMode){
+        if(currentWorkerEmp.resigned){
+          showToast('퇴사자는 입장할 수 없어요');
+          return;
+        }
+        enterWorkerAsAdmin(workerAuthPurpose);
+        return;
+      }
+      return originalOpenWorkerPw.apply(this,arguments);
+    };
+
+    var originalEnterWorkerInput=enterWorkerInput;
+    window.enterWorkerInput=function(){
+      if(isAdminMode&&currentWorkerEmp&&!currentWorkerEmp.resigned){
+        var originalHasWorkerSession=window.hasWorkerSession;
+        window.hasWorkerSession=function(){return true;};
+        try{
+          return originalEnterWorkerInput.apply(this,arguments);
+        }finally{
+          window.hasWorkerSession=originalHasWorkerSession;
+        }
+      }
+      return originalEnterWorkerInput.apply(this,arguments);
+    };
+
+    if(typeof enterWorkerMenu==='function'){
+      var originalEnterWorkerMenu=enterWorkerMenu;
+      window.enterWorkerMenu=function(purpose){
+        if(isAdminMode&&currentWorkerEmp&&!currentWorkerEmp.resigned){
+          enterWorkerAsAdmin(purpose);
+          return;
+        }
+        return originalEnterWorkerMenu.apply(this,arguments);
+      };
+    }
+
+    window.__zuoTask50WorkerPatched=true;
+    return true;
+  }
+
+  function patchPayslipHolidayRate(){
+    if(window.__zuoTask50PayslipPatched)return true;
+    if(typeof openPayslip!=='function'||typeof db==='undefined')return false;
+
+    window.openPayslip=async function(empId){
+      const emp=employees.find(e=>e.id===empId);if(!emp)return;
+      psCurrentEmp=emp;
+      const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
+      const snap=await db.collection('workHours').where('empId','==',empId).where('period','==',period).get();
+      const workDays=getWorkDaysFromSnapshot(snap);
+      const total=sumWorkDays(workDays);
+      const base=Math.round(total*(emp.rate||0));
+      const weeksInMonth=(()=>{
+        let sundays=0;
+        const daysInMonth=new Date(payY,payM+1,0).getDate();
+        for(let d=1;d<=daysInMonth;d++){
+          if(new Date(payY,payM,d).getDay()===0)sundays++;
+        }
+        return sundays;
+      })();
+      const weeklyHrs=weeksInMonth?total/weeksInMonth:0;
+
+      if(emp.holidayRate!==null&&emp.holidayRate!==undefined){
+        psHoliRateVal=Number(emp.holidayRate)||0;
+      }else if(weeklyHrs>=15){
+        psHoliRateVal=Math.round((weeklyHrs/40)*8*(emp.rate||0));
+      }else{
+        psHoliRateVal=0;
+      }
+      psWeekCntVal=weeksInMonth;
+
+      const psSnap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).get();
+      let savedBonus=0,savedBonusMemo='',savedEtc=0,savedEtcMemo='';
+      if(!psSnap.empty){
+        const saved=psSnap.docs[0].data();
+        const hasEmpRate=emp.holidayRate!==null&&emp.holidayRate!==undefined;
+        const empHoliRate=hasEmpRate?(Number(emp.holidayRate)||0):0;
+        if(hasEmpRate&&saved.holiRateVal!==undefined&&Number(saved.holiRateVal)!==empHoliRate){
+          psHoliRateVal=empHoliRate;
+          showToast('주휴단가가 변경됐어요. 저장하면 반영돼요.');
+        }else if(saved.holiRateVal!==undefined){
+          psHoliRateVal=Number(saved.holiRateVal)||0;
+        }
+        if(saved.weekCntVal!==undefined)psWeekCntVal=Number(saved.weekCntVal)||0;
+        savedBonus=saved.bonus||0;
+        savedBonusMemo=saved.bonusMemo||'';
+        savedEtc=saved.etc||0;
+        savedEtcMemo=saved.etcMemo||'';
+      }
+
+      const empType=emp.empType||'기타';
+      const typeLabel={정규직:'정규직 (4대보험)',프리랜서:'프리랜서 (3.3%)',일용직:'일용직 (2.97%+고용보험)',기타:'기타 (공제없음)'};
+      document.getElementById('psCafeName').textContent=`☕ ${currentCafe.name} · 급여 명세서`;
+      document.getElementById('psName').textContent=emp.name;
+      document.getElementById('psPeriod').textContent=`${payY}년 ${payM+1}월 급여 명세서`;
+      document.getElementById('psEmpType').textContent=typeLabel[empType]||empType;
+      document.getElementById('psHours').textContent=formatHours2(total)+'시간';
+      document.getElementById('psRate').textContent='₩'+(emp.rate||0).toLocaleString();
+      document.getElementById('psBase').textContent='₩'+base.toLocaleString();
+      document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
+      setCurrencyValue('psHoliRateInput',psHoliRateVal);
+      document.getElementById('psWeekCnt').textContent=psWeekCntVal;
+      document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
+      document.getElementById('psBonus').value=savedBonus;
+      document.getElementById('psBonusMemo').value=savedBonusMemo;
+      document.getElementById('psEtc').value=savedEtc;
+      document.getElementById('psEtcMemo').value=savedEtcMemo;
+      calcPayTotal();showScreen('scPayslip');
+    };
+
+    window.__zuoTask50PayslipPatched=true;
+    return true;
+  }
+
+  function bootTask50(){
+    var okWorker=patchWorkerAdminBypass();
+    var okPayslip=patchPayslipHolidayRate();
+    if(!okWorker||!okPayslip)setTimeout(bootTask50,200);
+  }
+
+  bootTask50();
+  document.addEventListener('DOMContentLoaded',bootTask50);
+})();
