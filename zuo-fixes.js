@@ -1016,3 +1016,207 @@
   bootTask51();
   document.addEventListener('DOMContentLoaded',bootTask51);
 })();
+
+/* Task #52: robust payslip confirm button + pay card button layout */
+(function(){
+  let originalOpenPayslip52=null;
+  let originalSavePayslip52=null;
+  let originalRenderPayEmpList52=null;
+
+  function payPeriod52(){return `${payY}-${String(payM+1).padStart(2,'0')}`;}
+
+  function qsPayslipButton(match){
+    return [...document.querySelectorAll('#scPayslip button')].find(match)||null;
+  }
+
+  function ensurePayslipControls52(){
+    const saveBtn=document.getElementById('psSaveBtn')||qsPayslipButton(b=>(b.getAttribute('onclick')||'').includes('savePayslip')||(b.textContent||'').includes('저장'));
+    const captureBtn=document.getElementById('psCaptureBtn')||qsPayslipButton(b=>(b.getAttribute('onclick')||'').includes('captureAndShare')||(b.textContent||'').includes('급여명세서 이미지 저장'));
+    if(saveBtn)saveBtn.id='psSaveBtn';
+    if(captureBtn)captureBtn.id='psCaptureBtn';
+    const row=(captureBtn&&captureBtn.parentElement)||(saveBtn&&saveBtn.parentElement);
+    if(row){
+      row.id='psActionRow';
+      row.style.display='flex';
+      row.style.gap='8px';
+      row.style.alignItems='stretch';
+    }
+    let btn=document.getElementById('psConfirmBtn');
+    if(!btn&&row){
+      btn=document.createElement('button');
+      btn.id='psConfirmBtn';
+      btn.type='button';
+      btn.onclick=confirmPayslip52;
+      row.insertBefore(btn,captureBtn||null);
+    }
+    if(btn){
+      btn.style.cssText='flex:1;padding:11px;border-radius:8px;border:none;background:#1D9E75;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap';
+      if(!btn.textContent.trim())btn.textContent='✅ 급여 확정';
+    }
+    if(saveBtn)saveBtn.style.flex='1';
+    if(captureBtn)captureBtn.style.flex='2';
+    ensureReadOnlyBadge52();
+    return !!btn;
+  }
+
+  function ensureReadOnlyBadge52(){
+    const card=document.getElementById('payslipCard');
+    if(!card||document.getElementById('psReadOnlyBadge'))return;
+    const badge=document.createElement('div');
+    badge.id='psReadOnlyBadge';
+    badge.textContent='🔒 확정된 명세서 (열람 전용)';
+    badge.style.cssText='display:none;margin:0 0 8px;padding:7px 10px;border-radius:8px;background:#EAF6F2;color:#0F6E56;font-size:12px;font-weight:700;text-align:center';
+    card.parentNode.insertBefore(badge,card);
+  }
+
+  async function findPayslipDoc52(empId,period){
+    const snap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).limit(1).get();
+    if(snap.empty)return null;
+    return {id:snap.docs[0].id,data:snap.docs[0].data()};
+  }
+
+  function setConfirmState52(confirmed){
+    ensurePayslipControls52();
+    const btn=document.getElementById('psConfirmBtn');
+    if(!btn)return;
+    btn.disabled=!!confirmed;
+    btn.textContent=confirmed?'🔒 확정됨':'✅ 급여 확정';
+    btn.style.background=confirmed?'#9CA3AF':'#1D9E75';
+    btn.style.cursor=confirmed?'not-allowed':'pointer';
+    btn.style.display=window.isWorkerViewMode?'none':'flex';
+  }
+
+  function setPayslipReadOnly52(readOnly){
+    ['psHoliRateInput','psBonus','psBonusMemo','psEtc','psEtcMemo'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){el.disabled=!!readOnly;el.readOnly=!!readOnly;el.style.background=readOnly?'#f3f4f6':'';}
+    });
+    document.querySelectorAll('#scPayslip .hc-btn-sm').forEach(btn=>{
+      btn.disabled=!!readOnly;
+      btn.style.opacity=readOnly?'0.45':'';
+      btn.style.pointerEvents=readOnly?'none':'';
+    });
+    const saveBtn=document.getElementById('psSaveBtn');
+    const confirmBtn=document.getElementById('psConfirmBtn');
+    const badge=document.getElementById('psReadOnlyBadge');
+    if(saveBtn)saveBtn.style.display=readOnly?'none':'';
+    if(confirmBtn)confirmBtn.style.display=readOnly?'none':'flex';
+    if(badge)badge.style.display=readOnly?'block':'none';
+    const back=document.querySelector('#psHdrBar .back-btn');
+    if(back)back.setAttribute('onclick',readOnly?"showScreen('scSvcWorker')":"showScreen('scPayManage')");
+  }
+
+  async function refreshPayslipConfirmUi52(){
+    if(!psCurrentEmp)return;
+    const found=await findPayslipDoc52(psCurrentEmp.id,payPeriod52());
+    setConfirmState52(!!found?.data?.confirmed);
+    setPayslipReadOnly52(!!window.isWorkerViewMode);
+  }
+
+  async function confirmPayslip52(){
+    if(!psCurrentEmp)return;
+    if(!confirm('확정하면 직원이 명세서를 열람할 수 있어요. 확정하시겠어요?'))return;
+    const period=payPeriod52();
+    let found=await findPayslipDoc52(psCurrentEmp.id,period);
+    if(!found){
+      await savePayslip();
+      found=await findPayslipDoc52(psCurrentEmp.id,period);
+    }
+    if(!found){showToast('명세서를 저장하지 못했어요');return;}
+    const ts=(typeof firebase!=='undefined'&&firebase.firestore?.FieldValue?.serverTimestamp)?firebase.firestore.FieldValue.serverTimestamp():Date.now();
+    await db.collection('payslips').doc(found.id).update({confirmed:true,confirmedAt:ts});
+    setConfirmState52(true);
+    if(typeof renderPayEmpList==='function')renderPayEmpList();
+    showToast('급여명세서를 확정했어요');
+  }
+
+  function openEmpWorkStatus52(empId){
+    const emp=employees.find(e=>e.id===empId);
+    if(!emp)return;
+    currentWorkerEmp=emp;
+    workerAuthPurpose='time';
+    isAdminMode=true;
+    enterWorkerInput();
+  }
+
+  function installPayListPatch52(){
+    if(typeof renderPayEmpList!=='function'||typeof db==='undefined')return false;
+    if(!originalRenderPayEmpList52)originalRenderPayEmpList52=renderPayEmpList;
+    window.renderPayEmpList=async function(){
+      updatePayMonthLabels();
+      const w=document.getElementById('payEmpList');
+      if(!w)return;
+      if(!employees.length){w.innerHTML=`<div style="text-align:center;padding:24px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
+      const period=payPeriod52();
+      const psSnap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('period','==',period).get();
+      const confirmedMap={};
+      psSnap.forEach(doc=>{const d=doc.data();if(d.confirmed)confirmedMap[d.empId]=true;});
+      const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
+      const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
+      w.className='pay-compact-grid';
+      w.innerHTML=employees.filter(e=>!e.resigned).map((e,i)=>`
+        <div class="pay-compact-card" style="position:relative" onclick="openPayslip('${e.id}')">
+          ${confirmedMap[e.id]?'<div class="pay-confirm-badge">🔒 확정</div>':''}
+          <div class="emp-avatar" style="background:${colors[i%5]};color:${tcolors[i%5]}">${e.name.substring(0,2)}</div>
+          <div style="flex:1;min-width:0"><div class="emp-nm">${e.name}</div><div class="emp-info">시급 ₩${(e.rate||0).toLocaleString()} · 주휴단가 ₩${(e.holidayRate||0).toLocaleString()}</div></div>
+          <div class="pay-card-actions">
+            <button class="pay-compact-action" onclick="event.stopPropagation();openPayslip('${e.id}')">명세서</button>
+            <button class="pay-compact-action pay-time-action" onclick="event.stopPropagation();openEmpWorkStatus52('${e.id}')">근무현황</button>
+          </div>
+        </div>`).join('');
+    };
+    return true;
+  }
+
+  function injectTask52Style(){
+    if(document.getElementById('zuoTask52Style'))return;
+    const style=document.createElement('style');
+    style.id='zuoTask52Style';
+    style.textContent=`
+      #psActionRow{display:flex!important;gap:8px!important;align-items:stretch!important}
+      #psActionRow button{min-width:0!important}
+      .pay-card-actions{grid-column:1/-1!important;display:flex!important;gap:8px!important;width:100%!important}
+      .pay-card-actions .pay-compact-action{flex:1 1 0!important;width:auto!important;margin:0!important;min-width:0!important}
+      .pay-time-action{background:#fff!important;color:#0F6E56!important;border:1px solid #B7DDCF!important}
+      .pay-confirm-badge{position:absolute;right:8px;top:8px;background:#EAF6F2;color:#0F6E56;border:1px solid #B7DDCF;border-radius:999px;padding:3px 7px;font-size:10px;font-weight:700}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function installTask52(){
+    if(typeof db==='undefined'||typeof employees==='undefined')return false;
+    injectTask52Style();
+    ensurePayslipControls52();
+    window.confirmPayslip=confirmPayslip52;
+    window.openEmpWorkStatus52=openEmpWorkStatus52;
+    if(!originalOpenPayslip52&&typeof openPayslip==='function')originalOpenPayslip52=openPayslip;
+    if(originalOpenPayslip52&&!window.__zuoTask52OpenPayslipPatched){
+      window.openPayslip=async function(empId,opts){
+        window.isWorkerViewMode=!!(opts&&opts.workerView);
+        await originalOpenPayslip52.call(this,empId,opts);
+        ensurePayslipControls52();
+        await refreshPayslipConfirmUi52();
+      };
+      window.__zuoTask52OpenPayslipPatched=true;
+    }
+    if(!originalSavePayslip52&&typeof savePayslip==='function')originalSavePayslip52=savePayslip;
+    if(originalSavePayslip52&&!window.__zuoTask52SavePayslipPatched){
+      window.savePayslip=async function(){
+        await originalSavePayslip52.apply(this,arguments);
+        await refreshPayslipConfirmUi52();
+      };
+      window.__zuoTask52SavePayslipPatched=true;
+    }
+    installPayListPatch52();
+    if(document.getElementById('payEmpList'))renderPayEmpList();
+    return true;
+  }
+
+  function bootTask52(){
+    try{if(!installTask52())setTimeout(bootTask52,250);}
+    catch(e){console.error('task52 payslip confirm button:',e);}
+  }
+
+  bootTask52();
+  document.addEventListener('DOMContentLoaded',bootTask52);
+})();
