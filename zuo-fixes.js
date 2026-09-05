@@ -1373,3 +1373,129 @@
   bootTask53();
   document.addEventListener('DOMContentLoaded',bootTask53);
 })();
+
+/* Task #54: direct payslip confirmation from pay employee cards */
+(function(){
+  function payPeriod54(){return `${payY}-${String(payM+1).padStart(2,'0')}`;}
+
+  async function findPayslipDoc54(empId,period){
+    const snap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).limit(1).get();
+    if(snap.empty)return null;
+    return {id:snap.docs[0].id,data:snap.docs[0].data()};
+  }
+
+  async function defaultPayslipData54(emp,period){
+    const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
+    const workDays=getWorkDaysFromSnapshot(snap);
+    const total=sumWorkDays(workDays);
+    const yr=parseInt(period.split('-')[0],10);
+    const mo=parseInt(period.split('-')[1],10)-1;
+    const weeksInMonth=(()=>{
+      let sundays=0;
+      const daysInMonth=new Date(yr,mo+1,0).getDate();
+      for(let d=1;d<=daysInMonth;d++){
+        if(new Date(yr,mo,d).getDay()===0)sundays++;
+      }
+      return sundays;
+    })();
+    const weeklyHrs=weeksInMonth?total/weeksInMonth:0;
+    let holiRateVal=0;
+    if(emp.holidayRate!==null&&emp.holidayRate!==undefined){
+      holiRateVal=Number(emp.holidayRate)||0;
+    }else if(weeklyHrs>=15){
+      holiRateVal=Math.round((weeklyHrs/40)*8*(emp.rate||0));
+    }
+    return {
+      empId:emp.id,
+      cafeId:currentCafe.id,
+      period,
+      holiRateVal,
+      weekCntVal:weeksInMonth,
+      bonus:0,
+      bonusMemo:'',
+      etc:0,
+      etcMemo:'',
+      updatedAt:Date.now()
+    };
+  }
+
+  async function confirmPayFromCard54(empId){
+    const emp=employees.find(e=>e.id===empId);
+    if(!emp)return;
+    if(!confirm(`${emp.name}님의 ${payY}년 ${payM+1}월 급여명세서를 확정할까요?`))return;
+    const period=payPeriod54();
+    const ts=(typeof firebase!=='undefined'&&firebase.firestore?.FieldValue?.serverTimestamp)?firebase.firestore.FieldValue.serverTimestamp():Date.now();
+    const found=await findPayslipDoc54(empId,period);
+    if(found){
+      await db.collection('payslips').doc(found.id).update({confirmed:true,confirmedAt:ts,updatedAt:Date.now()});
+    }else{
+      const data=await defaultPayslipData54(emp,period);
+      data.confirmed=true;
+      data.confirmedAt=ts;
+      await db.collection('payslips').add(data);
+    }
+    showToast(`${emp.name}님 급여명세서를 확정했어요`);
+    if(typeof renderPayEmpList==='function')renderPayEmpList();
+  }
+
+  function installPayCardConfirm54(){
+    if(typeof renderPayEmpList!=='function'||typeof db==='undefined')return false;
+    window.renderPayEmpList=async function(){
+      updatePayMonthLabels();
+      const w=document.getElementById('payEmpList');
+      if(!w)return;
+      if(!employees.length){w.innerHTML=`<div style="text-align:center;padding:24px;font-size:12px;color:var(--t3)">등록된 직원이 없어요</div>`;return;}
+      const period=payPeriod54();
+      const psSnap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('period','==',period).get();
+      const confirmedMap={};
+      psSnap.forEach(doc=>{const d=doc.data();if(d.confirmed)confirmedMap[d.empId]=true;});
+      const colors=['var(--gl)','#EEEDFE','#FBEAF0','#E6F1FB','var(--al)'];
+      const tcolors=['var(--gd)','#3C3489','#72243E','#0C447C','var(--ad)'];
+      w.className='pay-compact-grid';
+      w.innerHTML=employees.filter(e=>!e.resigned).map((e,i)=>{
+        const confirmed=!!confirmedMap[e.id];
+        return `<div class="pay-compact-card" style="position:relative" onclick="openPayslip('${e.id}')">
+          ${confirmed?'<div class="pay-confirm-badge">🔒 확정</div>':''}
+          <div class="emp-avatar" style="background:${colors[i%5]};color:${tcolors[i%5]}">${e.name.substring(0,2)}</div>
+          <div style="flex:1;min-width:0"><div class="emp-nm">${e.name}</div><div class="emp-info">시급 ₩${(e.rate||0).toLocaleString()} · 주휴단가 ₩${(e.holidayRate||0).toLocaleString()}</div></div>
+          <div class="pay-card-actions pay-card-actions-3">
+            <button class="pay-compact-action" onclick="event.stopPropagation();openPayslip('${e.id}')">명세서</button>
+            <button class="pay-compact-action pay-time-action" onclick="event.stopPropagation();openEmpWorkStatus52('${e.id}')">근무현황</button>
+            <button class="pay-compact-action pay-confirm-action" ${confirmed?'disabled':''} onclick="event.stopPropagation();confirmPayFromCard54('${e.id}')">${confirmed?'확정됨':'급여확정'}</button>
+          </div>
+        </div>`;
+      }).join('');
+    };
+    return true;
+  }
+
+  function injectTask54Style(){
+    if(document.getElementById('zuoTask54Style'))return;
+    const style=document.createElement('style');
+    style.id='zuoTask54Style';
+    style.textContent=`
+      .pay-card-actions-3{display:flex!important;grid-template-columns:none!important;gap:6px!important}
+      .pay-card-actions-3 .pay-compact-action{flex:1 1 0!important;padding:8px 4px!important;font-size:11px!important;white-space:nowrap!important}
+      .pay-confirm-action{background:#1D9E75!important;color:#fff!important;border:1px solid #1D9E75!important}
+      .pay-confirm-action:disabled{background:#E5E7EB!important;color:#6B7280!important;border-color:#E5E7EB!important;cursor:not-allowed!important}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function installTask54(){
+    if(typeof db==='undefined'||typeof employees==='undefined')return false;
+    injectTask54Style();
+    window.confirmPayFromCard54=confirmPayFromCard54;
+    installPayCardConfirm54();
+    if(document.getElementById('payEmpList'))renderPayEmpList();
+    return true;
+  }
+
+  function bootTask54(){
+    try{if(!installTask54())setTimeout(bootTask54,250);}
+    catch(e){console.error('task54 pay card confirm:',e);}
+  }
+
+  bootTask54();
+  document.addEventListener('DOMContentLoaded',bootTask54);
+})();
