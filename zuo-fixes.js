@@ -1220,3 +1220,156 @@
   bootTask52();
   document.addEventListener('DOMContentLoaded',bootTask52);
 })();
+
+/* Task #53: worker confirmed payslip history list */
+(function(){
+  function normalizePeriod53(period){
+    const s=String(period||'').trim();
+    let m=s.match(/^(\d{4})-(\d{1,2})$/);
+    if(m)return {key:`${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`,year:parseInt(m[1],10),month:parseInt(m[2],10)};
+    m=s.match(/^(\d{4})\s*년\s*(\d{1,2})\s*월$/);
+    if(m)return {key:`${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`,year:parseInt(m[1],10),month:parseInt(m[2],10)};
+    return {key:s,year:null,month:null};
+  }
+
+  function periodLabel53(period){
+    const p=normalizePeriod53(period);
+    if(p.year&&p.month)return `${p.year}년 ${p.month}월`;
+    return String(period||'-');
+  }
+
+  function money53(v){return '₩'+(Number(v)||0).toLocaleString();}
+
+  function ensureWorkerPayslipListScreen53(){
+    if(document.getElementById('scWorkerPayslips'))return true;
+    const div=document.createElement('div');
+    div.className='screen';
+    div.id='scWorkerPayslips';
+    div.innerHTML=`
+      <div class="hdr" id="workerPayslipListHdr">
+        <button class="back-btn" onclick="showScreen('scSvcWorker')">← 뒤로</button>
+        <div class="hdr-title">💰 급여명세서</div>
+        <div style="width:40px"></div>
+      </div>
+      <div class="worker-pay-list-wrap">
+        <div id="workerPayslipList" class="worker-pay-list-empty">명세서를 불러오는 중이에요</div>
+      </div>
+    `;
+    document.body.appendChild(div);
+    return true;
+  }
+
+  function updateWorkerPayslipCard53(){
+    const card=document.getElementById('workerPayslipCard');
+    if(!card)return false;
+    const name=card.querySelector('.svc-name');
+    const desc=card.querySelector('.svc-desc');
+    if(name)name.textContent='급여명세서';
+    if(desc)desc.textContent='확정된 명세서 열람';
+    card.onclick=openWorkerPayslipList53;
+    return true;
+  }
+
+  async function getConfirmedPayslips53(){
+    const snap=await db.collection('payslips')
+      .where('cafeId','==',currentCafe.id)
+      .where('empId','==',currentWorkerEmp.id)
+      .where('confirmed','==',true)
+      .get();
+    const rows=[];
+    snap.forEach(doc=>rows.push({id:doc.id,...doc.data()}));
+    rows.sort((a,b)=>{
+      const ak=normalizePeriod53(a.period).key;
+      const bk=normalizePeriod53(b.period).key;
+      if(ak!==bk)return bk.localeCompare(ak);
+      const at=a.confirmedAt?.seconds||a.updatedAt||0;
+      const bt=b.confirmedAt?.seconds||b.updatedAt||0;
+      return bt-at;
+    });
+    return rows;
+  }
+
+  async function openWorkerPayslipList53(){
+    if(!currentWorkerEmp){showToast('직원 정보를 확인할 수 없어요');return;}
+    ensureWorkerPayslipListScreen53();
+    const cm=colorMap[currentCafe.color||'green']||colorMap.green;
+    const hdr=document.getElementById('workerPayslipListHdr');
+    if(hdr)hdr.style.background=cm.main;
+    showScreen('scWorkerPayslips');
+    const listEl=document.getElementById('workerPayslipList');
+    listEl.className='worker-pay-list-empty';
+    listEl.innerHTML='명세서를 불러오는 중이에요';
+    try{
+      const rows=await getConfirmedPayslips53();
+      if(!rows.length){
+        listEl.className='worker-pay-list-empty';
+        listEl.innerHTML='아직 확정된 급여명세서가 없어요 🙏';
+        return;
+      }
+      const enriched=await Promise.all(rows.map(async row=>{
+        let net=row.net||row.total||row.payTotal||0;
+        if(typeof calcEmpPay==='function'){
+          try{net=(await calcEmpPay(currentWorkerEmp,row.period)).net||net;}catch(e){console.log('worker payslip net:',e);}
+        }
+        return {...row,net};
+      }));
+      listEl.className='worker-pay-list';
+      listEl.innerHTML=enriched.map(row=>`
+        <button class="worker-pay-row" onclick="openWorkerPayslipPeriod53('${String(row.period||'').replace(/'/g,'\\\'')}')">
+          <span>${periodLabel53(row.period)}</span>
+          <b>${money53(row.net)}</b>
+        </button>
+      `).join('');
+    }catch(e){
+      console.error('worker payslip list:',e);
+      listEl.className='worker-pay-list-empty';
+      listEl.innerHTML='급여명세서를 불러오지 못했어요';
+    }
+  }
+
+  async function openWorkerPayslipPeriod53(period){
+    const p=normalizePeriod53(period);
+    if(!p.year||!p.month){showToast('명세서 기간을 확인할 수 없어요');return;}
+    payY=p.year;
+    payM=p.month-1;
+    window.isWorkerViewMode=true;
+    await openPayslip(currentWorkerEmp.id,{workerView:true});
+  }
+
+  function injectTask53Style(){
+    if(document.getElementById('zuoTask53Style'))return;
+    const style=document.createElement('style');
+    style.id='zuoTask53Style';
+    style.textContent=`
+      .worker-pay-list-wrap{padding:14px;overflow-y:auto}
+      .worker-pay-list{display:flex;flex-direction:column;gap:8px}
+      .worker-pay-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--bd);background:#fff;border-radius:10px;padding:14px 13px;cursor:pointer;text-align:left}
+      .worker-pay-row span{font-size:14px;font-weight:600;color:var(--t1);white-space:nowrap}
+      .worker-pay-row b{font-size:15px;font-weight:800;color:var(--green);white-space:nowrap}
+      .worker-pay-list-empty{background:#fff;border:1px dashed #ddd;border-radius:10px;padding:28px 12px;text-align:center;font-size:13px;color:var(--t3)}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function installTask53(){
+    if(typeof db==='undefined'||typeof currentCafe==='undefined')return false;
+    injectTask53Style();
+    ensureWorkerPayslipListScreen53();
+    window.openWorkerPayslipList53=openWorkerPayslipList53;
+    window.openWorkerPayslipPeriod53=openWorkerPayslipPeriod53;
+    window.openWorkerConfirmedPayslip=openWorkerPayslipList53;
+    updateWorkerPayslipCard53();
+    return true;
+  }
+
+  function bootTask53(){
+    try{
+      const ok=installTask53();
+      if(!updateWorkerPayslipCard53())setTimeout(bootTask53,250);
+      else if(!ok)setTimeout(bootTask53,250);
+    }catch(e){console.error('task53 worker payslip list:',e);}
+  }
+
+  bootTask53();
+  document.addEventListener('DOMContentLoaded',bootTask53);
+})();
