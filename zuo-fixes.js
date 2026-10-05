@@ -154,7 +154,8 @@
     window.deleteWkHours=async function(){
       if(!wkSelDay||!currentWorkerEmp)return;
       if(!(workData&&workData[wkSelDay])){resetWkInput();return;}
-      if(typeof wkIsConfirmed!=='undefined'&&wkIsConfirmed&&!isAdminMode){showToast('🔒 확정된 데이터는 삭제할 수 없어요. 관리자에게 문의하세요.');return;}
+      const locked=await isPayrollConfirmed(currentWorkerEmp.id,`${wkY}-${String(wkM+1).padStart(2,'0')}`);
+      if(locked){showToast('급여 확정을 해제한 후 삭제해주세요');return;}
       if(!confirm(`${wkM+1}월 ${wkSelDay}일 근무시간을 삭제할까요?`))return;
       const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
       const snap=await db.collection('workHours').where('empId','==',currentWorkerEmp.id).where('period','==',period).where('day','==',wkSelDay).get();
@@ -172,8 +173,7 @@
     window.saveWkHours=async function(){
       if(!wkSelDay)return;
       const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
-      const confirmSnap=await db.collection('workConfirm').where('empId','==',currentWorkerEmp.id).where('period','==',period).get();
-      if(!confirmSnap.empty&&confirmSnap.docs[0].data().confirmed&&!isAdminMode){showToast('🔒 확정된 데이터는 수정할 수 없어요. 관리자에게 문의하세요.');return;}
+      if(await isPayrollConfirmed(currentWorkerEmp.id,period)){showToast('급여 확정을 해제한 후 수정해주세요');return;}
       updateWkTimeUi();
       const note=document.getElementById('wkNote').value.trim();
       const workMin=calcCurrentWorkMin();
@@ -869,10 +869,10 @@
     ensurePayslipControls();
     const btn=document.getElementById('psConfirmBtn');
     if(!btn)return;
-    btn.disabled=!!confirmed;
-    btn.textContent=confirmed?'🔒 확정됨':'✅ 급여 확정';
-    btn.style.background=confirmed?'#9CA3AF':'#1D9E75';
-    btn.style.cursor=confirmed?'not-allowed':'pointer';
+    btn.disabled=!!window.isWorkerViewMode;
+    btn.textContent=confirmed?'확정 해제':'✅ 급여 확정';
+    btn.style.background=confirmed?'#6B7280':'#1D9E75';
+    btn.style.cursor='pointer';
   }
 
   async function applyPayslipMode(){
@@ -1070,7 +1070,7 @@
   }
 
   async function findPayslipDoc52(empId,period){
-    const snap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).limit(1).get();
+    const snap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).limit(1).get();
     if(snap.empty)return null;
     return {id:snap.docs[0].id,data:snap.docs[0].data()};
   }
@@ -1079,10 +1079,10 @@
     ensurePayslipControls52();
     const btn=document.getElementById('psConfirmBtn');
     if(!btn)return;
-    btn.disabled=!!confirmed;
-    btn.textContent=confirmed?'🔒 확정됨':'✅ 급여 확정';
-    btn.style.background=confirmed?'#9CA3AF':'#1D9E75';
-    btn.style.cursor=confirmed?'not-allowed':'pointer';
+    btn.disabled=!!window.isWorkerViewMode;
+    btn.textContent=confirmed?'확정 해제':'✅ 급여 확정';
+    btn.style.background=confirmed?'#6B7280':'#1D9E75';
+    btn.style.cursor='pointer';
     btn.style.display=window.isWorkerViewMode?'none':'flex';
   }
 
@@ -1114,20 +1114,20 @@
   }
 
   async function confirmPayslip52(){
-    if(!psCurrentEmp)return;
-    if(!confirm('확정하면 직원이 명세서를 열람할 수 있어요. 확정하시겠어요?'))return;
+    if(!isAdminMode||window.isWorkerViewMode||!psCurrentEmp)return;
     const period=payPeriod52();
     let found=await findPayslipDoc52(psCurrentEmp.id,period);
+    const confirmed=!found?.data?.confirmed;
+    if(!confirm(confirmed?'급여명세서와 근무현황을 함께 확정할까요?':'확정을 해제하면 직원이 명세서를 열람할 수 없고 근무현황을 수정할 수 있어요. 해제할까요?'))return;
     if(!found){
       await savePayslip();
       found=await findPayslipDoc52(psCurrentEmp.id,period);
     }
     if(!found){showToast('명세서를 저장하지 못했어요');return;}
-    const ts=(typeof firebase!=='undefined'&&firebase.firestore?.FieldValue?.serverTimestamp)?firebase.firestore.FieldValue.serverTimestamp():Date.now();
-    await db.collection('payslips').doc(found.id).update({confirmed:true,confirmedAt:ts});
-    setConfirmState52(true);
+    if(!await setPayrollConfirmation(psCurrentEmp.id,period,confirmed))return;
+    setConfirmState52(confirmed);
     if(typeof renderPayEmpList==='function')renderPayEmpList();
-    showToast('급여명세서를 확정했어요');
+    showToast(confirmed?'급여명세서와 근무현황을 확정했어요':'급여명세서와 근무현황 확정을 해제했어요');
   }
 
   function openEmpWorkStatus52(empId){
@@ -1374,12 +1374,46 @@
   document.addEventListener('DOMContentLoaded',bootTask53);
 })();
 
+async function isPayrollConfirmed(empId,period){
+  const snap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
+  return snap.docs.some(doc=>doc.data().confirmed===true);
+}
+
+async function setPayrollConfirmation(empId,period,confirmed,newPayslip=null){
+  if(!isAdminMode||window.isWorkerViewMode)return false;
+  try{
+    const slips=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
+    const work=await db.collection('workConfirm').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
+    if(slips.empty&&!newPayslip){showToast('명세서를 먼저 저장해주세요');return false;}
+    const batch=db.batch();
+    const state={confirmed,confirmedAt:confirmed?firebase.firestore.FieldValue.serverTimestamp():null,updatedAt:Date.now()};
+    if(slips.empty){
+      batch.set(db.collection('payslips').doc(),{...newPayslip,empId,cafeId:currentCafe.id,period,...state});
+    }else{
+      slips.docs.forEach(doc=>batch.update(doc.ref,state));
+    }
+    if(work.empty){
+      batch.set(db.collection('workConfirm').doc(),{empId,cafeId:currentCafe.id,period,...state});
+    }else{
+      work.docs.forEach(doc=>batch.update(doc.ref,state));
+    }
+    // Both confirmation states change together, or neither changes.
+    await batch.commit();
+    if(currentWorkerEmp?.id===empId&&`${wkY}-${String(wkM+1).padStart(2,'0')}`===period)await loadConfirmStatus();
+    return true;
+  }catch(error){
+    console.error('payroll confirmation:',error);
+    showToast('확정 상태를 저장하지 못했어요. 다시 시도해주세요');
+    return false;
+  }
+}
+
 /* Task #54: direct payslip confirmation from pay employee cards */
 (function(){
   function payPeriod54(){return `${payY}-${String(payM+1).padStart(2,'0')}`;}
 
   async function findPayslipDoc54(empId,period){
-    const snap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).limit(1).get();
+    const snap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).limit(1).get();
     if(snap.empty)return null;
     return {id:snap.docs[0].id,data:snap.docs[0].data()};
   }
@@ -1420,21 +1454,16 @@
   }
 
   async function confirmPayFromCard54(empId){
+    if(!isAdminMode)return;
     const emp=employees.find(e=>e.id===empId);
     if(!emp)return;
-    if(!confirm(`${emp.name}님의 ${payY}년 ${payM+1}월 급여명세서를 확정할까요?`))return;
     const period=payPeriod54();
-    const ts=(typeof firebase!=='undefined'&&firebase.firestore?.FieldValue?.serverTimestamp)?firebase.firestore.FieldValue.serverTimestamp():Date.now();
     const found=await findPayslipDoc54(empId,period);
-    if(found){
-      await db.collection('payslips').doc(found.id).update({confirmed:true,confirmedAt:ts,updatedAt:Date.now()});
-    }else{
-      const data=await defaultPayslipData54(emp,period);
-      data.confirmed=true;
-      data.confirmedAt=ts;
-      await db.collection('payslips').add(data);
-    }
-    showToast(`${emp.name}님 급여명세서를 확정했어요`);
+    const confirmed=!found?.data?.confirmed;
+    if(!confirm(`${emp.name}님의 ${payY}년 ${payM+1}월 급여명세서와 근무현황을 ${confirmed?'확정':'확정 해제'}할까요?`))return;
+    const data=found?null:await defaultPayslipData54(emp,period);
+    if(!await setPayrollConfirmation(empId,period,confirmed,data))return;
+    showToast(confirmed?'급여명세서와 근무현황을 확정했어요':'급여명세서와 근무현황 확정을 해제했어요');
     if(typeof renderPayEmpList==='function')renderPayEmpList();
   }
 
@@ -1461,7 +1490,7 @@
           <div class="pay-card-actions pay-card-actions-3">
             <button class="pay-compact-action" onclick="event.stopPropagation();openPayslip('${e.id}')">명세서</button>
             <button class="pay-compact-action pay-time-action" onclick="event.stopPropagation();openEmpWorkStatus52('${e.id}')">근무현황</button>
-            <button class="pay-compact-action pay-confirm-action" ${confirmed?'disabled':''} onclick="event.stopPropagation();confirmPayFromCard54('${e.id}')">${confirmed?'확정됨':'급여확정'}</button>
+            <button class="pay-compact-action pay-confirm-action" onclick="event.stopPropagation();confirmPayFromCard54('${e.id}')">${confirmed?'확정 해제':'급여확정'}</button>
           </div>
         </div>`;
       }).join('');

@@ -789,7 +789,7 @@ input:focus{border-color:var(--green)}
     </div>
     <!-- 관리자 확정 버튼 영역 -->
     <div id="wkConfirmArea" style="margin-top:10px;display:none">
-      <button id="wkConfirmBtn" onclick="toggleConfirmMonth()" style="width:100%;padding:11px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer">🔒 이번달 확정</button>
+      <button id="wkConfirmBtn" disabled style="width:100%;padding:11px;border-radius:8px;border:none;font-size:13px;font-weight:400">급여 미확정</button>
     </div>
   </div>
 </div>
@@ -2900,8 +2900,7 @@ async function saveWkHours(){
   if(!wkSelDay)return;
   // 확정된 달이면 저장 불가
   const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
-  const confirmSnap=await db.collection('workConfirm').where('empId','==',currentWorkerEmp.id).where('period','==',period).get();
-  if(!confirmSnap.empty&&confirmSnap.docs[0].data().confirmed&&!isMaster('skip')){
+  if(await isPayrollConfirmed(currentWorkerEmp.id,period)){
     showToast('🔒 확정된 데이터는 수정할 수 없어요. 관리자에게 문의하세요.');return;
   }
   updateWkTimeUi();
@@ -2921,34 +2920,21 @@ else{await db.collection('workHours').add(data);}
 let wkIsConfirmed=false;
 async function loadConfirmStatus(){
   const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
-  const snap=await db.collection('workConfirm').where('empId','==',currentWorkerEmp.id).where('period','==',period).get();
-  wkIsConfirmed=!snap.empty&&snap.docs[0].data().confirmed;
+  const snap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',currentWorkerEmp.id).where('period','==',period).get();
+  wkIsConfirmed=snap.docs.some(doc=>doc.data().confirmed===true);
   const banner=document.getElementById('wkConfirmedBanner');
   const confirmArea=document.getElementById('wkConfirmArea');
   const confirmBtn=document.getElementById('wkConfirmBtn');
   // 확정 배너
   banner.style.display=wkIsConfirmed?'block':'none';
-  // 관리자만 확정 버튼 표시 (현재 근로관리는 마스터 진입)
-  if(isMaster(currentWorkerEmp?.password||'')===false){
-    confirmArea.style.display='block';
-    if(wkIsConfirmed){
-      confirmBtn.textContent='🔓 확정 해제';
-      confirmBtn.style.background='var(--amb)';confirmBtn.style.color='#fff';
-    } else {
-      confirmBtn.textContent='🔒 이번달 확정';
-      confirmBtn.style.background='var(--green)';confirmBtn.style.color='#fff';
-    }
-  }
+  confirmArea.style.display='block';
+  confirmBtn.disabled=true;
+  confirmBtn.textContent=wkIsConfirmed?'급여 확정 · 근무현황 확정됨':'급여 미확정';
+  confirmBtn.style.background=wkIsConfirmed?'var(--green)':'var(--bg)';
+  confirmBtn.style.color=wkIsConfirmed?'#fff':'var(--t2)';
 }
 async function toggleConfirmMonth(){
-  if(!isMaster(prompt('관리자 번호를 입력하세요')||'')){alert('번호가 틀렸어요');return;}
-  const period=`${wkY}-${String(wkM+1).padStart(2,'0')}`;
-  const snap=await db.collection('workConfirm').where('empId','==',currentWorkerEmp.id).where('period','==',period).get();
-  const newVal=!wkIsConfirmed;
-  if(!snap.empty){await db.collection('workConfirm').doc(snap.docs[0].id).update({confirmed:newVal});}
-  else{await db.collection('workConfirm').add({empId:currentWorkerEmp.id,cafeId:currentCafe.id,period,confirmed:true});}
-  showToast(newVal?'🔒 확정됐어요!':'🔓 확정이 해제됐어요!');
-  loadConfirmStatus();
+  showToast('급여명세서에서 확정하거나 해제해주세요');
 }
 
 // 직원 관리 (마스터)
@@ -4846,7 +4832,7 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20261005-worker-back"></script>
+<script src="zuo-fixes.js?v=20261005-payroll-confirm"></script>
 </body>
 </html>
 
