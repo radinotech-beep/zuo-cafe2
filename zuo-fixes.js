@@ -1136,7 +1136,7 @@
     currentWorkerEmp=emp;
     workerAuthPurpose='time';
     isAdminMode=true;
-    enterWorkerInput();
+    enterWorkerInput('scPayManage');
   }
 
   function installPayListPatch52(){

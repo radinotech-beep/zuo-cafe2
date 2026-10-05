@@ -1851,9 +1851,10 @@ function goSvcBack(){
   if(isAdminMode){showScreen('scSvc');}
   else{showScreen('scSvcWorker');}
 }
+let workerInputReturnScreen='scLabor';
 function goWorkerBack(){
-  // 직원 모드면 직원 서비스화면, 관리자 모드면 근로관리 화면
-  if(isAdminMode){showScreen('scLabor');}
+  // 관리자는 근무현황을 연 화면으로, 직원은 직원 서비스 화면으로 돌아간다.
+  if(isAdminMode){showScreen(workerInputReturnScreen);}
   else{showScreen('scSvcWorker');}
 }
 function isMaster(pw){ return pw===SUPER_MASTER || pw===MASTER_PW; }
@@ -2692,8 +2693,9 @@ function checkWorkerPw(){
     document.getElementById('workerPwError').style.display='block';
   }
 }
-function enterWorkerInput(){
+function enterWorkerInput(returnScreen='scLabor'){
   if(!hasWorkerSession()){workerAuthPurpose='time';enterWorkerMenu('time');return;}
+  workerInputReturnScreen=returnScreen;
   workData={};wkY=new Date().getFullYear();wkM=new Date().getMonth();wkSelDay=null;
   lastSavedHours=undefined;lastSavedWorkPreset=null;
   document.getElementById('workerInputName').textContent=currentWorkerEmp.name;
@@ -4844,7 +4846,7 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20260905-task54"></script>
+<script src="zuo-fixes.js?v=20261005-worker-back"></script>
 </body>
 </html>
 
