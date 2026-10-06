@@ -3417,24 +3417,28 @@ function calcPayTotal(){
   document.getElementById('psTotal').textContent='₩'+net.toLocaleString();
 }
 
-async function savePayslip(){
-  if(!psCurrentEmp)return;
+function getPayslipSaveData(){
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const bonus=parseFloat(document.getElementById('psBonus').value)||0;
   const bonusMemo=document.getElementById('psBonusMemo').value.trim();
   const etc=parseFloat(document.getElementById('psEtc').value)||0;
   const etcMemo=document.getElementById('psEtcMemo').value.trim();
-  const data={
+  return {
     empId:psCurrentEmp.id,
     cafeId:currentCafe.id,
     period,
-    holiRateVal:psHoliRateVal,
+    holiRateVal:getCurrencyValue('psHoliRateInput'),
+    empHolidayRateSnapshot:psCurrentEmp.holidayRate==null?null:(Number(psCurrentEmp.holidayRate)||0),
     weekCntVal:psWeekCntVal,
     bonus,bonusMemo,
     etc,etcMemo,
     updatedAt:Date.now()
   };
-  const snap=await db.collection('payslips').where('empId','==',psCurrentEmp.id).where('period','==',period).get();
+}
+async function savePayslip(){
+  if(!psCurrentEmp||window.isWorkerViewMode||!isAdminMode)return;
+  const data=getPayslipSaveData();
+  const snap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',psCurrentEmp.id).where('period','==',data.period).get();
   if(!snap.empty){await db.collection('payslips').doc(snap.docs[0].id).update(data);}
   else{await db.collection('payslips').add(data);}
   showToast('✅ 저장됐어요!');
@@ -4832,7 +4836,7 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20261005-payroll-confirm"></script>
+<script src="zuo-fixes.js?v=20261006-payslip-values"></script>
 </body>
 </html>
 

@@ -753,17 +753,14 @@
       }
       psWeekCntVal=weeksInMonth;
 
-      const psSnap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).get();
+      const psSnap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
       let savedBonus=0,savedBonusMemo='',savedEtc=0,savedEtcMemo='';
       if(!psSnap.empty){
         const saved=psSnap.docs[0].data();
-        const hasEmpRate=emp.holidayRate!==null&&emp.holidayRate!==undefined;
-        const empHoliRate=hasEmpRate?(Number(emp.holidayRate)||0):0;
-        if(hasEmpRate&&saved.holiRateVal!==undefined&&Number(saved.holiRateVal)!==empHoliRate){
-          psHoliRateVal=empHoliRate;
+        const resolved=resolvePayslipHolidayRate(emp,saved,psHoliRateVal);
+        psHoliRateVal=resolved.rate;
+        if(resolved.employeeChanged){
           showToast('주휴단가가 변경됐어요. 저장하면 반영돼요.');
-        }else if(saved.holiRateVal!==undefined){
-          psHoliRateVal=Number(saved.holiRateVal)||0;
         }
         if(saved.weekCntVal!==undefined)psWeekCntVal=Number(saved.weekCntVal)||0;
         savedBonus=saved.bonus||0;
@@ -1116,15 +1113,11 @@
   async function confirmPayslip52(){
     if(!isAdminMode||window.isWorkerViewMode||!psCurrentEmp)return;
     const period=payPeriod52();
-    let found=await findPayslipDoc52(psCurrentEmp.id,period);
+    const found=await findPayslipDoc52(psCurrentEmp.id,period);
     const confirmed=!found?.data?.confirmed;
     if(!confirm(confirmed?'급여명세서와 근무현황을 함께 확정할까요?':'확정을 해제하면 직원이 명세서를 열람할 수 없고 근무현황을 수정할 수 있어요. 해제할까요?'))return;
-    if(!found){
-      await savePayslip();
-      found=await findPayslipDoc52(psCurrentEmp.id,period);
-    }
-    if(!found){showToast('명세서를 저장하지 못했어요');return;}
-    if(!await setPayrollConfirmation(psCurrentEmp.id,period,confirmed))return;
+    const data=confirmed?getPayslipSaveData():null;
+    if(!await setPayrollConfirmation(psCurrentEmp.id,period,confirmed,data))return;
     setConfirmState52(confirmed);
     if(typeof renderPayEmpList==='function')renderPayEmpList();
     showToast(confirmed?'급여명세서와 근무현황을 확정했어요':'급여명세서와 근무현황 확정을 해제했어요');
@@ -1374,6 +1367,15 @@
   document.addEventListener('DOMContentLoaded',bootTask53);
 })();
 
+function resolvePayslipHolidayRate(emp,saved,fallback){
+  const empRate=emp.holidayRate==null?null:(Number(emp.holidayRate)||0);
+  const employeeChanged=!saved.confirmed&&saved.empHolidayRateSnapshot!==undefined&&saved.empHolidayRateSnapshot!==empRate;
+  return {
+    rate:employeeChanged||saved.holiRateVal===undefined?fallback:(Number(saved.holiRateVal)||0),
+    employeeChanged
+  };
+}
+
 async function isPayrollConfirmed(empId,period){
   const snap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
   return snap.docs.some(doc=>doc.data().confirmed===true);
@@ -1390,7 +1392,7 @@ async function setPayrollConfirmation(empId,period,confirmed,newPayslip=null){
     if(slips.empty){
       batch.set(db.collection('payslips').doc(),{...newPayslip,empId,cafeId:currentCafe.id,period,...state});
     }else{
-      slips.docs.forEach(doc=>batch.update(doc.ref,state));
+      slips.docs.forEach(doc=>batch.update(doc.ref,{...newPayslip,...state}));
     }
     if(work.empty){
       batch.set(db.collection('workConfirm').doc(),{empId,cafeId:currentCafe.id,period,...state});
@@ -1444,6 +1446,7 @@ async function setPayrollConfirmation(empId,period,confirmed,newPayslip=null){
       cafeId:currentCafe.id,
       period,
       holiRateVal,
+      empHolidayRateSnapshot:emp.holidayRate==null?null:(Number(emp.holidayRate)||0),
       weekCntVal:weeksInMonth,
       bonus:0,
       bonusMemo:'',
