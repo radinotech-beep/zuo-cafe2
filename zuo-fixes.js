@@ -1019,6 +1019,7 @@
   let originalOpenPayslip52=null;
   let originalSavePayslip52=null;
   let originalRenderPayEmpList52=null;
+  let loadedPayslip52=null;
 
   function payPeriod52(){return `${payY}-${String(payM+1).padStart(2,'0')}`;}
 
@@ -1077,7 +1078,8 @@
     const btn=document.getElementById('psConfirmBtn');
     if(!btn)return;
     btn.disabled=!!window.isWorkerViewMode;
-    btn.textContent=confirmed?'확정 해제':'✅ 급여 확정';
+    const changed=confirmed&&!window.isWorkerViewMode&&loadedPayslip52&&hasPayslipEdits(loadedPayslip52,getPayslipSaveData());
+    btn.textContent=confirmed?(changed?'변경사항 확정':'확정 해제'):'✅ 급여 확정';
     btn.style.background=confirmed?'#6B7280':'#1D9E75';
     btn.style.cursor='pointer';
     btn.style.display=window.isWorkerViewMode?'none':'flex';
@@ -1106,6 +1108,7 @@
   async function refreshPayslipConfirmUi52(){
     if(!psCurrentEmp)return;
     const found=await findPayslipDoc52(psCurrentEmp.id,payPeriod52());
+    loadedPayslip52=found?.data||null;
     setConfirmState52(!!found?.data?.confirmed);
     setPayslipReadOnly52(!!window.isWorkerViewMode);
   }
@@ -1114,10 +1117,13 @@
     if(!isAdminMode||window.isWorkerViewMode||!psCurrentEmp)return;
     const period=payPeriod52();
     const found=await findPayslipDoc52(psCurrentEmp.id,period);
-    const confirmed=!found?.data?.confirmed;
-    if(!confirm(confirmed?'급여명세서와 근무현황을 함께 확정할까요?':'확정을 해제하면 직원이 명세서를 열람할 수 없고 근무현황을 수정할 수 있어요. 해제할까요?'))return;
-    const data=confirmed?getPayslipSaveData():null;
+    const currentData=getPayslipSaveData();
+    const changed=!!found?.data?.confirmed&&hasPayslipEdits(found.data,currentData);
+    const confirmed=!found?.data?.confirmed||changed;
+    if(!confirm(changed?'수정한 급여 금액과 주휴 횟수로 다시 확정할까요?':confirmed?'급여명세서와 근무현황을 함께 확정할까요?':'확정을 해제하면 직원이 명세서를 열람할 수 없고 근무현황을 수정할 수 있어요. 해제할까요?'))return;
+    const data=confirmed?currentData:null;
     if(!await setPayrollConfirmation(psCurrentEmp.id,period,confirmed,data))return;
+    loadedPayslip52={...found?.data,...data,confirmed};
     setConfirmState52(confirmed);
     if(typeof renderPayEmpList==='function')renderPayEmpList();
     showToast(confirmed?'급여명세서와 근무현황을 확정했어요':'급여명세서와 근무현황 확정을 해제했어요');
@@ -1180,6 +1186,17 @@
     if(typeof db==='undefined'||typeof employees==='undefined')return false;
     injectTask52Style();
     ensurePayslipControls52();
+    const screen=document.getElementById('scPayslip');
+    if(screen&&!screen.dataset.confirmEditListener){
+      const updateButton=()=>{if(psCurrentEmp)setConfirmState52(!!loadedPayslip52?.confirmed);};
+      screen.addEventListener('input',event=>{
+        if(['psHoliRateInput','psBonus','psBonusMemo','psEtc','psEtcMemo'].includes(event.target.id))updateButton();
+      });
+      screen.addEventListener('click',event=>{
+        if(event.target.closest('.hc-btn-sm'))updateButton();
+      });
+      screen.dataset.confirmEditListener='true';
+    }
     window.confirmPayslip=confirmPayslip52;
     window.openEmpWorkStatus52=openEmpWorkStatus52;
     if(!originalOpenPayslip52&&typeof openPayslip==='function')originalOpenPayslip52=openPayslip;
@@ -1366,6 +1383,11 @@
   bootTask53();
   document.addEventListener('DOMContentLoaded',bootTask53);
 })();
+
+function hasPayslipEdits(saved,data){
+  return ['holiRateVal','weekCntVal','bonus','etc'].some(key=>(Number(saved[key])||0)!==(Number(data[key])||0))||
+    ['bonusMemo','etcMemo'].some(key=>(saved[key]||'')!==(data[key]||''));
+}
 
 function resolvePayslipHolidayRate(emp,saved,fallback){
   const empRate=emp.holidayRate==null?null:(Number(emp.holidayRate)||0);
