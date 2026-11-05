@@ -113,6 +113,12 @@ const fixtures={
       return {family:style.fontFamily,size:style.fontSize,weight:style.fontWeight};
     }));
     assert.ok(fonts.every(font=>JSON.stringify(font)===JSON.stringify(fonts[0])));
+    const amountColors=await page.evaluate(()=>({
+      paid:['psBase','psHoliTotal','psGross','psTotal','psBonusDisp','psEtcDisp'].map(id=>getComputedStyle(document.getElementById(id)).color),
+      inputs:['psHoliRateInput','psBonus','psEtc'].map(id=>getComputedStyle(document.getElementById(id)).color)
+    }));
+    assert.ok(amountColors.paid.every(color=>color==='rgb(15, 110, 86)'));
+    assert.ok(amountColors.inputs.every(color=>color==='rgb(26, 26, 26)'));
     await page.locator('#psEtc').fill('-1250');
     assert.equal((await page.evaluate(()=>getPayslipSaveData())).etc,-1250);
     await page.locator('#psEtc').fill('12500');
@@ -129,12 +135,22 @@ const fixtures={
     await page.locator('#payslipCard').screenshot({path:path.join(artifactDir,'payslip-capture-mobile.png')});
     await page.evaluate(()=>restoreCapture());
     await page.setViewportSize({width:320,height:740});
+    await page.waitForFunction(()=>['psBonusMemo','psEtcMemo'].every(id=>{
+      const node=document.getElementById(id);return node.scrollHeight<=node.clientHeight+2;
+    }));
     const narrow=await page.evaluate(()=>({
       overflow:document.documentElement.scrollWidth>innerWidth,
-      rowTops:[...document.querySelectorAll('.ps-holiday-grid .ps-payment-field')].map(el=>el.getBoundingClientRect().top)
+      rowTops:[...document.querySelectorAll('.ps-holiday-grid .ps-payment-field')].map(el=>el.getBoundingClientRect().top),
+      extras:[...document.querySelectorAll('.ps-extra-row')].map(row=>[...row.children].map(node=>{
+        const r=node.getBoundingClientRect();return {center:r.top+r.height/2,left:r.left,right:r.right};
+      }))
     }));
     assert.equal(narrow.overflow,false);
     assert.ok(Math.max(...narrow.rowTops)-Math.min(...narrow.rowTops)<2,'Holiday fields must share one row');
+    for(const row of narrow.extras){
+      assert.ok(Math.max(...row.map(r=>r.center))-Math.min(...row.map(r=>r.center))<2,'Label, memo and amount must share one row');
+      assert.ok(row[0].right<=row[1].left&&row[1].right<=row[2].left,'Allowance columns must not overlap');
+    }
     await page.screenshot({path:path.join(artifactDir,'payslip-narrow-mobile.png'),fullPage:true});
     await page.setViewportSize({width:1280,height:900});
     await page.evaluate(()=>window.scrollTo(0,0));

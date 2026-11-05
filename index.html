@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1D9E75">
-<meta name="zuo-version" content="2026.11.05.3">
+<meta name="zuo-version" content="2026.11.05.4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ZUO">
@@ -355,7 +355,13 @@ input:focus{border-color:var(--green)}
 #payslipCard .ps-item{padding:10px 0;border-bottom:1px solid #eee}
 #payslipCard .ps-item:last-child{border-bottom:0}
 #payslipCard .ps-item-title{font-size:14px;font-weight:500;color:var(--t1)}
-#payslipCard .ps-item-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#payslipCard{--ps-paid:#0F6E56}
+#payslipCard .ps-extra-row{display:grid;grid-template-columns:28px minmax(0,1fr) 122px;gap:8px;align-items:center}
+#payslipCard .ps-extra-row .ps-item-title{white-space:nowrap}
+#payslipCard .ps-extra-memo{min-width:0}
+#payslipCard .ps-extra-row .ps-extra-amount{width:auto;min-width:0}
+#payslipCard .ps-extra-row .ps-memo{margin:0;padding:7px 6px}
+#payslipCard .ps-extra-row .ps-memo-display{margin:0;padding:7px 6px}
 #payslipCard .ps-holiday-grid{display:grid;grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);gap:8px;margin-top:8px}
 #payslipCard .ps-payment-field{position:relative;min-width:0}
 #payslipCard .ps-payment-label{display:block;margin-bottom:5px;font-size:11px;font-weight:400;color:var(--t2)}
@@ -373,7 +379,8 @@ input:focus{border-color:var(--green)}
 #payslipCard .ps-memo{display:block;min-height:36px;margin-top:7px;padding:8px 10px;resize:none;overflow:hidden;font-family:inherit;font-size:14px;font-weight:400;line-height:1.5;color:var(--t1);background:#fafafa}
 #payslipCard .ps-memo:not(:placeholder-shown){font-weight:500;border-color:#c8ddd4;background:#f3faf6}
 #payslipCard .ps-memo-display{display:none;margin-top:7px;padding:8px 10px;border-left:3px solid var(--green);font-family:inherit;font-size:14px;font-weight:500;line-height:1.5;color:var(--t1);white-space:pre-wrap;overflow-wrap:anywhere;background:#f3faf6}
-@media(max-width:350px){#payslipCard .ps-holiday-grid{grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);gap:4px}#payslipCard .ps-money-field{padding:0 3px}#payslipCard .ps-extra-amount{width:130px}}
+#payslipCard .ps-paid-amount{color:var(--ps-paid)}
+@media(max-width:350px){#payslipCard .ps-holiday-grid{grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);gap:4px}#payslipCard .ps-money-field{padding:0 3px}#payslipCard .ps-extra-row{grid-template-columns:28px minmax(0,1fr) 108px;gap:6px}}
 /* 월급여 테이블 */
 .pay-tbl-wrap{overflow-x:hidden;margin-bottom:12px;border-radius:8px;border:1px solid var(--bd)}
 .pay-tbl{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10px}
@@ -949,7 +956,7 @@ input:focus{border-color:var(--green)}
         </div>
         <div style="flex:1;text-align:center">
           <div style="font-size:10px;color:var(--gd);margin-bottom:2px">시급 합계</div>
-          <div style="font-size:17px;font-weight:700;color:var(--gd)" id="psBase">₩0</div>
+          <div class="ps-paid-amount" style="font-size:17px;font-weight:700" id="psBase">₩0</div>
         </div>
       </div>
 
@@ -980,7 +987,7 @@ input:focus{border-color:var(--green)}
             </div>
             <div class="ps-payment-field">
               <span class="ps-payment-label" style="text-align:right">수당</span>
-              <div class="ps-payment-amount" id="psHoliTotal">₩0</div>
+              <div class="ps-payment-amount ps-paid-amount" id="psHoliTotal">₩0</div>
             </div>
           </div>
         </div>
@@ -988,36 +995,36 @@ input:focus{border-color:var(--green)}
         <div id="psHolidayNotes" style="display:none;padding:8px 0;font-size:11px;font-weight:400;line-height:1.6;color:var(--t2);white-space:pre-line;overflow-wrap:anywhere"></div>
 
         <!-- 상여 -->
-        <div class="ps-item">
-          <div class="ps-item-heading">
-            <label class="ps-item-title" for="psBonus">상여</label>
-            <div class="ps-extra-amount">
-              <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span><input class="ps-money-input" id="psBonus" inputmode="decimal" value="0" oninput="formatPayslipAmount(this)" onblur="formatPayslipAmount(this,true)" aria-label="상여 금액"></div>
-              <div class="ps-capture-value" id="psBonusDisp">₩0</div>
-            </div>
+        <div class="ps-item ps-extra-row">
+          <label class="ps-item-title" for="psBonus">상여</label>
+          <div class="ps-extra-memo">
+            <div class="no-capture"><textarea class="ps-memo" rows="1" id="psBonusMemo" oninput="resizePayslipMemo(this)" placeholder="지급 내용" aria-label="상여 지급 내용"></textarea></div>
+            <div class="ps-memo-display" id="psBonusMemoDisp"></div>
           </div>
-          <div class="no-capture"><textarea class="ps-memo" rows="1" id="psBonusMemo" oninput="resizePayslipMemo(this)" placeholder="예: 명절 상여, 성과급 등" aria-label="상여 지급 내용"></textarea></div>
-          <div class="ps-memo-display" id="psBonusMemoDisp"></div>
+          <div class="ps-extra-amount">
+            <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span><input class="ps-money-input" id="psBonus" inputmode="decimal" value="0" oninput="formatPayslipAmount(this)" onblur="formatPayslipAmount(this,true)" aria-label="상여 금액"></div>
+            <div class="ps-capture-value ps-paid-amount" id="psBonusDisp">₩0</div>
+          </div>
         </div>
 
         <!-- 기타 -->
-        <div class="ps-item">
-          <div class="ps-item-heading">
-            <label class="ps-item-title" for="psEtc">기타</label>
-            <div class="ps-extra-amount">
-              <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span><input class="ps-money-input" id="psEtc" inputmode="decimal" value="0" oninput="formatPayslipAmount(this)" onblur="formatPayslipAmount(this,true)" aria-label="기타 지급 금액"></div>
-              <div class="ps-capture-value" id="psEtcDisp">₩0</div>
-            </div>
+        <div class="ps-item ps-extra-row">
+          <label class="ps-item-title" for="psEtc">기타</label>
+          <div class="ps-extra-memo">
+            <div class="no-capture"><textarea class="ps-memo" rows="1" id="psEtcMemo" oninput="resizePayslipMemo(this)" placeholder="지급 내용" aria-label="기타 지급 내용"></textarea></div>
+            <div class="ps-memo-display" id="psEtcMemoDisp"></div>
           </div>
-          <div class="no-capture"><textarea class="ps-memo" rows="1" id="psEtcMemo" oninput="resizePayslipMemo(this)" placeholder="예: 교통비, 식대 등" aria-label="기타 지급 내용"></textarea></div>
-          <div class="ps-memo-display" id="psEtcMemoDisp"></div>
+          <div class="ps-extra-amount">
+            <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span><input class="ps-money-input" id="psEtc" inputmode="decimal" value="0" oninput="formatPayslipAmount(this)" onblur="formatPayslipAmount(this,true)" aria-label="기타 지급 금액"></div>
+            <div class="ps-capture-value ps-paid-amount" id="psEtcDisp">₩0</div>
+          </div>
         </div>
       </div>
 
       <!-- 총 지급액 -->
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-bottom:1px solid var(--bd);background:var(--gl)">
         <span style="font-size:13px;font-weight:600;color:var(--gd)">총 지급액</span>
-        <span style="font-size:18px;font-weight:800;color:var(--gd)" id="psGross">₩0</span>
+        <span class="ps-paid-amount" style="font-size:18px;font-weight:800" id="psGross">₩0</span>
       </div>
 
       <!-- 공제 항목 -->
@@ -1031,17 +1038,17 @@ input:focus{border-color:var(--green)}
       </div>
 
       <!-- 실수령액 -->
-      <div style="background:var(--green);padding:16px 18px;display:flex;justify-content:space-between;align-items:center">
+      <div style="background:#E1F5EE;border-top:1px solid #c8ddd4;padding:16px 18px;display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9)">💳 실수령액</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:2px">총 지급액 - 공제 합계</div>
+          <div style="font-size:14px;font-weight:500;color:var(--t1)">💳 실수령액</div>
+          <div style="font-size:10px;color:var(--t2);margin-top:2px">총 지급액 - 공제 합계</div>
         </div>
-        <span style="font-size:24px;font-weight:800;color:#fff" id="psTotal">₩0</span>
+        <span class="ps-paid-amount" style="font-size:24px;font-weight:800" id="psTotal">₩0</span>
       </div>
 
       <!-- 카드 푸터 -->
       <div style="padding:10px 18px;background:#fafafa;border-top:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--t3)" data-zuo-version>ZUO v2026.11.05.3</div>
+        <div style="font-size:10px;color:var(--t3)" data-zuo-version>ZUO v2026.11.05.4</div>
         <div style="font-size:10px;color:var(--t3)" id="psIssuedAt"></div>
       </div>
     </div>
@@ -4891,12 +4898,18 @@ async function testPushNotification(){
 document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminModePw();});
   document.getElementById('adminPwInput').addEventListener('keyup',e=>{if(e.key==='Enter')checkAdminPw();});
 
+window.addEventListener('resize',()=>{
+  if(document.getElementById('scPayslip').classList.contains('active')){
+    resizePayslipMemo(document.getElementById('psBonusMemo'));
+    resizePayslipMemo(document.getElementById('psEtcMemo'));
+  }
+});
 loadCafes();
 </script>
 
-<script src="zuo-payroll.js?v=2026.11.05.3"></script>
-<script src="zuo-fixes.js?v=2026.11.05.3"></script>
-<script src="zuo-version.js?v=2026.11.05.3"></script>
+<script src="zuo-payroll.js?v=2026.11.05.4"></script>
+<script src="zuo-fixes.js?v=2026.11.05.4"></script>
+<script src="zuo-version.js?v=2026.11.05.4"></script>
 </body>
 </html>
 

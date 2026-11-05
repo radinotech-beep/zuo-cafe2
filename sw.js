@@ -1,6 +1,6 @@
-const CACHE='zuo-2026.11.05.3';
+const CACHE='zuo-2026.11.05.4';
 const BASE='/zuo-cafe2/';
-const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-payroll.js?v=2026.11.05.3',BASE+'zuo-fixes.js?v=2026.11.05.3',BASE+'zuo-version.js?v=2026.11.05.3'];
+const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-payroll.js?v=2026.11.05.4',BASE+'zuo-fixes.js?v=2026.11.05.4',BASE+'zuo-version.js?v=2026.11.05.4'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
