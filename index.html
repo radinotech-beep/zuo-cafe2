@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1D9E75">
+<meta name="zuo-version" content="2026.11.05.2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ZUO">
@@ -28,6 +29,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 @keyframes sdot{0%,80%,100%{background:rgba(255,255,255,0.4)}40%{background:#fff}}
 .screen{display:none;min-height:100vh;background:#f5f5f5}
 .screen.active{display:block}
+.app-version-bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:6px 14px;background:#fff;border-bottom:1px solid var(--bd);font-size:11px;font-weight:400;color:var(--t2)}
+.app-version-status{flex:1;min-width:0;overflow-wrap:anywhere}
+.app-version-update{flex:none;border:0;background:none;padding:4px 0;font:inherit;color:var(--gd);cursor:pointer}
+.app-version-update:disabled{opacity:0.5;cursor:wait}
 .hdr{position:sticky;top:0;z-index:10;background:var(--green);padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between}
 .hdr-title{font-size:17px;font-weight:700;color:#fff}
 .hdr-sub{font-size:11px;color:rgba(255,255,255,0.75)}
@@ -1011,8 +1016,8 @@ input:focus{border-color:var(--green)}
       </div>
 
       <!-- 카드 푸터 -->
-      <div style="padding:10px 18px;background:#fafafa;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--t3)">☕ ZUO · 한 손안에 매장관리</div>
+      <div style="padding:10px 18px;background:#fafafa;border-top:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:center">
+        <div style="font-size:10px;color:var(--t3)" data-zuo-version>ZUO v2026.11.05.2</div>
         <div style="font-size:10px;color:var(--t3)" id="psIssuedAt"></div>
       </div>
     </div>
@@ -4728,7 +4733,7 @@ function urlBase64ToUint8Array(b){
 }
 let swReg=null;
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(reg=>{swReg=reg;}).catch(e=>console.log('SW:',e));
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{swReg=reg;}).catch(e=>console.log('SW:',e));
 }
 // SW에 메시지로 알림 요청 (보안 정책 우회)
 async function showSwNotification(title,body,tag){
@@ -4833,8 +4838,9 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-payroll.js?v=20261105-weekly-holiday"></script>
-<script src="zuo-fixes.js?v=20261105-weekly-holiday"></script>
+<script src="zuo-payroll.js?v=2026.11.05.2"></script>
+<script src="zuo-fixes.js?v=2026.11.05.2"></script>
+<script src="zuo-version.js?v=2026.11.05.2"></script>
 </body>
 </html>
 

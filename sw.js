@@ -1,6 +1,6 @@
-const CACHE='zuo-v42-weekly-holiday';
+const CACHE='zuo-2026.11.05.2';
 const BASE='/zuo-cafe2/';
-const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-payroll.js?v=20261105-weekly-holiday',BASE+'zuo-fixes.js?v=20261105-weekly-holiday'];
+const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-payroll.js?v=2026.11.05.2',BASE+'zuo-fixes.js?v=2026.11.05.2',BASE+'zuo-version.js?v=2026.11.05.2'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
@@ -13,8 +13,12 @@ self.addEventListener('activate',e=>{
 });
 
 self.addEventListener('fetch',e=>{
+  if(new URL(e.request.url).pathname.endsWith('/version.json')){
+    e.respondWith(fetch(e.request,{cache:'no-store'}));
+    return;
+  }
   if(e.request.mode==='navigate'){
-    e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+    e.respondWith(fetch(e.request,{cache:'no-store'}).catch(()=>caches.match(e.request,{ignoreSearch:true})));
     return;
   }
   e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));

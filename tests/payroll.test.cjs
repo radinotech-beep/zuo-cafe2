@@ -224,8 +224,12 @@ test('failed batch writes neither payroll confirmation nor exclusion metadata',a
 test('inline scripts parse and service worker precaches both versioned payroll scripts',()=>{
   for(const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))if(match[1].trim())new vm.Script(match[1]);
   const sw=fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8');
-  for(const name of ['zuo-payroll.js','zuo-fixes.js']){
+  const release=JSON.parse(fs.readFileSync(path.join(__dirname,'../version.json'),'utf8')).version;
+  assert.ok(html.includes(`<meta name="zuo-version" content="${release}">`));
+  assert.ok(sw.includes(`const CACHE='zuo-${release}'`));
+  for(const name of ['zuo-payroll.js','zuo-fixes.js','zuo-version.js']){
     const version=html.match(new RegExp(name.replace('.','\\.')+'\\?v=([^"\\s]+)'))[1];
+    assert.equal(version,release);
     assert.ok(sw.includes(`${name}?v=${version}`));
   }
 });
