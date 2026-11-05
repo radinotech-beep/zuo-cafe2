@@ -956,6 +956,8 @@ input:focus{border-color:var(--green)}
           </div>
         </div>
 
+        <div id="psHolidayNotes" style="display:none;padding:8px 0;font-size:11px;font-weight:400;line-height:1.6;color:var(--t2);white-space:pre-line;overflow-wrap:anywhere"></div>
+
         <!-- 상여 -->
         <div style="padding:7px 0;border-bottom:1px solid #f5f5f5">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -3286,41 +3288,27 @@ function renderPayEmpList(){
 }
 
 let psCurrentEmp=null;
+let psHolidayAssessment=null;
 async function openPayslip(empId){
   const emp=employees.find(e=>e.id===empId);if(!emp)return;
   psCurrentEmp=emp;
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   // 근무시간 로드
-  const snap=await db.collection('workHours').where('empId','==',empId).where('period','==',period).get();
+  const snap=await db.collection('workHours').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
   const workDays=getWorkDaysFromSnapshot(snap);
   const total=sumWorkDays(workDays);
   const base=Math.round(total*(emp.rate||0));
-  // 주수 = 해당 월의 일요일 개수
-  const weeksInMonth=(()=>{
-    let sundays=0;
-    const daysInMonth=new Date(payY,payM+1,0).getDate();
-    for(let d=1;d<=daysInMonth;d++){
-      if(new Date(payY,payM,d).getDay()===0)sundays++;
-    }
-    return sundays;
-  })();
-  const weeklyHrs=total/weeksInMonth;
-  // 주휴단가 기본값
-  if(emp.holidayRate!==null&&emp.holidayRate!==undefined){
-    psHoliRateVal=emp.holidayRate;
-  } else if(weeklyHrs>=15){
-    psHoliRateVal=Math.round((weeklyHrs/40)*8*(emp.rate||0));
-  } else {
-    psHoliRateVal=0;
-  }
-  psWeekCntVal=getPayslipWeekCount(total,null,weeksInMonth);
+  psHolidayAssessment=await ZuoPayroll.load(emp,period,workDays);
+  psHoliRateVal=psHolidayAssessment.rate;
+  psWeekCntVal=psHolidayAssessment.eligibleCount;
   // ★ 저장된 명세서 데이터 불러오기
-  const psSnap=await db.collection('payslips').where('empId','==',empId).where('period','==',period).get();
+  const psSnap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
   let savedBonus=0,savedBonusMemo='',savedEtc=0,savedEtcMemo='';
   if(!psSnap.empty){
     const saved=psSnap.docs[0].data();
-    if(saved.holiRateVal!==undefined)psHoliRateVal=saved.holiRateVal;
-    psWeekCntVal=getPayslipWeekCount(total,saved,weeksInMonth);
+    const holiday=ZuoPayroll.values(emp,saved,psHolidayAssessment);
+    psHoliRateVal=holiday.rate;
+    psWeekCntVal=holiday.count;
     savedBonus=saved.bonus||0;
     savedBonusMemo=saved.bonusMemo||'';
     savedEtc=saved.etc||0;
@@ -3352,7 +3340,8 @@ function changeHoliRate(v){
   calcPayTotal();
 }
 function changePayWeeks(v){
-  psWeekCntVal=Math.max(0,Math.min(6,psWeekCntVal+v));
+  if(window.isWorkerViewMode)return;
+  psWeekCntVal=Math.max(0,Math.min(psHolidayAssessment?.eligibleCount||0,psWeekCntVal+v));
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
   document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
   calcPayTotal();
@@ -3388,6 +3377,20 @@ function calcTax(empType,gross,totalHrs){
   return {deductions,totalDeduct};
 }
 function calcPayTotal(){
+  if(!(Number(psCurrentEmp?.holidayRate)>0)){
+    psHoliRateVal=0;
+    psWeekCntVal=0;
+    setCurrencyValue('psHoliRateInput',0);
+  }
+  psWeekCntVal=Math.max(0,Math.min(psHolidayAssessment?.eligibleCount||0,psWeekCntVal));
+  document.getElementById('psWeekCnt').textContent=psWeekCntVal;
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
+  document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
+  if(psHolidayAssessment){
+    const notes=document.getElementById('psHolidayNotes');
+    notes.textContent=ZuoPayroll.notes(psHolidayAssessment,psWeekCntVal).join('\n');
+    notes.style.display=notes.textContent?'block':'none';
+  }
   const base=parseFloat((document.getElementById('psBase').textContent||'0').replace(/[₩,]/g,''))||0;
   const holi=psHoliRateVal*psWeekCntVal;
   document.getElementById('psHoliTotal').textContent='₩'+holi.toLocaleString();
@@ -3418,6 +3421,7 @@ function calcPayTotal(){
 }
 
 function getPayslipSaveData(){
+  calcPayTotal();
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
   const bonus=parseFloat(document.getElementById('psBonus').value)||0;
   const bonusMemo=document.getElementById('psBonusMemo').value.trim();
@@ -3430,6 +3434,7 @@ function getPayslipSaveData(){
     holiRateVal:getCurrencyValue('psHoliRateInput'),
     empHolidayRateSnapshot:psCurrentEmp.holidayRate==null?null:(Number(psCurrentEmp.holidayRate)||0),
     weekCntVal:psWeekCntVal,
+    ...ZuoPayroll.metadata(psHolidayAssessment,psWeekCntVal),
     bonus,bonusMemo,
     etc,etcMemo,
     updatedAt:Date.now()
@@ -3651,35 +3656,30 @@ async function exportTrendExcel(){
   XLSX.writeFile(wb,`인건비추이_${new Date().getFullYear()}.xlsx`);
 }
 
-// 공통 급여 계산 함수 - 명세서 저장 데이터 기준 (없으면 모두 0)
+// 급여현황과 명세서가 동일한 주휴 적용 기준을 사용한다.
 async function calcEmpPay(emp,period){
   // 근무시간 조회
   const wSnap=await db.collection('workHours').where('cafeId','==',currentCafe.id).where('empId','==',emp.id).where('period','==',period).get();
-  const h=sumWorkDays(getWorkDaysFromSnapshot(wSnap));
+  const workDays=getWorkDaysFromSnapshot(wSnap);
+  const h=sumWorkDays(workDays);
   // 명세서 저장 데이터 조회
   const psSnap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',emp.id).where('period','==',period).get();
   const hasWorkData=h>0;
   const hasPsData=!psSnap.empty;
-  // 근무기록도 없고 명세서도 없으면 → 모두 0
-  if(!hasWorkData&&!hasPsData){
+  const assessment=await ZuoPayroll.load(emp,period,workDays);
+  if(!hasWorkData&&!hasPsData&&!assessment.eligibleCount){
     return {h:0,base:0,holi:0,bonus:0,etc:0,gross:0,totalDeduct:0,net:0,hasData:false};
   }
   const base=Math.round(h*(emp.rate||0));
-  let holiRate=0,weekCnt=0,bonus=0,etc=0;
+  let bonus=0,etc=0;
+  const saved=hasPsData?psSnap.docs[0].data():null;
   if(hasPsData){
     // 명세서 저장값 우선 사용
-    const saved=psSnap.docs[0].data();
-    holiRate=saved.holiRateVal!==undefined?saved.holiRateVal:0;
-    weekCnt=getPayslipWeekCount(h,saved,0);
     bonus=saved.bonus||0;
     etc=saved.etc||0;
-  } else if(hasWorkData){
-    // 근무기록만 있고 명세서 미저장 → 주휴수당은 직원 설정값, 주수는 해당월 일요일
-    holiRate=(emp.holidayRate!==null&&emp.holidayRate!==undefined)?emp.holidayRate:0;
-    const yr=parseInt(period.split('-')[0]),mo=parseInt(period.split('-')[1]);
-    weekCnt=(()=>{let s=0;const dim=new Date(yr,mo,0).getDate();for(let d=1;d<=dim;d++){if(new Date(yr,mo-1,d).getDay()===0)s++;}return s;})();
   }
-  const holi=Math.round(holiRate*weekCnt);
+  const holiday=ZuoPayroll.values(emp,saved,assessment);
+  const holi=Math.round(holiday.rate*holiday.count);
   const gross=base+holi+bonus+etc;
   const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
   const net=Math.max(0,gross-totalDeduct);
@@ -4833,7 +4833,8 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-fixes.js?v=20261105-no-work-holiday"></script>
+<script src="zuo-payroll.js?v=20261105-weekly-holiday"></script>
+<script src="zuo-fixes.js?v=20261105-weekly-holiday"></script>
 </body>
 </html>
 

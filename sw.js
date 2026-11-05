@@ -1,6 +1,6 @@
-const CACHE='zuo-v41';
+const CACHE='zuo-v42-weekly-holiday';
 const BASE='/zuo-cafe2/';
-const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-fixes.js'];
+const FILES=[BASE,BASE+'index.html',BASE+'manifest.json',BASE+'zuo-payroll.js?v=20261105-weekly-holiday',BASE+'zuo-fixes.js?v=20261105-weekly-holiday'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)));
