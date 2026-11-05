@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1D9E75">
-<meta name="zuo-version" content="2026.11.05.2">
+<meta name="zuo-version" content="2026.11.05.3">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="ZUO">
@@ -352,6 +352,28 @@ input:focus{border-color:var(--green)}
 .hrs-ctrl-sm{display:flex;align-items:center;gap:4px}
 .hc-btn-sm{width:24px;height:24px;border-radius:6px;border:1px solid var(--bd);background:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .hc-val-sm{width:28px;text-align:center;border:1px solid var(--green);border-radius:5px;padding:2px;font-size:12px;font-weight:700;color:var(--green);background:#f0fdf8}
+#payslipCard .ps-item{padding:10px 0;border-bottom:1px solid #eee}
+#payslipCard .ps-item:last-child{border-bottom:0}
+#payslipCard .ps-item-title{font-size:14px;font-weight:500;color:var(--t1)}
+#payslipCard .ps-item-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#payslipCard .ps-holiday-grid{display:grid;grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);gap:8px;margin-top:8px}
+#payslipCard .ps-payment-field{position:relative;min-width:0}
+#payslipCard .ps-payment-label{display:block;margin-bottom:5px;font-size:11px;font-weight:400;color:var(--t2)}
+#payslipCard .ps-money-field{display:flex;align-items:center;gap:3px;min-width:0;height:34px;padding:0 6px;border:1px solid var(--bd);border-radius:6px;background:#fff;color:var(--t1);font-family:inherit;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+#payslipCard .ps-money-field:focus-within{border-color:var(--green)}
+#payslipCard .ps-money-field span{flex:none;font:inherit;color:var(--t2)}
+#payslipCard .ps-money-input{width:100%;min-width:0;border:0;outline:0;padding:0;background:transparent;color:var(--t1);font-family:inherit;font-size:14px;font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+#payslipCard .ps-money-input:disabled{opacity:1;-webkit-text-fill-color:var(--t1)}
+#payslipCard .ps-stepper{display:flex;align-items:center;justify-content:center;gap:3px;height:34px}
+#payslipCard .hc-btn-sm{flex:none;width:24px;height:30px;font-family:inherit;font-size:14px;font-weight:400}
+#payslipCard .hc-val-sm{flex:none;width:28px;padding:4px 0;border:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:var(--t1);font-variant-numeric:tabular-nums}
+#payslipCard .ps-payment-amount{display:flex;align-items:center;justify-content:flex-end;min-height:34px;font-family:inherit;font-size:14px;font-weight:500;color:var(--t1);font-variant-numeric:tabular-nums;white-space:nowrap}
+#payslipCard .ps-capture-value{position:absolute;bottom:0;left:0;right:0;display:none;height:34px;line-height:34px;text-align:right;font-family:inherit;font-size:14px;font-weight:500;color:var(--t1);font-variant-numeric:tabular-nums}
+#payslipCard .ps-extra-amount{position:relative;flex:none;width:140px}
+#payslipCard .ps-memo{display:block;min-height:36px;margin-top:7px;padding:8px 10px;resize:none;overflow:hidden;font-family:inherit;font-size:14px;font-weight:400;line-height:1.5;color:var(--t1);background:#fafafa}
+#payslipCard .ps-memo:not(:placeholder-shown){font-weight:500;border-color:#c8ddd4;background:#f3faf6}
+#payslipCard .ps-memo-display{display:none;margin-top:7px;padding:8px 10px;border-left:3px solid var(--green);font-family:inherit;font-size:14px;font-weight:500;line-height:1.5;color:var(--t1);white-space:pre-wrap;overflow-wrap:anywhere;background:#f3faf6}
+@media(max-width:350px){#payslipCard .ps-holiday-grid{grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);gap:4px}#payslipCard .ps-money-field{padding:0 3px}#payslipCard .ps-extra-amount{width:130px}}
 /* 월급여 테이블 */
 .pay-tbl-wrap{overflow-x:hidden;margin-bottom:12px;border-radius:8px;border:1px solid var(--bd)}
 .pay-tbl{border-collapse:collapse;width:100%;table-layout:fixed;font-size:10px}
@@ -936,27 +958,29 @@ input:focus{border-color:var(--green)}
         <div style="font-size:11px;font-weight:600;color:var(--t3);margin-bottom:6px">📥 지급 항목</div>
 
         <!-- 주휴수당 -->
-        <div style="padding:7px 0;border-bottom:1px solid #f5f5f5">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div style="font-size:13px;font-weight:600;color:var(--t1)">주휴수당</div>
-            <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right" id="psHoliTotal">₩0</div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div style="font-size:10px;color:var(--t3)">단가 (직접 수정 가능)</div>
-            <div class="no-capture">
-              <input type="text" id="psHoliRateInput" inputmode="numeric"
-                oninput="formatCurrencyInput(this);psHoliRateVal=getCurrencyValue('psHoliRateInput');document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();calcPayTotal()"
-                placeholder="0" style="width:110px;text-align:right;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;font-size:13px;font-weight:600;color:var(--t1);outline:none">
-              <span id="psHoliRate" style="display:none">₩0</span>
+        <div class="ps-item">
+          <div class="ps-item-title">주휴수당</div>
+          <div class="ps-holiday-grid">
+            <div class="ps-payment-field">
+              <label class="ps-payment-label" for="psHoliRateInput">단가</label>
+              <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span>
+                <input class="ps-money-input" type="text" id="psHoliRateInput" inputmode="numeric" aria-label="주휴 단가"
+                  oninput="formatCurrencyInput(this);psHoliRateVal=getCurrencyValue('psHoliRateInput');calcPayTotal()" placeholder="0">
+              </div>
+              <span class="ps-capture-value" id="psHoliRate">₩0</span>
             </div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:10px;color:var(--t3)">횟수</div>
-            <div class="no-capture" style="display:flex;align-items:center;gap:4px">
-              <button class="hc-btn-sm" onclick="changePayWeeks(-1)">−</button>
-              <div class="hc-val-sm" id="psWeekCnt">4</div>
-              <button class="hc-btn-sm" onclick="changePayWeeks(1)">+</button>
-              <span style="font-size:11px;color:var(--t2)">주 (<span id="psWeekCntDisp">4</span>주)</span>
+            <div class="ps-payment-field">
+              <span class="ps-payment-label" style="text-align:center">횟수</span>
+              <div class="ps-stepper no-capture">
+                <button class="hc-btn-sm" onclick="changePayWeeks(-1)" aria-label="주휴 횟수 줄이기" title="주휴 횟수 줄이기">−</button>
+                <div class="hc-val-sm" id="psWeekCnt">0</div>
+                <button class="hc-btn-sm" onclick="changePayWeeks(1)" aria-label="주휴 횟수 늘리기" title="주휴 횟수 늘리기">+</button>
+              </div>
+              <span class="ps-capture-value" id="psWeekCntDisp" style="text-align:center">0회</span>
+            </div>
+            <div class="ps-payment-field">
+              <span class="ps-payment-label" style="text-align:right">수당</span>
+              <div class="ps-payment-amount" id="psHoliTotal">₩0</div>
             </div>
           </div>
         </div>
@@ -964,29 +988,29 @@ input:focus{border-color:var(--green)}
         <div id="psHolidayNotes" style="display:none;padding:8px 0;font-size:11px;font-weight:400;line-height:1.6;color:var(--t2);white-space:pre-line;overflow-wrap:anywhere"></div>
 
         <!-- 상여 -->
-        <div style="padding:7px 0;border-bottom:1px solid #f5f5f5">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div style="font-size:13px;font-weight:600;color:var(--t1)">상여</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div class="no-capture"><input class="amt-input" id="psBonus" value="0" oninput="calcPayTotal()" style="width:100px"></div>
-              <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right;display:none" id="psBonusDisp">₩0</div>
+        <div class="ps-item">
+          <div class="ps-item-heading">
+            <label class="ps-item-title" for="psBonus">상여</label>
+            <div class="ps-extra-amount">
+              <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span><input class="ps-money-input" id="psBonus" inputmode="decimal" value="0" oninput="formatPayslipAmount(this)" onblur="formatPayslipAmount(this,true)" aria-label="상여 금액"></div>
+              <div class="ps-capture-value" id="psBonusDisp">₩0</div>
             </div>
           </div>
-          <div class="no-capture"><input class="ps-memo" id="psBonusMemo" placeholder="예: 명절 상여, 성과급 등"></div>
-          <div style="font-size:11px;color:var(--t2);display:none" id="psBonusMemoDisp"></div>
+          <div class="no-capture"><textarea class="ps-memo" rows="1" id="psBonusMemo" oninput="resizePayslipMemo(this)" placeholder="예: 명절 상여, 성과급 등" aria-label="상여 지급 내용"></textarea></div>
+          <div class="ps-memo-display" id="psBonusMemoDisp"></div>
         </div>
 
         <!-- 기타 -->
-        <div style="padding:7px 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div style="font-size:13px;font-weight:600;color:var(--t1)">기타</div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div class="no-capture"><input class="amt-input" id="psEtc" value="0" oninput="calcPayTotal()" style="width:100px"></div>
-              <div style="font-size:15px;font-weight:700;color:var(--t1);min-width:70px;text-align:right;display:none" id="psEtcDisp">₩0</div>
+        <div class="ps-item">
+          <div class="ps-item-heading">
+            <label class="ps-item-title" for="psEtc">기타</label>
+            <div class="ps-extra-amount">
+              <div class="ps-money-field no-capture"><span aria-hidden="true">₩</span><input class="ps-money-input" id="psEtc" inputmode="decimal" value="0" oninput="formatPayslipAmount(this)" onblur="formatPayslipAmount(this,true)" aria-label="기타 지급 금액"></div>
+              <div class="ps-capture-value" id="psEtcDisp">₩0</div>
             </div>
           </div>
-          <div class="no-capture"><input class="ps-memo" id="psEtcMemo" placeholder="예: 교통비, 식대 등"></div>
-          <div style="font-size:11px;color:var(--t2);display:none" id="psEtcMemoDisp"></div>
+          <div class="no-capture"><textarea class="ps-memo" rows="1" id="psEtcMemo" oninput="resizePayslipMemo(this)" placeholder="예: 교통비, 식대 등" aria-label="기타 지급 내용"></textarea></div>
+          <div class="ps-memo-display" id="psEtcMemoDisp"></div>
         </div>
       </div>
 
@@ -1017,7 +1041,7 @@ input:focus{border-color:var(--green)}
 
       <!-- 카드 푸터 -->
       <div style="padding:10px 18px;background:#fafafa;border-top:1px solid var(--bd);display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;align-items:center">
-        <div style="font-size:10px;color:var(--t3)" data-zuo-version>ZUO v2026.11.05.2</div>
+        <div style="font-size:10px;color:var(--t3)" data-zuo-version>ZUO v2026.11.05.3</div>
         <div style="font-size:10px;color:var(--t3)" id="psIssuedAt"></div>
       </div>
     </div>
@@ -3332,12 +3356,14 @@ async function openPayslip(empId){
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
   setCurrencyValue('psHoliRateInput',psHoliRateVal);
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
-  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
-  document.getElementById('psBonus').value=savedBonus;
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal+'회';
+  setCurrencyValue('psBonus',savedBonus);
   document.getElementById('psBonusMemo').value=savedBonusMemo;
-  document.getElementById('psEtc').value=savedEtc;
+  setCurrencyValue('psEtc',savedEtc);
   document.getElementById('psEtcMemo').value=savedEtcMemo;
   calcPayTotal();showScreen('scPayslip');
+  resizePayslipMemo(document.getElementById('psBonusMemo'));
+  resizePayslipMemo(document.getElementById('psEtcMemo'));
 }
 function changeHoliRate(v){
   psHoliRateVal=Math.max(0,psHoliRateVal+v);
@@ -3348,7 +3374,7 @@ function changePayWeeks(v){
   if(window.isWorkerViewMode)return;
   psWeekCntVal=Math.max(0,Math.min(psHolidayAssessment?.eligibleCount||0,psWeekCntVal+v));
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
-  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal+'회';
   calcPayTotal();
 }
 function calcTax(empType,gross,totalHrs){
@@ -3389,7 +3415,7 @@ function calcPayTotal(){
   }
   psWeekCntVal=Math.max(0,Math.min(psHolidayAssessment?.eligibleCount||0,psWeekCntVal));
   document.getElementById('psWeekCnt').textContent=psWeekCntVal;
-  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal+'회';
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
   if(psHolidayAssessment){
     const notes=document.getElementById('psHolidayNotes');
@@ -3399,8 +3425,8 @@ function calcPayTotal(){
   const base=parseFloat((document.getElementById('psBase').textContent||'0').replace(/[₩,]/g,''))||0;
   const holi=psHoliRateVal*psWeekCntVal;
   document.getElementById('psHoliTotal').textContent='₩'+holi.toLocaleString();
-  const bonus=parseFloat(document.getElementById('psBonus').value)||0;
-  const etc=parseFloat(document.getElementById('psEtc').value)||0;
+  const bonus=getCurrencyValue('psBonus');
+  const etc=getCurrencyValue('psEtc');
   const gross=Math.round(base+holi+bonus+etc);
   document.getElementById('psGross').textContent='₩'+gross.toLocaleString();
   // 세금 계산
@@ -3425,12 +3451,33 @@ function calcPayTotal(){
   document.getElementById('psTotal').textContent='₩'+net.toLocaleString();
 }
 
+function resizePayslipMemo(el){
+  el.style.height='auto';
+  el.style.height=Math.max(36,Number(el.scrollHeight)||0)+'px';
+}
+
+function formatPayslipAmount(el,complete=false){
+  const raw=el.value.trim();
+  if(raw===''||raw==='-'){
+    el.dataset.rawValue='0';
+    if(complete)el.value='0';
+    calcPayTotal();
+    return;
+  }
+  const negative=raw.startsWith('-');
+  formatCurrencyInput(el);
+  const amount=getCurrencyValue(el.id)*(negative?-1:1);
+  setCurrencyValue(el.id,amount);
+  if(amount===0)el.value='0';
+  calcPayTotal();
+}
+
 function getPayslipSaveData(){
   calcPayTotal();
   const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
-  const bonus=parseFloat(document.getElementById('psBonus').value)||0;
+  const bonus=getCurrencyValue('psBonus');
   const bonusMemo=document.getElementById('psBonusMemo').value.trim();
-  const etc=parseFloat(document.getElementById('psEtc').value)||0;
+  const etc=getCurrencyValue('psEtc');
   const etcMemo=document.getElementById('psEtcMemo').value.trim();
   return {
     empId:psCurrentEmp.id,
@@ -3455,21 +3502,26 @@ async function savePayslip(){
 }
 
 function prepareCapture(){
+  calcPayTotal();
   // 캡처용 주휴단가 텍스트 업데이트
   document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
-  const bonus=parseInt(document.getElementById('psBonus').value)||0;
+  document.getElementById('psHoliRate').style.display='block';
+  const bonus=getCurrencyValue('psBonus');
   const bonusMemo=document.getElementById('psBonusMemo').value.trim();
   document.getElementById('psBonusDisp').textContent='₩'+bonus.toLocaleString();
   document.getElementById('psBonusDisp').style.display='block';
   document.getElementById('psBonusMemoDisp').textContent=bonusMemo||'';
   document.getElementById('psBonusMemoDisp').style.display=bonusMemo?'block':'none';
-  const etc=parseInt(document.getElementById('psEtc').value)||0;
+  document.getElementById('psBonusMemo').parentElement.style.display='none';
+  const etc=getCurrencyValue('psEtc');
   const etcMemo=document.getElementById('psEtcMemo').value.trim();
   document.getElementById('psEtcDisp').textContent='₩'+etc.toLocaleString();
   document.getElementById('psEtcDisp').style.display='block';
   document.getElementById('psEtcMemoDisp').textContent=etcMemo||'';
   document.getElementById('psEtcMemoDisp').style.display=etcMemo?'block':'none';
-  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
+  document.getElementById('psEtcMemo').parentElement.style.display='none';
+  document.getElementById('psWeekCntDisp').textContent=psWeekCntVal+'회';
+  document.getElementById('psWeekCntDisp').style.display='block';
   const now=new Date();
   document.getElementById('psIssuedAt').textContent=`발행일 ${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
   document.querySelectorAll('.no-capture').forEach(el=>el.style.visibility='hidden');
@@ -3481,6 +3533,10 @@ function restoreCapture(){
   document.getElementById('psEtcDisp').style.display='none';
   document.getElementById('psBonusMemoDisp').style.display='none';
   document.getElementById('psEtcMemoDisp').style.display='none';
+  document.getElementById('psBonusMemo').parentElement.style.display='';
+  document.getElementById('psEtcMemo').parentElement.style.display='';
+  document.getElementById('psHoliRate').style.display='none';
+  document.getElementById('psWeekCntDisp').style.display='none';
 }
 
 async function captureAndShare(){
@@ -3680,15 +3736,16 @@ async function calcEmpPay(emp,period){
   const saved=hasPsData?psSnap.docs[0].data():null;
   if(hasPsData){
     // 명세서 저장값 우선 사용
-    bonus=saved.bonus||0;
-    etc=saved.etc||0;
+    bonus=Number(saved.bonus)||0;
+    etc=Number(saved.etc)||0;
   }
   const holiday=ZuoPayroll.values(emp,saved,assessment);
   const holi=Math.round(holiday.rate*holiday.count);
   const gross=base+holi+bonus+etc;
   const {totalDeduct}=calcTax(emp.empType||'기타',gross,h);
   const net=Math.max(0,gross-totalDeduct);
-  return {h,base,holi,bonus,etc,gross,totalDeduct,net,hasData:true};
+  const hasData=hasWorkData||[base,holi,bonus,etc].some(value=>value!==0);
+  return {h,base,holi,bonus,etc,gross,totalDeduct,net,hasData};
 }
 
 async function renderPayTable(){
@@ -3710,8 +3767,7 @@ async function renderPayTable(){
   for(const emp of allEmps){
     // 근무시간
     const pay=await calcEmpPay(emp,period);
-    // 퇴사자는 해당 월 데이터 있을 때만 표시
-    if(emp.resigned&&!pay.hasData)continue;
+    if(!pay.hasData)continue;
     sumH+=pay.h;sumB+=pay.base;sumHoli+=pay.holi;sumBonus+=pay.bonus;sumEtc+=pay.etc;sumDeduct+=pay.totalDeduct;sumNet+=pay.net;
     const resignBadge=emp.resigned?`<span style="font-size:9px;background:#f5f5f5;color:var(--t3);padding:1px 4px;border-radius:4px;margin-left:3px">퇴사</span>`:'';
     tbl.innerHTML+=`<tr>
@@ -3824,7 +3880,7 @@ async function exportExcel(){
   let grandTotal=0,grandBase=0,grandHoli=0,grandBonus=0,grandEtc=0,grandDeduct=0,grandNet=0;
   for(let ei=0;ei<excelEmps.length;ei++){
     const emp=excelEmps[ei];
-    if(emp.resigned&&!empPayMap[emp.id]?.hasData)continue;
+    if(!empPayMap[emp.id]?.hasData)continue;
     const {days}=empDataMap[emp.id]||{days:{}};
     const pay=empPayMap[emp.id]||{h:0,base:0,holi:0,bonus:0,etc:0,gross:0,totalDeduct:0,net:0};
     const rowFill=ei%2===0?C_WHITE:C_ALT;
@@ -4838,9 +4894,9 @@ document.getElementById('adminPwInput2').addEventListener('keyup',e=>{if(e.key==
 loadCafes();
 </script>
 
-<script src="zuo-payroll.js?v=2026.11.05.2"></script>
-<script src="zuo-fixes.js?v=2026.11.05.2"></script>
-<script src="zuo-version.js?v=2026.11.05.2"></script>
+<script src="zuo-payroll.js?v=2026.11.05.3"></script>
+<script src="zuo-fixes.js?v=2026.11.05.3"></script>
+<script src="zuo-version.js?v=2026.11.05.3"></script>
 </body>
 </html>
 

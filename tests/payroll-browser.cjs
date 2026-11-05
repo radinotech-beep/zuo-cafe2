@@ -96,14 +96,50 @@ const fixtures={
     assert.match(await page.locator('#psHolidayNotes').innerText(),/14시간 59분/);
     await page.locator('#scPayslip button[onclick="changePayWeeks(1)"]').click();
     assert.equal(await page.locator('#psWeekCnt').innerText(),'2');
+    await page.locator('#psHoliRateInput').fill('30960');
+    await page.locator('#psBonus').fill('100000');
+    await page.locator('#psEtc').fill('12500');
+    await page.locator('#psBonusMemo').fill('우수근로 포상');
+    await page.locator('#psEtcMemo').fill('교통비 및 식대 지원');
+    assert.equal(await page.locator('#psHoliRateInput').inputValue(),'30,960');
+    assert.equal(await page.locator('#psBonus').inputValue(),'100,000');
+    assert.equal(await page.locator('#psEtc').inputValue(),'12,500');
+    const savedAmounts=await page.evaluate(()=>getPayslipSaveData());
+    assert.equal(savedAmounts.holiRateVal,30960);
+    assert.equal(savedAmounts.bonus,100000);
+    assert.equal(savedAmounts.etc,12500);
+    const fonts=await page.evaluate(()=>['psHoliRateInput','psBonus','psEtc','psHoliTotal'].map(id=>{
+      const style=getComputedStyle(document.getElementById(id));
+      return {family:style.fontFamily,size:style.fontSize,weight:style.fontWeight};
+    }));
+    assert.ok(fonts.every(font=>JSON.stringify(font)===JSON.stringify(fonts[0])));
+    await page.locator('#psEtc').fill('-1250');
+    assert.equal((await page.evaluate(()=>getPayslipSaveData())).etc,-1250);
+    await page.locator('#psEtc').fill('12500');
     await page.evaluate(()=>window.scrollTo(0,0));
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
     assert.equal(overflow,false,'Mobile page must not overflow');
     await page.screenshot({path:path.join(artifactDir,'weekly-notes-mobile.png'),fullPage:true});
+    await page.evaluate(()=>prepareCapture());
+    assert.equal(await page.locator('#psBonusDisp').innerText(),'₩100,000');
+    assert.equal(await page.locator('#psEtcDisp').innerText(),'₩12,500');
+    assert.equal(await page.locator('#psHoliRate').innerText(),'₩30,960');
+    assert.equal(await page.locator('#psWeekCntDisp').innerText(),'2회');
+    assert.equal(await page.locator('#psBonusMemoDisp').innerText(),'우수근로 포상');
+    await page.locator('#payslipCard').screenshot({path:path.join(artifactDir,'payslip-capture-mobile.png')});
+    await page.evaluate(()=>restoreCapture());
+    await page.setViewportSize({width:320,height:740});
+    const narrow=await page.evaluate(()=>({
+      overflow:document.documentElement.scrollWidth>innerWidth,
+      rowTops:[...document.querySelectorAll('.ps-holiday-grid .ps-payment-field')].map(el=>el.getBoundingClientRect().top)
+    }));
+    assert.equal(narrow.overflow,false);
+    assert.ok(Math.max(...narrow.rowTops)-Math.min(...narrow.rowTops)<2,'Holiday fields must share one row');
+    await page.screenshot({path:path.join(artifactDir,'payslip-narrow-mobile.png'),fullPage:true});
     await page.setViewportSize({width:1280,height:900});
     await page.evaluate(()=>window.scrollTo(0,0));
     await page.screenshot({path:path.join(artifactDir,'weekly-notes-desktop.png'),fullPage:true});
-    publishedVersion='2026.11.05.3';
+    publishedVersion='9999.12.31.1';
     await page.evaluate(()=>ZuoVersion.check());
     assert.equal(await page.locator('#scPayslip .app-version-update').innerText(),'업데이트 적용');
     await page.locator('#psBonus').fill('777');
@@ -115,8 +151,29 @@ const fixtures={
     manifestUnavailable=true;
     await page.evaluate(()=>ZuoVersion.check());
     assert.match(await page.locator('#scPayslip .app-version-status').innerText(),/확인 실패/);
+    await page.evaluate(async()=>{
+      const data=window.__fixtures;
+      data.employees[0].holidayRate=0;
+      data.employees[0].resigned=true;
+      data.workHours=[];
+      data.payslips=[{id:'slip',cafeId:'cafe',empId:'target',period:'2026-10',holiRateVal:50568,weekCntVal:1,bonus:0,etc:0,confirmed:true}];
+      currentWorkerEmp=employees[0];
+      await renderPayTable();
+      await openWorkerPayslipList53();
+    });
+    assert.equal((await page.locator('#payTable').innerText()).includes('Test'),false);
+    assert.equal(await page.locator('#workerPayslipList .worker-pay-row').count(),0);
+    assert.match(await page.locator('#workerPayslipList').innerText(),/표시할 급여명세서가 없어요/);
+    await page.evaluate(async()=>{
+      window.__fixtures.payslips[0].bonus=500;
+      await renderPayTable();
+      await openWorkerPayslipList53();
+    });
+    assert.equal((await page.locator('#payTable').innerText()).includes('Test'),true);
+    assert.equal(await page.locator('#workerPayslipList .worker-pay-row').count(),1);
+    assert.match(await page.locator('#workerPayslipList .worker-pay-row').innerText(),/500/);
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({result:'PASS',checks:['real app script chain','zero-rate legacy saved slip','weekly exclusions','mobile overflow','desktop rendering','visible build version','update detection','unsaved-input cancellation','offline update status'],artifactDir}));
+    console.log(JSON.stringify({result:'PASS',checks:['real app script chain','zero-rate legacy saved slip','weekly exclusions','320px/390px one-row layout','desktop rendering','uniform monetary fonts','comma-formatted numeric saving','signed amounts','image-capture amounts and memo','visible build version','update detection','unsaved-input cancellation','offline update status','empty legacy history hidden in administrator and worker lists','bonus-only history preserved'],artifactDir}));
   }finally{
     if(browser)await browser.close();
     await new Promise(resolve=>server.close(resolve));

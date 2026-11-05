@@ -763,12 +763,14 @@
       document.getElementById('psHoliRate').textContent='₩'+psHoliRateVal.toLocaleString();
       setCurrencyValue('psHoliRateInput',psHoliRateVal);
       document.getElementById('psWeekCnt').textContent=psWeekCntVal;
-      document.getElementById('psWeekCntDisp').textContent=psWeekCntVal;
-      document.getElementById('psBonus').value=savedBonus;
+      document.getElementById('psWeekCntDisp').textContent=psWeekCntVal+'회';
+      setCurrencyValue('psBonus',savedBonus);
       document.getElementById('psBonusMemo').value=savedBonusMemo;
-      document.getElementById('psEtc').value=savedEtc;
+      setCurrencyValue('psEtc',savedEtc);
       document.getElementById('psEtcMemo').value=savedEtcMemo;
       calcPayTotal();showScreen('scPayslip');
+      resizePayslipMemo(document.getElementById('psBonusMemo'));
+      resizePayslipMemo(document.getElementById('psEtcMemo'));
     };
 
     window.__zuoTask50PayslipPatched=true;
@@ -1302,14 +1304,17 @@
         return;
       }
       const enriched=await Promise.all(rows.map(async row=>{
-        let net=row.net||row.total||row.payTotal||0;
-        if(typeof calcEmpPay==='function'){
-          try{net=(await calcEmpPay(currentWorkerEmp,row.period)).net;}catch(e){console.log('worker payslip net:',e);}
-        }
-        return {...row,net};
+        const pay=await calcEmpPay(currentWorkerEmp,row.period);
+        return {...row,net:pay.net,hasData:pay.hasData};
       }));
+      const visible=enriched.filter(row=>row.hasData);
+      if(!visible.length){
+        listEl.className='worker-pay-list-empty';
+        listEl.textContent='표시할 급여명세서가 없어요';
+        return;
+      }
       listEl.className='worker-pay-list';
-      listEl.innerHTML=enriched.map(row=>`
+      listEl.innerHTML=visible.map(row=>`
         <button class="worker-pay-row" onclick="openWorkerPayslipPeriod53('${String(row.period||'').replace(/'/g,'\\\'')}')">
           <span>${periodLabel53(row.period)}</span>
           <b>${money53(row.net)}</b>

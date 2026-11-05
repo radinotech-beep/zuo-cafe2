@@ -221,6 +221,32 @@ test('failed batch writes neither payroll confirmation nor exclusion metadata',a
   assert.equal(records.workConfirm.length,0);
 });
 
+test('an old confirmed document alone does not create payroll history without work or payment',async()=>{
+  const employee={...emp,holidayRate:0,resigned:true};
+  const {context:c,records}=environment(employee,{holiRateVal:50568,weekCntVal:1,bonus:0,etc:0,confirmed:true});
+  records.workHours=[];
+  const before=JSON.stringify(records.payslips);
+  const pay=await c.calcEmpPay(employee,'2026-10');
+  assert.equal(pay.h,0);assert.equal(pay.net,0);assert.equal(pay.hasData,false);
+  assert.equal(JSON.stringify(records.payslips),before);
+});
+
+test('bonus-only and adjustment-only payslips remain visible even without work records',async()=>{
+  const employee={...emp,holidayRate:0};
+  for(const amounts of [{bonus:500,etc:0},{bonus:0,etc:200},{bonus:0,etc:-200}]){
+    const {context:c,records}=environment(employee,{holiRateVal:0,weekCntVal:0,...amounts,confirmed:true});
+    records.workHours=[];
+    assert.equal((await c.calcEmpPay(employee,'2026-10')).hasData,true);
+  }
+});
+
+test('actual work remains a payroll record even when the hourly rate and resulting payment are zero',async()=>{
+  const employee={...emp,rate:0,holidayRate:0};
+  const {context:c}=environment(employee);
+  const pay=await c.calcEmpPay(employee,'2026-10');
+  assert.equal(pay.net,0);assert.ok(pay.h>0);assert.equal(pay.hasData,true);
+});
+
 test('inline scripts parse and service worker precaches both versioned payroll scripts',()=>{
   for(const match of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))if(match[1].trim())new vm.Script(match[1]);
   const sw=fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8');
