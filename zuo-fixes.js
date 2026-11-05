@@ -730,7 +730,7 @@
       const emp=employees.find(e=>e.id===empId);if(!emp)return;
       psCurrentEmp=emp;
       const period=`${payY}-${String(payM+1).padStart(2,'0')}`;
-      const snap=await db.collection('workHours').where('empId','==',empId).where('period','==',period).get();
+      const snap=await db.collection('workHours').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
       const workDays=getWorkDaysFromSnapshot(snap);
       const total=sumWorkDays(workDays);
       const base=Math.round(total*(emp.rate||0));
@@ -751,7 +751,7 @@
       }else{
         psHoliRateVal=0;
       }
-      psWeekCntVal=weeksInMonth;
+      psWeekCntVal=getPayslipWeekCount(total,null,weeksInMonth);
 
       const psSnap=await db.collection('payslips').where('cafeId','==',currentCafe.id).where('empId','==',empId).where('period','==',period).get();
       let savedBonus=0,savedBonusMemo='',savedEtc=0,savedEtcMemo='';
@@ -762,7 +762,10 @@
         if(resolved.employeeChanged){
           showToast('주휴단가가 변경됐어요. 저장하면 반영돼요.');
         }
-        if(saved.weekCntVal!==undefined)psWeekCntVal=Number(saved.weekCntVal)||0;
+        psWeekCntVal=getPayslipWeekCount(total,saved,weeksInMonth);
+        if(total<=0&&saved.confirmed&&psWeekCntVal*psHoliRateVal>0){
+          showToast('근무기록이 없는 확정 명세서에 주휴수당이 있어요. 확정 해제 후 확인해주세요.');
+        }
         savedBonus=saved.bonus||0;
         savedBonusMemo=saved.bonusMemo||'';
         savedEtc=saved.etc||0;
@@ -1124,6 +1127,12 @@
     const data=confirmed?currentData:null;
     if(!await setPayrollConfirmation(psCurrentEmp.id,period,confirmed,data))return;
     loadedPayslip52={...found?.data,...data,confirmed};
+    if(!confirmed&&!(parseFloat(document.getElementById('psHours').textContent)>0)){
+      psWeekCntVal=0;
+      document.getElementById('psWeekCnt').textContent=0;
+      document.getElementById('psWeekCntDisp').textContent=0;
+      calcPayTotal();
+    }
     setConfirmState52(confirmed);
     if(typeof renderPayEmpList==='function')renderPayEmpList();
     showToast(confirmed?'급여명세서와 근무현황을 확정했어요':'급여명세서와 근무현황 확정을 해제했어요');
@@ -1384,6 +1393,12 @@
   document.addEventListener('DOMContentLoaded',bootTask53);
 })();
 
+function getPayslipWeekCount(totalHours,saved,fallback){
+  if(saved?.confirmed&&saved.weekCntVal!==undefined)return Number(saved.weekCntVal)||0;
+  if(!(Number(totalHours)>0))return 0;
+  return saved?.weekCntVal!==undefined?(Number(saved.weekCntVal)||0):fallback;
+}
+
 function hasPayslipEdits(saved,data){
   return ['holiRateVal','weekCntVal','bonus','etc'].some(key=>(Number(saved[key])||0)!==(Number(data[key])||0))||
     ['bonusMemo','etcMemo'].some(key=>(saved[key]||'')!==(data[key]||''));
@@ -1443,7 +1458,7 @@ async function setPayrollConfirmation(empId,period,confirmed,newPayslip=null){
   }
 
   async function defaultPayslipData54(emp,period){
-    const snap=await db.collection('workHours').where('empId','==',emp.id).where('period','==',period).get();
+    const snap=await db.collection('workHours').where('cafeId','==',currentCafe.id).where('empId','==',emp.id).where('period','==',period).get();
     const workDays=getWorkDaysFromSnapshot(snap);
     const total=sumWorkDays(workDays);
     const yr=parseInt(period.split('-')[0],10);
@@ -1469,7 +1484,7 @@ async function setPayrollConfirmation(empId,period,confirmed,newPayslip=null){
       period,
       holiRateVal,
       empHolidayRateSnapshot:emp.holidayRate==null?null:(Number(emp.holidayRate)||0),
-      weekCntVal:weeksInMonth,
+      weekCntVal:getPayslipWeekCount(total,null,weeksInMonth),
       bonus:0,
       bonusMemo:'',
       etc:0,
